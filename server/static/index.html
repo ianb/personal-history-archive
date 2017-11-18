@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>History</title>
+    <link rel="icon" src="icon.png">
+    <style>
+    
+body {
+  font-family: sans-serif;
+}
+
+#history-items tr:nth-child(odd) {
+  background-color: #eee;
+}
+
+.fetching {
+  font-weight: bold;
+}
+
+.queued {
+  color: #ddd;
+}
+    
+    </style>
+  </head>
+  <body>
+
+<div>
+  <b>History items:</b>
+  <code class="historyCount"></code>
+  <b>Unfetched:</b>
+  <code class="unfetchedCount"></code>
+</div>
+
+<div>
+  <b>Latest history item timestamp:</b>
+  <code class="latest"></code>
+</div>
+
+<fieldset>
+  <button id="sendHistory">Send History</button>
+  <button id="fetchSome">Fetch some pages</button>
+  <input type="text" id="fetch-batch" placeholder="Fetch size (6)">
+</fieldset>
+
+<hr>
+
+<div>
+  Fetching:
+  <ul id="fetching"></ul>
+  Problems:
+  <ul id="failed"></ul>
+</div>
+
+<div>
+  History items:
+  
+  <table id="history-items">
+  </table>
+</div>
+    
+  </body>
+</html>

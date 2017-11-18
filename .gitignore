@@ -1,0 +1,4 @@
+/node_modules
+/Profile
+/pages
+*.sqlite

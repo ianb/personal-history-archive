@@ -1,0 +1,26 @@
+{
+  "name": "personal-history-archive",
+  "description": "A server and browser extension for saving a personal archive",
+  "version": "0.1.0",
+  "author": "Ian Bicking <ian@ianbicking.org>",
+  "bugs": {
+    "url": "https://github.com/ianb/personal-history-archive/issues"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "readability": "git+https://github.com/mozilla/readability.git",
+    "sqlite3": "^3.1.13",
+    "web-ext": "^2.2.2"
+  },
+  "devDependencies": {},
+  "homepage": "https://github.com/ianb/personal-history-archive",
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ianb/personal-history-archive.git"
+  },
+  "scripts": {
+    "server": "node server/server.js"
+  }
+}

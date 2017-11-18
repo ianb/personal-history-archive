@@ -1,0 +1,39 @@
+{
+  "manifest_version": 2,
+  "name": "Personal History Archive",
+  "version": "0.1.0",
+  "description": "Save a personal archive of your browser history",
+  "author": "Ian Bicking <ian@ianbicking.org>",
+  "homepage_url": "https://github.com/ianb/personal-history-archive",
+  "applications": {
+    "gecko": {
+      "id": "personal-history-archive@ianbicking.org"
+    }
+  },
+  "browser_action": {
+    "default_icon": {
+      "32": "icon.png"
+    },
+    "default_title": "Personal history"
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost/*"],
+      "js": [
+        "sitescript.js"
+      ]
+    }
+  ],
+  "permissions": [
+    "http://localhost:11180/",
+    "history",
+    "storage",
+    "tabs",
+    "<all_urls>"
+  ]
+}
