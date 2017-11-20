@@ -39,13 +39,26 @@ browser.runtime.onMessage.addListener((message) => {
     });
   } else if (message.type == "fetchPage") {
     return fetchPage(message.url);
+  } else if (message.type == "escapeKey") {
+    browser.tabs.query({
+      currentWindow: true,
+      url: [SERVER + "/*", SERVER_BASE + "/*"]
+    }).then((tabs) => {
+      for (let tab of tabs) {
+        browser.tabs.sendMessage(tab.id, {
+          type: "escapeKey"
+        }).catch((error) => {
+          console.error("Error sending message to tab:", error);
+        });
+      }
+    });
   }
   throw new Error("Bad message: " + JSON.stringify(message));
 });
 
 browser.browserAction.onClicked.addListener(() => {
   browser.tabs.query({
-    currentWindow: true, 
+    currentWindow: true,
     url: [SERVER + "/*", SERVER_BASE + "/*"]
   }).then((tabs) => {
     if (tabs.length) {
@@ -64,7 +77,12 @@ function fetchPage(url) {
       browser.tabs.update(tab.id, {active: true});
     }, 5000);
     return browser.tabs.executeScript(tab.id, {
-      file: "make-static-html.js"
+      file: "escape-catcher.js",
+      runAt: "document_start"
+    }).then(() => {
+      return browser.tabs.executeScript(tab.id, {
+        file: "make-static-html.js"
+      });
     }).then(() => {
       return browser.tabs.executeScript(tab.id, {
         file: "Readability.js"

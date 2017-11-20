@@ -12,7 +12,7 @@
     This script also contains the infrastructure for communicating as a framescript
     with lib/framescripter
     */
-    
+
 function makeUuid() { // eslint-disable-line no-unused-vars
   // get sixteen unsigned 8 bit random values
   var randomValues = window

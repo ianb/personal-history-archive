@@ -2,3 +2,4 @@
 /Profile
 /pages
 *.sqlite
+/package-lock.json

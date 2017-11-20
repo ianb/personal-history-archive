@@ -2,7 +2,7 @@ const DEFAULT_PAGE_LIMIT = 6;
 
 let browserId;
 let model = {
-  fetching: new Map(), 
+  fetching: new Map(),
   failed: new Map()
 };
 
@@ -14,6 +14,25 @@ setTimeout(() => {
     return register().then(refresh);
   });
 }, 200);
+
+browser.runtime.onMessage.addListener((message) => {
+  if (message.type == "escapeKey") {
+    abortWorkerNow();
+  } else {
+    console.warn("sitescript got unexpected message:", message);
+  }
+});
+
+function abortWorkerNow() {
+  fetchSomeButton.textContent = "Fetch some pages";
+  abortWorker = true;
+}
+
+document.addEventListener("keyup", (event) => {
+  if ((event.code || event.key) == "Escape") {
+    abortWorkerNow();
+  }
+}, false);
 
 function register() {
   return new Promise((resolve, reject) => {
@@ -31,7 +50,7 @@ function register() {
     };
     req.send(JSON.stringify({browserId}));
   });
-}  
+}
 
 function sendHistory(historyItems) {
   let req = new content.XMLHttpRequest();
@@ -71,8 +90,7 @@ let fetchSomeButton = document.querySelector("#fetchSome");
 
 fetchSomeButton.addEventListener("click", () => {
   if (!abortWorker) {
-    abortWorker = true;
-    fetchSomeButton.textContent = "Fetch some pages";
+    abortWorkerNow();
     return;
   }
   abortWorker = false;
