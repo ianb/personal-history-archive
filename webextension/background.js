@@ -34,7 +34,8 @@ browser.runtime.onMessage.addListener((message) => {
   } else if (message.type == "history.search") {
     return browser.history.search({
       text: "",
-      startTime: message.startTime + 1,
+      startTime: message.startTime || 0,
+      endTime: message.endTime,
       maxResults: message.maxResults
     });
   } else if (message.type == "fetchPage") {

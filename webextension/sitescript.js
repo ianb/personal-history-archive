@@ -1,4 +1,6 @@
 const DEFAULT_PAGE_LIMIT = 6;
+const HISTORY_PAGE_TIME = 24*60*60*1000; // 1 day
+const HISTORY_START = Date.now() - (20*365*24*60*60*1000); // 20 years ago
 
 let browserId;
 let model = {
@@ -71,20 +73,48 @@ function sendHistory(historyItems) {
 }
 
 document.querySelector("#sendHistory").addEventListener("click", () => {
-  let startTime = document.querySelector(".latest").textContent;
-  if (startTime == "null") {
-    startTime = 0;
+  let endTime = document.querySelector(".oldest").textContent;
+  if (!endTime || endTime == "null") {
+    endTime = Date.now();
   }
-  startTime = parseInt(startTime, 10);
-  console.log("sending history since", startTime);
-  browser.runtime.sendMessage({
+  endTime = parseInt(endTime, 10);
+  let latest = document.querySelector(".latest").textContent;
+  if (!latest || latest == "null") {
+    latest = Date.now();
+  }
+  latest = parseInt(latest, 10)
+  console.log("sending history since", endTime, "or until", latest);
+  sendSomeHistory(endTime, latest);
+}, false);
+
+function sendSomeHistory(endTime, latest) {
+  return browser.runtime.sendMessage({
     type: "history.search",
     maxResults: 100,
-    startTime
+    endTime: endTime - 1
   }).then((results) => {
-    sendHistory(results);
+    if (!results.length) {
+      console.log("No old items, sending new items", latest + 1, Date.now());
+      return browser.runtime.sendMessage({
+        type: "history.search",
+        maxResults: 100000,
+        startTime: latest + 1,
+        endTime: Date.now()
+      }).then((results) => {
+        if (!results.length) {
+          console.log("No recent items to send");
+          model.historyStatus = "fully up to date";
+          refresh();
+        } else {
+          model.historyStatus = `Up to date with ${results.length} recent items`;
+          return sendHistory(results);
+        }
+      });
+    }
+    model.historyStatus = `Sent ${results.length} old items`;
+    return sendHistory(results);
   });
-}, false);
+}
 
 let fetchSomeButton = document.querySelector("#fetchSome");
 
@@ -134,6 +164,9 @@ function render() {
     let value = model[key];
     for (let el of document.querySelectorAll("." + key)) {
       el.textContent = value;
+    }
+    for (let el of document.querySelectorAll(`.${key}-date`)) {
+      el.textContent = String(new Date(value));
     }
   }
   if (model.history) {

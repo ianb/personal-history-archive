@@ -11,19 +11,20 @@ if (!fs.existsSync(dataPath)) {
 }
 
 const db = new sqlite3.Database("./history.sqlite", () => {
-  db.exec(`    
+  db.exec(`
     CREATE TABLE IF NOT EXISTS browsers (
       id TEXT PRIMARY KEY,
       created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      latest INT
+      latest INT,
+      oldest INT
     );
-    
+
     CREATE TABLE IF NOT EXISTS ignore (
       id TEXT PRIMARY KEY,
       url_hash TEXT,
       domain_hash TEXT
     );
-    
+
     CREATE TABLE IF NOT EXISTS history (
       browser TEXT REFERENCES browsers (id),
       browser_history_id TEXT PRIMARY_KEY,
@@ -33,7 +34,7 @@ const db = new sqlite3.Database("./history.sqlite", () => {
       visitCount INT NOT NULL DEFAULT 0,
       typedCount INT NOT NULL DEFAULT 0
     );
-    
+
     CREATE TABLE IF NOT EXISTS page (
       url TEXT PRIMARY KEY,
       fetched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -83,10 +84,12 @@ app.get("/status", function(req, res) {
     SELECT
       (SELECT COUNT(*) FROM history) AS history_count,
       (SELECT latest FROM browsers WHERE id = ?) AS latest,
+      (SELECT oldest FROM browsers WHERE id = ?) AS oldest,
       (SELECT COUNT(*) FROM history, page WHERE history.url = page.url) AS fetched_count
-  `, req.query.browserId).then((row) => {
+  `, req.query.browserId, req.query.browserId).then((row) => {
     result.historyCount = row.history_count;
     result.latest = row.latest || 0;
+    result.oldest = row.oldest || null;
     result.fetchedCount = row.fetched_count;
     result.unfetchedCount = result.historyCount - result.fetchedCount;
     res.send(result);
@@ -107,8 +110,12 @@ app.post("/add-history", function(req, res) {
   }
   promise.then(() => {
     return dbRun(`
-      UPDATE browsers SET latest = (SELECT MAX(lastvisitTime) FROM history WHERE browser = ?)
-    `, req.body.browserId);
+      UPDATE browsers
+      SET latest = (SELECT MAX(lastvisitTime)
+                    FROM history WHERE browser = ?),
+          oldest = (SELECT MIN(lastvisitTime)
+                    FROM history WHERE browser = ?)
+    `, req.body.browserId, req.body.browserId);
   }).then(() => {
     res.send("OK");
   });
@@ -117,7 +124,7 @@ app.post("/add-history", function(req, res) {
 app.post("/register", function(req, res) {
   let browserId = req.body.browserId;
   dbGet(`
-    SELECT created, latest FROM browsers
+    SELECT created FROM browsers
     WHERE id = ?
   `, browserId).then((row) => {
     if (row) {
