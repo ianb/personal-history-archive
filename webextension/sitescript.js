@@ -2,6 +2,16 @@ const DEFAULT_PAGE_LIMIT = 6;
 const HISTORY_PAGE_TIME = 24*60*60*1000; // 1 day
 const HISTORY_START = Date.now() - (20*365*24*60*60*1000); // 20 years ago
 
+let ContentXMLHttpRequest;
+let Content_fetch;
+if (typeof content === "undefined") {
+  ContentXMLHttpRequest = XMLHttpRequest;
+  Content_fetch = fetch;
+} else {
+  ContentXMLHttpRequest = content.XMLHttpRequest;
+  Content_fetch = content.fetch;
+}
+
 let browserId;
 let model = {
   fetching: new Map(),
@@ -38,7 +48,7 @@ document.addEventListener("keyup", (event) => {
 
 function register() {
   return new Promise((resolve, reject) => {
-    let req = new content.XMLHttpRequest();
+    let req = new ContentXMLHttpRequest();
     req.open("POST", "/register");
     req.setRequestHeader("Content-Type", "application/json");
     req.onload = () => {
@@ -55,42 +65,68 @@ function register() {
 }
 
 function sendHistory(historyItems) {
-  let req = new content.XMLHttpRequest();
-  req.open("POST", "/add-history");
-  req.setRequestHeader("Content-Type", "application/json");
-  req.onload = () => {
-    if (req.status != 200) {
-      console.error("Bad response to /add-history:", req.status);
-    } else {
-      refresh();
-    }
-  };
-  console.log("sending history", JSON.stringify(historyItems));
-  req.send(JSON.stringify({
-    browserId,
-    items: historyItems
-  }));
+  return new Promise((resolve, reject) => {
+    let req = new ContentXMLHttpRequest();
+    req.open("POST", "/add-history");
+    req.setRequestHeader("Content-Type", "application/json");
+    req.onload = () => {
+      if (req.status != 200) {
+        console.error("Bad response to /add-history:", req.status);
+        reject(req);
+      } else {
+        for (let item of historyItems) {
+          let last = item.lastVisitTime;
+          if (!model.latest) {
+            model.latest = last;
+          } else if (model.latest < last) {
+            model.latest = last;
+          }
+          if (!model.oldest) {
+            model.oldest = last;
+          } else if (model.oldest > last) {
+            model.oldest = last;
+          }
+        }
+        refresh();
+        resolve();
+      }
+    };
+    console.log("sending history", JSON.stringify(historyItems));
+    req.send(JSON.stringify({
+      browserId,
+      items: historyItems
+    }));
+  });
 }
 
 document.querySelector("#sendHistory").addEventListener("click", () => {
-  let endTime = document.querySelector(".oldest").textContent;
-  if (!endTime || endTime == "null") {
-    endTime = Date.now();
-  }
-  endTime = parseInt(endTime, 10);
-  let latest = document.querySelector(".latest").textContent;
-  if (!latest || latest == "null") {
-    latest = Date.now();
-  }
-  latest = parseInt(latest, 10)
+  let continuous = document.querySelector("#sendHistoryContinuous").checked;
+  let endTime = model.oldest || Date.now();
+  let latest = model.latest || Date.now();
   console.log("sending history since", endTime, "or until", latest);
-  sendSomeHistory(endTime, latest);
+  if (continuous) {
+    sendContinuousHistory();
+  } else {
+    sendSomeHistory(endTime, latest);
+  }
 }, false);
+
+function sendContinuousHistory() {
+  let endTime = model.oldest || Date.now();
+  let latest = model.latest || Date.now();
+  console.log("Starting continuous history sending");
+  return sendSomeHistory(endTime, latest).then((anySent) => {
+    if (anySent) {
+      console.log("Sending another batch!");
+      return sendContinuousHistory();
+    }
+  });
+}
 
 function sendSomeHistory(endTime, latest) {
   return browser.runtime.sendMessage({
     type: "history.search",
-    maxResults: 100,
+    maxResults: 1000,
     endTime: endTime - 1
   }).then((results) => {
     if (!results.length) {
@@ -105,14 +141,19 @@ function sendSomeHistory(endTime, latest) {
           console.log("No recent items to send");
           model.historyStatus = "fully up to date";
           refresh();
+          return false;
         } else {
           model.historyStatus = `Up to date with ${results.length} recent items`;
-          return sendHistory(results);
+          return sendHistory(results).then(() => {
+            return true;
+          });
         }
       });
     }
     model.historyStatus = `Sent ${results.length} old items`;
-    return sendHistory(results);
+    return sendHistory(results).then(() => {
+      return true;
+    });
   });
 }
 
@@ -125,7 +166,7 @@ fetchSomeButton.addEventListener("click", () => {
   }
   abortWorker = false;
   fetchSomeButton.textContent = "Stop fetching";
-  content.fetch("/get-needed-pages").then((resp) => {
+  Content_fetch("/get-needed-pages").then((resp) => {
     return resp.json();
   }).then((pages) => {
     for (let url of pages) {
@@ -137,7 +178,7 @@ fetchSomeButton.addEventListener("click", () => {
 }, false);
 
 function refresh() {
-  let req = new content.XMLHttpRequest();
+  let req = new ContentXMLHttpRequest();
   req.open("GET", `/status?browserId=${encodeURIComponent(browserId)}`);
   req.onload = () => {
     let data = JSON.parse(req.responseText);
@@ -149,7 +190,7 @@ function refresh() {
 }
 
 function getRemoteHistory() {
-  return content.fetch("/get-history").then((resp) => {
+  return Content_fetch("/get-history").then((resp) => {
     return resp.json();
   }).then((rows) => {
     model.history = rows;
@@ -171,17 +212,26 @@ function render() {
   }
   if (model.history) {
     let table = document.querySelector("#history-items");
-    table.innerHTML = '<tr><th>Title</th><th>URL</th><th>Fetched</th></tr>';
+    table.innerHTML = '<tr><th>Title</th><th>URL</th><th>Visit</th><th>Fetched</th></tr>';
     for (let h of model.history) {
       let tr = document.createElement('tr');
       let title = document.createElement('td');
       title.textContent = h.title;
       let url = document.createElement('td');
       url.textContent = h.url;
+      let visit = document.createElement('td');
+      visit.textContent = (new Date(h.lastVisitTime)).toLocaleDateString("en-US", {
+        year: "2-digit",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
       let fetched = document.createElement('td');
       fetched.textContent = h.fetched;
       tr.appendChild(title);
       tr.appendChild(url);
+      tr.appendChild(visit);
       tr.appendChild(fetched);
       table.appendChild(tr);
     }
@@ -276,7 +326,7 @@ function fetchPage(url) {
 
 function sendPage(url, pageData) {
   console.log("sending", url, JSON.stringify(pageData));
-  return content.fetch("/add-fetched-page", {
+  return Content_fetch("/add-fetched-page", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

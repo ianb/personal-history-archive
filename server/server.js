@@ -26,8 +26,8 @@ const db = new sqlite3.Database("./history.sqlite", () => {
     );
 
     CREATE TABLE IF NOT EXISTS history (
+      browser_history_id TEXT UNIQUE PRIMARY KEY,
       browser TEXT REFERENCES browsers (id),
-      browser_history_id TEXT PRIMARY_KEY,
       url TEXT,
       title TEXT,
       lastVisitTime TIMESTAMP,
@@ -103,9 +103,9 @@ app.post("/add-history", function(req, res) {
     item.typedCount = item.typedCount || 0;
     console.log("Added history", item);
     promise = promise.then(dbRun(`
-        INSERT INTO history (browser, browser_history_id, url, title, lastVisitTime, visitCount, typedCount)
+        INSERT OR REPLACE INTO history (browser_history_id, browser, url, title, lastVisitTime, visitCount, typedCount)
         VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, req.body.browserId, item.id, item.url, item.title, item.lastVisitTime, item.visitCount, item.typedCount)
+      `, item.id, req.body.browserId, item.url, item.title, item.lastVisitTime, item.visitCount, item.typedCount)
     );
   }
   promise.then(() => {
@@ -142,9 +142,9 @@ app.post("/register", function(req, res) {
 
 app.get("/get-history", function(req, res) {
   dbAll(`
-    SELECT history.url, history.title, page.fetched FROM history
+    SELECT history.url, history.title, history.lastVisitTime, page.fetched FROM history
     LEFT JOIN page ON page.url = history.url
-    ORDER BY lastVisitTime DESC
+    ORDER BY history.lastVisitTime DESC
     LIMIT 100
   `).then((rows) => {
     console.log("sending", rows);

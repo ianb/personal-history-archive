@@ -32,19 +32,31 @@ browser.runtime.onMessage.addListener((message) => {
   if (message.type == "init") {
     return Promise.resolve({browserId});
   } else if (message.type == "history.search") {
+    console.log("Searching from", message.startTime || 0, "to", message.endTime, String(new Date(message.endTime)), "for max", message.maxResults);
     return browser.history.search({
       text: "",
       startTime: message.startTime || 0,
       endTime: message.endTime,
       maxResults: message.maxResults
+    }).then((results) => {
+      let correctResults = [];
+      // Workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=1419197
+      for (let result of results) {
+        console.log(String(new Date(result.lastVisitTime)), result.id, result.lastVisitTime > message.endTime);
+        if (result.lastVisitTime < message.endTime) {
+          correctResults.push(result);
+        }
+      }
+      console.log("Sending", correctResults.length, "/", results.length);
+      return correctResults;
     });
   } else if (message.type == "fetchPage") {
     return fetchPage(message.url);
   } else if (message.type == "escapeKey") {
-    browser.tabs.query({
-      currentWindow: true,
-      url: [SERVER + "/*", SERVER_BASE + "/*"]
-    }).then((tabs) => {
+    getServerPage().then((tabs) => {
+      if (!tabs) {
+        return;
+      }
       for (let tab of tabs) {
         browser.tabs.sendMessage(tab.id, {
           type: "escapeKey"
@@ -58,17 +70,32 @@ browser.runtime.onMessage.addListener((message) => {
 });
 
 browser.browserAction.onClicked.addListener(() => {
-  browser.tabs.query({
-    currentWindow: true,
-    url: [SERVER + "/*", SERVER_BASE + "/*"]
-  }).then((tabs) => {
-    if (tabs.length) {
+  getServerPage().then((tabs) => {
+    if (tabs) {
       browser.tabs.update(tabs[0].id, {active: true});
     } else {
       browser.tabs.create({url: SERVER, pinned: true});
     }
   });
 });
+
+function getServerPage() {
+  return browser.tabs.query({
+    currentWindow: true,
+    url: [SERVER + "/*", SERVER_BASE + "/*"]
+  }).then((tabs) => {
+    let filtered = [];
+    for (let tab of tabs) {
+      if (tab.url.startsWith(SERVER)) {
+        filtered.push(tab);
+      }
+    }
+    if (!filtered.length) {
+      return null;
+    }
+    return filtered;
+  });
+}
 
 function fetchPage(url) {
   let focusTimer = null;
