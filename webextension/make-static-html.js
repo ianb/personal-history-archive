@@ -26,18 +26,20 @@ function makeUuid() { // eslint-disable-line no-unused-vars
   });
 }
 
-let CONFIG = {
-};
-
 const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   let exports = {};
 
-  // This is an option that gets set by the caller of this module, but
-  // we store it in a global:
-  var prefInlineCss = false;
-  var allowUnknownAttributes = false;
-  var annotateForPage = true;
-  var debugInlineCss = true;
+  let CONFIG = {
+    // This tries to inline all CSS rules; unfortunately doesn't usually work
+    // due to permission issues:
+    inlineCss: false,
+    // Includes some information in the inlined CSS:
+    debugInlineCss: true,
+    // If false, then any attributes that aren't whitelisted will get removed:
+    allowUnknownAttributes: true,
+    // Includes the frozen HTML/DOM:
+    freezeHtml: true
+  };
 
   function getDocument() {
     return document;
@@ -425,7 +427,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       // but just to be double sure...
       return true;
     }
-    if (prefInlineCss) {
+    if (CONFIG.inlineCss) {
       if (el.tagName == "STYLE") {
         return true;
       }
@@ -439,7 +441,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   const BORING_SKIPS = ["http-equiv", "action", "name", "contenteditable"];
 
   function skipAttribute(attrName, el) {
-    if (allowUnknownAttributes) {
+    if (CONFIG.allowUnknownAttributes) {
       return attrName.toLowerCase().startsWith("on");
     }
     if (isSVGElement(el)) {
@@ -483,7 +485,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     let parts = html.split(/<\/head>/i);
     let base = `<base href="${htmlQuote(doc.location.href)}">`;
     let rules = '';
-    if (prefInlineCss) {
+    if (CONFIG.inlineCss) {
       rules = createStyle(doc);
     }
     html = `${parts[0]}\n<meta charset="UTF-8">\n${base}${rules}</head>${parts[1]}`;
@@ -582,7 +584,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       }
     }
     s += '>';
-    if (prefInlineCss && el.tagName == "HEAD") {
+    if (CONFIG.inlineCss && el.tagName == "HEAD") {
       s += createStyle(el.contentWindow.document);
     }
     if (el.tagName == "TEXTAREA") {
@@ -725,7 +727,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       skipRule: function (rule) {
         this.rulesOmitted++;
         this.charsOmitted += rule.cssText.length;
-        if (debugInlineCss) {
+        if (CONFIG.debugInlineCss) {
           let parentHref = rule.parentStyleSheet;
           parentHref = parentHref ? parentHref.href : "unknown";
           this.rules.push(`/* Omitted: ${rule.cssText} (from ${parentHref}) */`);
@@ -892,15 +894,15 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     console.info("serializing setup took " + (Date.now() - start) + " milliseconds");
 
     let promises = [];
-    if (body && annotateForPage) {
+    if (body && freezeHtml) {
       promises.push(asyncStaticChildren(body).then((bodyHtml) => {
         result.body = bodyHtml;
         console.info("static body serializing took " + (Date.now() - start) + " milliseconds");
       }));
     }
-    if (head && annotateForPage) {
+    if (head && freezeHtml) {
       promises.push(asyncStaticChildren(head).then((headHtml) => {
-        if (prefInlineCss) {
+        if (CONFIG.inlineCss) {
           let style = createStyle(getDocument());
           headHtml = style + headHtml;
         }
