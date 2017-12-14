@@ -292,6 +292,9 @@ function startWorker() {
     if (model.fetching.get(url)) {
       continue;
     }
+    if (model.failed.get(url)) {
+      continue;
+    }
     fetchPage(url);
     model.fetching.set(url, true);
     found++;

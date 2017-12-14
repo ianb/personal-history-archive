@@ -1,4 +1,4 @@
-/* globals setTimeout, btoa, console, document, window, makeUuid */
+/* globals setTimeout, btoa, console, document, window */
 /* exported makeStaticHtml */
 
 /** This file is used to turn the document into static HTML with no scripts
@@ -26,22 +26,11 @@ function makeUuid() { // eslint-disable-line no-unused-vars
   });
 }
 
+let CONFIG = {
+};
+
 const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   let exports = {};
-
-  let uuidGenerator;
-
-  // Handles makeUuid in Chrome, and uuidGenerator in Firefox
-  function genMakeUuid() {
-    if (uuidGenerator) {
-      var uuid = uuidGenerator.generateUUID();
-      uuid = uuid.toString();
-      // Strips off {}:
-      return uuid.substr(1, uuid.length-2);
-    } else {
-      return makeUuid();
-    }
-  }
 
   // This is an option that gets set by the caller of this module, but
   // we store it in a global:
@@ -117,7 +106,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     if (url.includes("#")) {
       [url, hash] = url.split("#")[1];
     }
-    let repl = genMakeUuid();
+    let repl = makeUuid();
     let match = (/\.(jpg|jpeg|gif|png|webm|css|html)$/).exec(url);
     if (match) {
       repl += "." + match[1];
