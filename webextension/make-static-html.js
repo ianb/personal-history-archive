@@ -38,7 +38,15 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     // If false, then any attributes that aren't whitelisted will get removed:
     allowUnknownAttributes: true,
     // Includes the frozen HTML/DOM:
-    freezeHtml: true
+    freezeHtml: true,
+    // Adds data-height/data-width to all images
+    sizeImages: true,
+    // Adds data-height/data-width to everything
+    sizeEverything: false,
+    // Excludes elements that don't appear to be visible
+    excludeHidden: false,
+    // Adds data-hidden to anything that we might otherwise exclude
+    annotateHidden: true,
   };
 
   function getDocument() {
@@ -381,8 +389,11 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     xmlns: "*"
   };
 
-  /** true if this element should be skipped/removed from the frozen DOM */
-  function skipElement(el) {
+  /** true if this element should be skipped/removed because it's not sensible to include in the frozen document
+
+  Note these elements are skipped even if excludeHidden is false.
+  */
+  function skipElementAsInvalid(el) {
     var tag = el.tagName;
     if (skipElementsBadTags[tag]) {
       return true;
@@ -390,26 +401,8 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     if (el.id == "pageshot-stylesheet" || (typeof el.className == "string" && el.className.startsWith("pageshot-"))) {
       return true;
     }
-    // Skip elements that can't be seen, and have no children, and are potentially
-    // "visible" elements (e.g., not STYLE)
-    // Note elements with children might have children with, e.g., absolute
-    // positioning -- so they might not make the parent have any width, but
-    // may still need to be displayed.
-    if (el.style && el.style.display == 'none') {
-      return true;
-    }
     if (el.tagName == "META" && el.getAttribute("http-equiv")) {
       return true;
-    }
-    if ((! skipElementsOKEmpty[tag]) && winGetComputedStyle(el).display == 'none') {
-      return true;
-    }
-    if ((el.clientWidth === 0 && el.clientHeight === 0) &&
-        (! skipElementsOKEmpty[tag]) &&
-        (! el.childNodes.length)) {
-      if (! isSVGElement(el)) {
-        return true;
-      }
     }
     if (el.tagName == "IFRAME" && ! el.contentWindow) {
       // FIXME: I'm not sure why this happens, but when it does we can't serialize
@@ -422,11 +415,6 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
         return true;
       }
     }
-    if (el.tagName == "INPUT" && (el.getAttribute("type") || '').search(/hidden/i) !== -1) {
-      // Probably hidden fields will get eliminated because they aren't visible
-      // but just to be double sure...
-      return true;
-    }
     if (CONFIG.inlineCss) {
       if (el.tagName == "STYLE") {
         return true;
@@ -434,6 +422,36 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       if (el.tagName == "LINK" && (el.getAttribute("rel") || "").toLowerCase() == "stylesheet") {
         return true;
       }
+    }
+    return false;
+  }
+
+
+  /** true if this element should be skipped/removed from the frozen DOM */
+  function isElementHidden(el) {
+    var tag = el.tagName;
+    // Skip elements that can't be seen, and have no children, and are potentially
+    // "visible" elements (e.g., not STYLE)
+    // Note elements with children might have children with, e.g., absolute
+    // positioning -- so they might not make the parent have any width, but
+    // may still need to be displayed.
+    if (el.style && el.style.display == 'none') {
+      return true;
+    }
+    if ((! skipElementsOKEmpty[tag]) && winGetComputedStyle(el).display == 'none') {
+      return true;
+    }
+    if ((el.clientWidth === 0 && el.clientHeight === 0) &&
+        (! skipElementsOKEmpty[tag]) &&
+        (! el.childNodes.length)) {
+      if (! isSVGElement(el)) {
+        return true;
+      }
+    }
+    if (el.tagName == "INPUT" && (el.getAttribute("type") || '').search(/hidden/i) !== -1) {
+      // Probably hidden fields will get eliminated because they aren't visible
+      // but just to be double sure...
+      return true;
     }
     return false;
   }
@@ -512,6 +530,13 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       }
     }
     var s = '<' + el.tagName;
+    if (!CONFIG.excludeHidden && CONFIG.annotateHidden && isElementHidden(el)) {
+      s += ' data-hidden="true"';
+    }
+    if (CONFIG.sizeEverything || (CONFIG.sizeImages && el.tagName == "IMG")) {
+      s += ` data-width="${el.clientWidth}"`;
+      s += ` data-height="${el.clientHeight}"`;
+    }
     var attrs = el.attributes;
     if (attrs && attrs.length) {
       var l = attrs.length;
@@ -645,7 +670,10 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       if (child.nodeType == TEXT_NODE) {
         pieces.push(htmlQuote(child.nodeValue, true));
       } else if (child.nodeType == ELEMENT_NODE) {
-        if (skipElement(child)) {
+        if (skipElementAsInvalid(child)) {
+          continue;
+        }
+        if (config.excludeHidden && isElementHidden(child)) {
           continue;
         }
         if (l >= childLimit) {
