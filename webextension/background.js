@@ -106,10 +106,14 @@ function getServerPage() {
 function fetchPage(url) {
   let focusTimer = null;
   let startTime = Date.now();
+  if (url.startsWith("https://www.youtube.com/watch?")) {
+    // This keeps the YouTube videos from auto-playing:
+    url += "&start=86400";
+  }
   return browser.tabs.create({url, active: false}).then((tab) => {
     focusTimer = setInterval(() => {
       browser.tabs.update(tab.id, {active: true});
-    }, 5000);
+    }, 10000);
     return browser.tabs.executeScript(tab.id, {
       file: "escape-catcher.js",
       runAt: "document_start"
