@@ -922,13 +922,13 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     console.info("serializing setup took " + (Date.now() - start) + " milliseconds");
 
     let promises = [];
-    if (body && freezeHtml) {
+    if (body && CONFIG.freezeHtml) {
       promises.push(asyncStaticChildren(body).then((bodyHtml) => {
         result.body = bodyHtml;
         console.info("static body serializing took " + (Date.now() - start) + " milliseconds");
       }));
     }
-    if (head && freezeHtml) {
+    if (head && CONFIG.freezeHtml) {
       promises.push(asyncStaticChildren(head).then((headHtml) => {
         if (CONFIG.inlineCss) {
           let style = createStyle(getDocument());
