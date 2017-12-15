@@ -93,6 +93,8 @@ app.get("/status", function(req, res) {
     result.fetchedCount = row.fetched_count;
     result.unfetchedCount = result.historyCount - result.fetchedCount;
     res.send(result);
+  }).catch((error) => {
+    res.status(500).type("text").send(String(error));
   });
 });
 
@@ -118,6 +120,8 @@ app.post("/add-history", function(req, res) {
     `, req.body.browserId, req.body.browserId);
   }).then(() => {
     res.send("OK");
+  }).catch((error) => {
+    res.status(500).type("text").send(String(error));
   });
 });
 
@@ -130,13 +134,15 @@ app.post("/register", function(req, res) {
     if (row) {
       res.send("Already created");
     } else {
-      dbRun(`
+      return dbRun(`
         INSERT INTO browsers (id)
         VALUES ($1)
       `, browserId).then(() => {
         res.send("Created");
       });
     }
+  }).catch((error) => {
+    res.status(500).type("text").send(String(error));
   });
 });
 
@@ -149,6 +155,8 @@ app.get("/get-history", function(req, res) {
   `).then((rows) => {
     console.log("sending", rows);
     res.send(rows);
+  }).catch((error) => {
+    res.status(500).type("text").send(String(error));
   });
 });
 
@@ -166,6 +174,8 @@ app.get("/get-needed-pages", function(req, res) {
       result.push(row.url);
     }
     res.send(result);
+  }).catch((error) => {
+    res.status(500).type("text").send(String(error));
   });
 });
 
@@ -197,6 +207,8 @@ app.post("/add-fetched-page", function(req, res) {
         res.send("OK");
       }
     });
+  }).catch((error) => {
+    res.status(500).type("text").send(String(error));
   });
 });
 
@@ -206,7 +218,7 @@ app.use("/", express.static(path.join(__dirname, "static"), {
 }));
 
 app.use(function(err, req, res, next) {
-  console.log("Error:", err+"", "\n", err.stack, "\n\n");
+  console.log("Error:", String(err), "\n", err.stack, "\n\n");
   res.header("Content-Type", "text/plain; charset=utf-8");
   res.status(500);
   let message = "Error:";
@@ -219,6 +231,6 @@ app.use(function(err, req, res, next) {
   res.send(message);
 });
 
-server = http.createServer(app);
+let server = http.createServer(app);
 server.listen(11180);
 console.log("Listening on http://localhost:11180");

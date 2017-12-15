@@ -1,0 +1,34 @@
+env:
+  browser: true
+  es6: true
+  node: true
+
+extends:
+  - eslint:recommended
+  - plugin:mozilla/recommended
+
+parserOptions:
+  sourceType: module
+
+plugins:
+  - mozilla
+  - promise
+
+root: true
+
+rules:
+  consistent-return: off # TODO: remove, and default to mozilla/recommended of "error"
+  eqeqeq: off # TODO: change to "error"
+  no-console: [warn, {allow: [debug, error, info, trace, warn]}]
+  no-var: off # TODO: change to "error"
+  prefer-const: off # TODO: change to "error"
+  quotes: [off, double] # TODO: change to "error"
+
+  promise/always-return: off
+  promise/avoid-new: off
+  promise/catch-or-return: error
+  promise/no-callback-in-promise: off
+  promise/no-native: off
+  promise/no-nesting: off
+  promise/no-promise-in-callback: off
+  promise/param-names: error

@@ -26,7 +26,7 @@ function makeUuid() { // eslint-disable-line no-unused-vars
   });
 }
 
-const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
+const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   let exports = {};
 
   let CONFIG = {
@@ -68,14 +68,14 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   /** Does standard HTML quoting, if `leaveQuote` is true it doesn't do &quot; */
   function htmlQuote(s, leaveQuote) {
     /* Does minimal quoting of a string for embedding as a literal in HTML */
-    if (! s) {
+    if (!s) {
       return s;
     }
     if (s.search(/[&<"]/) == -1) {
       return s;
     }
     s = s.replace(/&/g, "&amp;").replace(/</g, '&lt;');
-    if (! leaveQuote) {
+    if (!leaveQuote) {
       s = s.replace(/\042/g, "&quot;");
     }
     return s;
@@ -188,10 +188,10 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     accept: ['form', 'input'],
     'accept-charset': ['form', 'input'],
     accesskey: '*',
-    //action: ['form'],
+    // action: ['form'],
     align: '*',
     alt: ['applet', 'area', 'img', 'input'],
-    //async: ['script'],
+    // async: ['script'],
     autocomplete: ['form', 'input'],
     autofocus: ['button', 'input', 'select', 'textarea'],
     autoplay: ['audio', 'video'],
@@ -203,13 +203,13 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     checked: ['input'],
     cite: ['blockquote', 'del', 'ins', 'q'],
     "class": "*",
-    //code: ['applet'],
-    //codebase: ['applet'],
+    // code: ['applet'],
+    // codebase: ['applet'],
     color: ['basefont', 'font', 'hr'],
     cols: ['textarea', 'frameset'],
     colspan: ['td', 'th'],
     content: ['meta'],
-    //contenteditable: "*",
+    // contenteditable: "*",
     // FIXME: should we skip contextmenu, since the menus can't do anything?
     contextmenu: "*",
     controls: ['audio', 'video'],
@@ -217,17 +217,17 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     data: ['object'],
     datetime: ['del', 'ins', 'time'],
     "default": ['track'],
-    //defer: ['script'],
+    // defer: ['script'],
     dir: "*",
     dirname: ['input', 'textarea'],
     disabled: ['button', 'fieldset', 'input', 'optgroup', 'option', 'select', 'textarea'],
     download: ['a', 'area'],
-    //draggable: "*",
-    //dropzone: "*",
+    // draggable: "*",
+    // dropzone: "*",
     enctype: ['form'],
     "for": ['label', 'output'],
     form: ['button', 'fieldset', 'input', 'label', 'meter', 'object', 'output', 'progress', 'select', 'textarea'],
-    //formaction: ['input', 'button'],
+    // formaction: ['input', 'button'],
     headers: ['td', 'th'],
     height: ['canvas', 'embed', 'iframe', 'img', 'input', 'object', 'video', 'td', 'th'],
     // FIXME: should check that hidden elements are skipped
@@ -235,17 +235,17 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     high: ['meter'],
     href: ['a', 'area', 'base', 'link'],
     hreflang: ['a', 'area', 'link'],
-    //"http-equiv": ['meta'],
+    // "http-equiv": ['meta'],
     id: "*",
     ismap: ['img'],
     kind: ['track'],
     label: ['track', 'option', 'optgroup'],
     lang: "*",
-    //language: ['script'],
+    // language: ['script'],
     list: ['input'],
     loop: ['audio', 'bgsound', 'marquee', 'video', 'embed'],
     low: ['meter'],
-    //manifest: ['html'],
+    // manifest: ['html'],
     max: ['input', 'meter', 'progress'],
     maxlength: ['input', 'textarea'],
     media: ['a', 'area', 'link', 'source', 'style'],
@@ -334,7 +334,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     text: ['body'],
     valign: ['col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'iframe'],
     valuetype: ['param'],
-    //version: ['html'],
+    // version: ['html'],
     vspace: ['applet', 'img', 'object', 'iframe'],
     // from https://developer.apple.com/library/iad/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/Attributes.html
     "aria-checked": "*",
@@ -404,7 +404,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     if (el.tagName == "META" && el.getAttribute("http-equiv")) {
       return true;
     }
-    if (el.tagName == "IFRAME" && ! el.contentWindow) {
+    if (el.tagName == "IFRAME" && !el.contentWindow) {
       // FIXME: I'm not sure why this happens, but when it does we can't serialize
       // the iframe usefully
       return true;
@@ -438,13 +438,13 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     if (el.style && el.style.display == 'none') {
       return true;
     }
-    if ((! skipElementsOKEmpty[tag]) && winGetComputedStyle(el).display == 'none') {
+    if ((!skipElementsOKEmpty[tag]) && winGetComputedStyle(el).display == 'none') {
       return true;
     }
     if ((el.clientWidth === 0 && el.clientHeight === 0) &&
-        (! skipElementsOKEmpty[tag]) &&
-        (! el.childNodes.length)) {
-      if (! isSVGElement(el)) {
+        (!skipElementsOKEmpty[tag]) &&
+        (!el.childNodes.length)) {
+      if (!isSVGElement(el)) {
         return true;
       }
     }
@@ -472,8 +472,8 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     }
     let tagName = el.tagName.toLowerCase();
     let tags = ATTRIBUTES[attrName];
-    if (! tags) {
-      if (! attrName.startsWith("data-") && ! BORING_SKIPS.includes(attrName)) {
+    if (!tags) {
+      if (!attrName.startsWith("data-") && !BORING_SKIPS.includes(attrName)) {
         console.info("Skipping unknown attribute", attrName, "on", tagName);
       }
       return true;
@@ -483,12 +483,11 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     }
     if (tags.includes(tagName)) {
       return false;
-    } else {
-      if (! BORING_SKIPS.includes(attrName)) {
-        console.info("Attribute", attrName, "not expected on", tagName);
-      }
-      return true;
     }
+    if (!BORING_SKIPS.includes(attrName)) {
+      console.info("Attribute", attrName, "not expected on", tagName);
+    }
+    return true;
   }
 
   // This is quite a bit faster than looking up these numbers all the time:
@@ -513,7 +512,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   /** Converts the element to static HTML, dropping anything that isn't static
       The element must not be one that should be skipped.
       */
-  function staticHTML(el, childLimit) {
+  function staticHTML(el, childLimit) { // eslint-disable-line complexity
     if (el.tagName == 'CANVAS') {
       return '<IMG SRC="' + htmlQuote(el.toDataURL('image/png')) + '">';
     }
@@ -524,7 +523,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
         replSrc = encodeData('text/html', html);
       } catch (e) {
         if (e.name !== "InvalidCharacterError") {
-          console.warn('Had to skip iframe for permission reasons:', e+"", "(" + e.name + ")");
+          console.warn('Had to skip iframe for permission reasons:', e + "", "(" + e.name + ")");
         }
         replSrc = encodeData('text/html', NULL_IFRAME);
       }
@@ -540,7 +539,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     var attrs = el.attributes;
     if (attrs && attrs.length) {
       var l = attrs.length;
-      for (var i=0; i<l; i++) {
+      for (var i = 0; i < l; i++) {
         var name = attrs[i].name;
         if (name.substr(0, 2).toLowerCase() == "on") {
           continue;
@@ -597,14 +596,14 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       if (elType.search(/password/) !== -1) {
         // do nothing, don't save value
       } else if (elType === "checkbox" || elType == "radio") {
-        if ((! el.hasAttribute("checked")) && el.checked) {
+        if ((!el.hasAttribute("checked")) && el.checked) {
           s += " checked";
         }
-      } else if ((! el.hasAttribute("value")) && el.value) {
+      } else if ((!el.hasAttribute("value")) && el.value) {
         s += ' value="' + htmlQuote(el.value) + '"';
       }
     } else if (el.tagName == "OPTION") {
-      if ((! el.hasAttribute("selected")) && el.selected) {
+      if ((!el.hasAttribute("selected")) && el.selected) {
         s += " selected";
       }
     }
@@ -623,11 +622,10 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       s += childrenHTML;
       s += '</' + el.tagName + '>';
       return s;
-    } else {
-      return childrenHTML.then(function (html) {
-        return s + html + '</' + el.tagName + '>';
-      });
     }
+    return childrenHTML.then(function(html) {
+      return s + html + '</' + el.tagName + '>';
+    });
   }
 
   /** Returns a list of [[attrName, attrValue]] */
@@ -637,7 +635,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     var attrs = el.attributes;
     if (attrs && attrs.length) {
       var l = attrs.length;
-      for (var i=0; i<l; i++) {
+      for (var i = 0; i < l; i++) {
         var name = attrs[i].name;
         if (name.substr(0, 2).toLowerCase() == "on") {
           continue;
@@ -665,7 +663,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
     var l = children.length;
     let pieces = [];
     let promises = [];
-    for (let i=0; i<l; i++) {
+    for (let i = 0; i < l; i++) {
       let child = children[i];
       if (child.nodeType == TEXT_NODE) {
         pieces.push(htmlQuote(child.nodeValue, true));
@@ -673,24 +671,24 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
         if (skipElementAsInvalid(child)) {
           continue;
         }
-        if (config.excludeHidden && isElementHidden(child)) {
+        if (CONFIG.excludeHidden && isElementHidden(child)) {
           continue;
         }
         if (l >= childLimit) {
           pieces.push("");
-          promises.push(insertInto(doSoon(staticHTML, child, childLimit), pieces, pieces.length-1));
+          promises.push(insertInto(doSoon(staticHTML, child, childLimit), pieces, pieces.length - 1));
         } else {
           let result = staticHTML(child, childLimit);
           if (typeof result == "string") {
             pieces.push(result);
           } else {
             pieces.push("");
-            promises.push(insertInto(result, pieces, pieces.length-1));
+            promises.push(insertInto(result, pieces, pieces.length - 1));
           }
         }
       }
     }
-    if (! promises.length) {
+    if (!promises.length) {
       return pieces.join("");
     }
     return Promise.all(promises).then(() => {
@@ -700,11 +698,11 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
 
   function doSoon(func, ...args) {
     return new Promise((resolve, reject) => {
-      setTimeout(function () {
+      setTimeout(function() {
         try {
           let result = func.apply(null, args);
           if (result.then) {
-            result.then(resolve, reject);
+            result.then(resolve, reject); // eslint-disable-line promise/catch-or-return
           } else {
             resolve(result);
           }
@@ -727,7 +725,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       if (typeof result == "string") {
         resolve(result);
       } else {
-        result.then(resolve, reject);
+        result.then(resolve, reject); // eslint-disable-line promise/catch-or-return
       }
     });
   }
@@ -739,20 +737,20 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       rulesOmitted: 0,
       charsOmitted: 0,
       rules: [],
-      addRule: function (rule) {
+      addRule(rule) {
         this.rulesKept++;
         this.rules.push(resolveCssText(rule));
       },
       mediaRules: {},
-      addMediaRule: function (media, rule) {
+      addMediaRule(media, rule) {
         this.rulesKept++;
         let mediaText = media.cssText.split("{")[0].trim();
-        if (! this.mediaRules[mediaText]) {
+        if (!this.mediaRules[mediaText]) {
           this.mediaRules[mediaText] = [];
         }
         this.mediaRules[mediaText].push(resolveCssText(rule));
       },
-      skipRule: function (rule) {
+      skipRule(rule) {
         this.rulesOmitted++;
         this.charsOmitted += rule.cssText.length;
         if (CONFIG.debugInlineCss) {
@@ -761,7 +759,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
           this.rules.push(`/* Omitted: ${rule.cssText} (from ${parentHref}) */`);
         }
       },
-      toString: function () {
+      toString() {
         let styles = [];
         for (let rule of this.rules) {
           styles.push(rule);
@@ -780,7 +778,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
           header.push("       " + href);
         }
         header.push(`   Kept ${this.rulesKept}/${this.rulesKept + this.rulesOmitted} rules`);
-        header.push(`   Omitted ${this.charsOmitted} characters; kept ${styles.length} (saved ${Math.floor(100*this.charsOmitted/(this.charsOmitted + styles.length))}%)`);
+        header.push(`   Omitted ${this.charsOmitted} characters; kept ${styles.length} (saved ${Math.floor(100 * this.charsOmitted / (this.charsOmitted + styles.length))}%)`);
         header = htmlQuote(header.join("\n"), true) + " */";
         return `<style type="text/css">\n${header}\n${htmlQuote(styles, true)}\n</style>`;
       }
@@ -800,7 +798,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
         }
         // Print- or speech-only stylesheet
         // FIXME: these should be included except with the appropriate media restriction
-        if (! anyFound) {
+        if (!anyFound) {
           continue;
         }
       }
@@ -813,7 +811,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
   /** Gets the rule's .cssText, but also rewrites url("...") and sets resources */
   function resolveCssText(rule) {
     let text = rule.cssText;
-    text = text.replace(/url\("([^"]*)"\)/gi, function (match, url) {
+    text = text.replace(/url\("([^"]*)"\)/gi, function(match, url) {
       if (url.search(/^data:/i) !== -1) {
         return match;
       }
@@ -871,7 +869,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       } catch (e) {
         matchesElements = !!doc.querySelector(origSel);
       }
-      if (! matchesElements) {
+      if (!matchesElements) {
         result.skipRule(rule);
         continue;
       }
@@ -938,7 +936,7 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
         console.info("static head serializing took " + (Date.now() - start) + " milliseconds");
       }));
     }
-    return Promise.all(promises).then(function () {
+    return Promise.all(promises).then(function() {
       return result;
     });
   }
@@ -964,13 +962,13 @@ const makeStaticHtml = (function () { // eslint-disable-line no-unused-vars
       let value;
       if (elems.length > 1) {
         value = [];
-        for (let i=0; i<elems.length; i++) {
+        for (let i = 0; i < elems.length; i++) {
           let v = elems[i].getAttribute("content");
           if (v) {
             value.push(v);
           }
         }
-        if (! value.length) {
+        if (!value.length) {
           value = null;
         }
       } else if (elems.length === 1) {

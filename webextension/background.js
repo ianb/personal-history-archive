@@ -1,6 +1,8 @@
+/* globals browser */
+
 let browserId;
-const SERVER = "http://localhost:11180"
-const SERVER_BASE = "http://localhost"
+const SERVER = "http://localhost:11180";
+const SERVER_BASE = "http://localhost";
 
 browser.storage.local.get(["browserId"]).then((result) => {
   if (!result.browserId) {
@@ -64,6 +66,8 @@ browser.runtime.onMessage.addListener((message) => {
           console.error("Error sending message to tab:", error);
         });
       }
+    }).catch((error) => {
+      console.error("Error in getServerPage:", error);
     });
   }
   throw new Error("Bad message: " + JSON.stringify(message));
@@ -76,6 +80,8 @@ browser.browserAction.onClicked.addListener(() => {
     } else {
       browser.tabs.create({url: SERVER, pinned: true});
     }
+  }).catch((error) => {
+    console.error("Error in getServerPage:", error);
   });
 });
 

@@ -1,6 +1,6 @@
+/* globals content, browser */
+
 const DEFAULT_PAGE_LIMIT = 6;
-const HISTORY_PAGE_TIME = 24*60*60*1000; // 1 day
-const HISTORY_START = Date.now() - (20*365*24*60*60*1000); // 20 years ago
 
 let ContentXMLHttpRequest;
 let Content_fetch;
@@ -24,6 +24,8 @@ setTimeout(() => {
   }).then((result) => {
     browserId = result.browserId;
     return register().then(refresh);
+  }).catch((error) => {
+    console.error("Error initializing:", error);
   });
 }, 200);
 
@@ -44,7 +46,7 @@ document.addEventListener("keyup", (event) => {
   if ((event.code || event.key) == "Escape") {
     abortWorkerNow();
   }
-}, false);
+});
 
 function register() {
   return new Promise((resolve, reject) => {
@@ -109,7 +111,7 @@ document.querySelector("#sendHistory").addEventListener("click", () => {
   } else {
     sendSomeHistory(endTime, latest);
   }
-}, false);
+});
 
 function sendContinuousHistory() {
   let endTime = model.oldest || Date.now();
@@ -142,12 +144,11 @@ function sendSomeHistory(endTime, latest) {
           model.historyStatus = "fully up to date";
           refresh();
           return false;
-        } else {
-          model.historyStatus = `Up to date with ${results.length} recent items`;
-          return sendHistory(results).then(() => {
-            return true;
-          });
         }
+        model.historyStatus = `Up to date with ${results.length} recent items`;
+        return sendHistory(results).then(() => {
+          return true;
+        });
       });
     }
     model.historyStatus = `Sent ${results.length} old items`;
@@ -174,8 +175,10 @@ fetchSomeButton.addEventListener("click", () => {
     }
     startWorker();
     render();
+  }).catch((error) => {
+    console.error("Got error from /get-needed-pages:", error);
   });
-}, false);
+});
 
 function refresh() {
   let req = new ContentXMLHttpRequest();
@@ -247,9 +250,8 @@ function render() {
         return -1;
       } else if (a[0] < b[0]) {
         return 1;
-      } else {
-        return 1;
       }
+      return 1;
     });
     for (let [url, fetching] of items) {
       let li = document.createElement('li');
@@ -309,7 +311,7 @@ function fetchPage(url) {
   let start = Date.now();
   browser.runtime.sendMessage({
     type: "fetchPage",
-    url: url
+    url
   }).then((result) => {
     if (!result) {
       console.error("Error fetching url:", url);
