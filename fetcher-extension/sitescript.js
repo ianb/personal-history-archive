@@ -1,6 +1,7 @@
 /* globals content, browser */
 
 const DEFAULT_PAGE_LIMIT = 6;
+const SERVER = "http://localhost:11180";
 
 let ContentXMLHttpRequest;
 let Content_fetch;
@@ -193,7 +194,7 @@ function refresh() {
 }
 
 function getRemoteHistory() {
-  return Content_fetch("/get-history").then((resp) => {
+  return fetch(SERVER + "/get-history").then((resp) => {
     return resp.json();
   }).then((rows) => {
     model.history = rows;

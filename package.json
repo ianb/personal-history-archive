@@ -7,11 +7,14 @@
     "url": "https://github.com/ianb/personal-history-archive/issues"
   },
   "dependencies": {
+    "atob": "^2.0.3",
     "body-parser": "^1.18.2",
+    "btoa": "^1.1.2",
     "eslint-plugin-mozilla": "^0.4.10",
     "eslint-plugin-no-unsanitized": "^2.0.2",
     "eslint-plugin-promise": "^3.6.0",
     "express": "^4.16.2",
+    "firefox-profile": "^1.1.0",
     "readability": "git+https://github.com/mozilla/readability.git",
     "sqlite3": "^3.1.13",
     "web-ext": "^2.2.2",
@@ -26,6 +29,7 @@
   },
   "scripts": {
     "server": "node server/server.js",
-    "lint:js": "eslint ."
+    "lint:js": "eslint .",
+    "firefox-profile": "firefox-profile"
   }
 }

@@ -24,12 +24,12 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
       readable = result.readable;
       readableDiv = result.readableDiv;
     }
-    var images = findImages([
+    let images = findImages([
       {element: document.head, isReadable: false},
       {element: readableDiv, isReadable: true},
       {element: document.body, isReadable: false}]);
     console.info("Image time:", Date.now() - start, "ms");
-    var siteName = findSiteName();
+    let siteName = findSiteName();
     console.info("extractData time:", Date.now() - start, "ms");
     let passwordFields = [];
     for (let el of Array.from(document.querySelectorAll('input[type=password]'))) {
@@ -45,8 +45,8 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
 
   function extractReadable() {
     // Readability is destructive, so we have to run it on a copy
-    var loc = document.location;
-    var uri = {
+    let loc = document.location;
+    let uri = {
       spec: loc.href,
       host: loc.host,
       prePath: loc.protocol + "//" + loc.host,
@@ -65,15 +65,15 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
   }
 
   // Images smaller than either of these sizes are skipped:
-  var MIN_IMAGE_WIDTH = 250;
-  var MIN_IMAGE_HEIGHT = 200;
+  let MIN_IMAGE_WIDTH = 250;
+  let MIN_IMAGE_HEIGHT = 200;
 
   /** Finds images in any of the given elements, avoiding duplicates
       Looks for Open Graph og:image, then img elements, sorting img
       elements by width (largest preferred) */
   function findImages(elements) {
-    var images = [];
-    var found = {};
+    let images = [];
+    let found = {};
     function addImage(imgData) {
       if (!(imgData && imgData.url)) {
         return;
@@ -84,17 +84,17 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
       images.push(imgData);
       found[imgData.url] = true;
     }
-    for (var i = 0; i < elements.length; i++) {
-      var el = elements[i].element;
+    for (let i = 0; i < elements.length; i++) {
+      let el = elements[i].element;
       if (!el) {
         continue;
       }
-      var isReadable = elements[i].isReadable;
-      var ogs = el.querySelectorAll("meta[property='og:image'], meta[name='twitter:image']");
-      var j;
+      let isReadable = elements[i].isReadable;
+      let ogs = el.querySelectorAll("meta[property='og:image'], meta[name='twitter:image']");
+      let j;
       for (j = 0; j < ogs.length; j++) {
-        var src = ogs[j].getAttribute("content");
-        var a = document.createElement("a");
+        let src = ogs[j].getAttribute("content");
+        let a = document.createElement("a");
         a.href = src;
         src = a.href;
         if (src.search(/^https?/i) === -1) {
@@ -104,7 +104,7 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
           url: src
         });
       }
-      var imgs = el.querySelectorAll("img");
+      let imgs = el.querySelectorAll("img");
       imgs = Array.prototype.slice.call(imgs);
       // Widest images first:
       imgs.sort(function(a, b) {
@@ -114,7 +114,7 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
         return 1;
       });
       for (j = 0; j < imgs.length; j++) {
-        var img = imgs[j];
+        let img = imgs[j];
         if ((!img.src) || (img.src.search(/^https?/i) === -1)) {
           continue;
         }
@@ -146,9 +146,11 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
   }
 
   exports.documentStaticJson = function() {
-    let json = makeStaticHtml.documentStaticData();
-    Object.assign(json, exports.extractData());
-    return json;
+    let jsonPromise = Promise.resolve(makeStaticHtml.documentStaticData());
+    return jsonPromise.then((json) => {
+      Object.assign(json, exports.extractData());
+      return json;
+    });
   };
 
   return exports;

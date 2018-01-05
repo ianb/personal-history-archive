@@ -5,6 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const dataPath = path.join(__dirname, "../pages");
+const atob = require("atob");
 
 if (!fs.existsSync(dataPath)) {
   fs.mkdirSync(dataPath);
@@ -212,13 +213,18 @@ app.post("/add-fetched-page", function(req, res) {
   });
 });
 
+app.get("/echo", function(req, res) {
+  res.type(req.query.type);
+  res.send(req.query.content);
+});
+
 app.use("/", express.static(path.join(__dirname, "static"), {
   index: ["index.html"],
   maxAge: null
 }));
 
 app.use(function(err, req, res, next) {
-  console.log("Error:", String(err), "\n", err.stack, "\n\n");
+  console.error("Error:", String(err), "\n", err.stack, "\n\n");
   res.header("Content-Type", "text/plain; charset=utf-8");
   res.status(500);
   let message = "Error:";

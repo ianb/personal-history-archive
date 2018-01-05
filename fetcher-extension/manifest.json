@@ -24,7 +24,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["http://localhost/*"],
+      "matches": ["http://localhost/"],
       "js": [
         "browser-polyfill.js",
         "sitescript.js"

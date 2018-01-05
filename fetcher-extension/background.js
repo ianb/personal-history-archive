@@ -19,13 +19,13 @@ browser.storage.local.get(["browserId"]).then((result) => {
 
 function makeUuid() { // eslint-disable-line no-unused-vars
   // get sixteen unsigned 8 bit random values
-  var randomValues = window
+  let randomValues = window
     .crypto
     .getRandomValues(new Uint8Array(36));
 
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var i = Array.prototype.slice.call(arguments).slice(-2)[0]; // grab the `offset` parameter
-    var r = randomValues[i] % 16|0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    let i = Array.prototype.slice.call(arguments).slice(-2)[0]; // grab the `offset` parameter
+    let r = randomValues[i] % 16|0, v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
@@ -74,16 +74,34 @@ browser.runtime.onMessage.addListener((message) => {
 });
 
 browser.browserAction.onClicked.addListener(() => {
+  return browser.tabs.query({
+    active: true
+  }).then((tabs) => {
+    return scrapeTab(tabs[0].id);
+  }).then((json) => {
+    return browser.tabs.create({url: `${SERVER}/show-json.html`}).then((tab) => {
+      return browser.tabs.executeScript({
+        file: "inject-json.js"
+      }).then(() => {
+        return browser.tabs.sendMessage({json});
+      });
+    });
+  }).catch((error) => {
+    let s = `Error: ${error}\n\n${error.stack}`;
+    let errorUrl = `${SERVER}/echo?type=text/plain&content=${encodeURIComponent(s)}`;
+    browser.tabs.create({url: errorUrl});
+  });
+});
+
+setTimeout(() => {
   getServerPage().then((tabs) => {
-    if (tabs) {
-      browser.tabs.update(tabs[0].id, {active: true});
-    } else {
+    if (!tabs) {
       browser.tabs.create({url: SERVER, pinned: true});
     }
   }).catch((error) => {
     console.error("Error in getServerPage:", error);
   });
-});
+}, 2000);
 
 function getServerPage() {
   return browser.tabs.query({
@@ -103,6 +121,26 @@ function getServerPage() {
   });
 }
 
+function scrapeTab(tabId) {
+  return browser.tabs.executeScript(tabId, {
+    file: "make-static-html.js"
+  }).then(() => {
+    return browser.tabs.executeScript(tabId, {
+      file: "Readability.js"
+    });
+  }).then(() => {
+    return browser.tabs.executeScript(tabId, {
+      file: "extractor-worker.js"
+    });
+  }).then(() => {
+    return browser.tabs.executeScript(tabId, {
+      code: "extractorWorker.documentStaticJson()"
+    });
+  }).then((resultList) => {
+    return resultList[0];
+  });
+}
+
 function fetchPage(url) {
   let focusTimer = null;
   let startTime = Date.now();
@@ -118,30 +156,16 @@ function fetchPage(url) {
       file: "escape-catcher.js",
       runAt: "document_start"
     }).then(() => {
-      return browser.tabs.executeScript(tab.id, {
-        file: "make-static-html.js"
-      });
-    }).then(() => {
-      return browser.tabs.executeScript(tab.id, {
-        file: "Readability.js"
-      });
-    }).then(() => {
-      return browser.tabs.executeScript(tab.id, {
-        file: "extractor-worker.js"
-      });
-    }).then(() => {
-      return browser.tabs.executeScript(tab.id, {
-        code: "extractorWorker.documentStaticJson()"
-      }).then((resultList) => {
-        clearTimeout(focusTimer);
-        return browser.tabs.remove(tab.id).then(() => {
-          // Remove our own repeated visit:
-          browser.history.deleteRange({
-            startTime,
-            endTime: Date.now()
-          });
-          return resultList[0];
+      return scrapeTab(tab.id);
+    }).then((result) => {
+      clearTimeout(focusTimer);
+      return browser.tabs.remove(tab.id).then(() => {
+        // Remove our own repeated visit:
+        browser.history.deleteRange({
+          startTime,
+          endTime: Date.now()
         });
+        return result;
       });
     });
   }).catch((error) => {

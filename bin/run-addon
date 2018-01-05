@@ -106,9 +106,16 @@ fi
 profile_option1=
 profile_option2=
 if [[ -z "$scratch" ]] ; then
-  mkdir -p ./Profile
-  profile_option1="--firefox-profile"
-  profile_option2="./Profile/"
+  if [[ -e ./StickyProfile ]] ; then
+    echo "Using ./StickyProfile"
+    profile_option1="--keep-profile-changes --firefox-profile"
+    profile_option2="./StickyProfile"
+  else
+    echo "Creating ./Profile"
+    mkdir -p ./Profile
+    profile_option1="--firefox-profile"
+    profile_option2="./Profile/"
+  fi
 fi
 
 if [[ -n "$force_profile" ]] ; then
@@ -119,7 +126,7 @@ fi
 run_webext() {
   echo "Running Firefox.  You might want to go to:"
   echo "  about:debugging"
-  echo "and Debug Firefox Screenshots"
+  echo "and Debug PHA"
 
   $webext run --firefox "$binary" $profile_option1 "$profile_option2" --browser-console --source-dir ./webextension/
 }

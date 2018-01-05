@@ -1,5 +1,4 @@
 /* globals setTimeout, btoa, console, document, window */
-/* exported makeStaticHtml */
 
 /** This file is used to turn the document into static HTML with no scripts
 
@@ -15,13 +14,13 @@
 
 function makeUuid() { // eslint-disable-line no-unused-vars
   // get sixteen unsigned 8 bit random values
-  var randomValues = window
+  let randomValues = window
     .crypto
     .getRandomValues(new Uint8Array(36));
 
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var i = Array.prototype.slice.call(arguments).slice(-2)[0]; // grab the `offset` parameter
-    var r = randomValues[i] % 16|0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    let i = Array.prototype.slice.call(arguments).slice(-2)[0]; // grab the `offset` parameter
+    let r = randomValues[i] % 16|0, v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
 }
@@ -394,7 +393,7 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   Note these elements are skipped even if excludeHidden is false.
   */
   function skipElementAsInvalid(el) {
-    var tag = el.tagName;
+    let tag = el.tagName;
     if (skipElementsBadTags[tag]) {
       return true;
     }
@@ -429,7 +428,7 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
 
   /** true if this element should be skipped/removed from the frozen DOM */
   function isElementHidden(el) {
-    var tag = el.tagName;
+    let tag = el.tagName;
     // Skip elements that can't be seen, and have no children, and are potentially
     // "visible" elements (e.g., not STYLE)
     // Note elements with children might have children with, e.g., absolute
@@ -495,7 +494,7 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   const ELEMENT_NODE = getDocument().ELEMENT_NODE;
 
   // Used when an iframe fails to serialize:
-  var NULL_IFRAME = '<html><head><meta charset="UTF-8"></head><body></body></html>';
+  let NULL_IFRAME = '<html><head><meta charset="UTF-8"></head><body></body></html>';
 
   function staticHTMLDocument(doc) {
     let html = staticHTML(doc.documentElement);
@@ -516,10 +515,10 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     if (el.tagName == 'CANVAS') {
       return '<IMG SRC="' + htmlQuote(el.toDataURL('image/png')) + '">';
     }
-    var replSrc = null;
+    let replSrc = null;
     if (el.tagName == 'IFRAME') {
       try {
-        var html = staticHTMLDocument(el.contentWindow.document);
+        let html = staticHTMLDocument(el.contentWindow.document);
         replSrc = encodeData('text/html', html);
       } catch (e) {
         if (e.name !== "InvalidCharacterError") {
@@ -528,7 +527,7 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
         replSrc = encodeData('text/html', NULL_IFRAME);
       }
     }
-    var s = '<' + el.tagName;
+    let s = '<' + el.tagName;
     if (!CONFIG.excludeHidden && CONFIG.annotateHidden && isElementHidden(el)) {
       s += ' data-hidden="true"';
     }
@@ -536,18 +535,18 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       s += ` data-width="${el.clientWidth}"`;
       s += ` data-height="${el.clientHeight}"`;
     }
-    var attrs = el.attributes;
+    let attrs = el.attributes;
     if (attrs && attrs.length) {
-      var l = attrs.length;
-      for (var i = 0; i < l; i++) {
-        var name = attrs[i].name;
+      let l = attrs.length;
+      for (let i = 0; i < l; i++) {
+        let name = attrs[i].name;
         if (name.substr(0, 2).toLowerCase() == "on") {
           continue;
         }
         if (skipAttribute(name, el)) {
           continue;
         }
-        var value;
+        let value;
         if (name == 'rel' && el.tagName == "LINK") {
           // Remove any attempt to mark something as prefetch
           value = attrs[i].value;
@@ -592,7 +591,7 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       }
     }
     if (el.tagName === "INPUT") {
-      var elType = (el.getAttribute("type") || "text").toLowerCase();
+      let elType = (el.getAttribute("type") || "text").toLowerCase();
       if (elType.search(/password/) !== -1) {
         // do nothing, don't save value
       } else if (elType === "checkbox" || elType == "radio") {
@@ -630,13 +629,13 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
 
   /** Returns a list of [[attrName, attrValue]] */
   function getAttributes(el) {
-    var value;
-    var result = [];
-    var attrs = el.attributes;
+    let value;
+    let result = [];
+    let attrs = el.attributes;
     if (attrs && attrs.length) {
-      var l = attrs.length;
-      for (var i = 0; i < l; i++) {
-        var name = attrs[i].name;
+      let l = attrs.length;
+      for (let i = 0; i < l; i++) {
+        let name = attrs[i].name;
         if (name.substr(0, 2).toLowerCase() == "on") {
           continue;
         }
@@ -659,8 +658,8 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
 
   /** Traverses the children of an element and serializes that to text */
   function staticChildren(el, childLimit) {
-    var children = el.childNodes;
-    var l = children.length;
+    let children = el.childNodes;
+    let l = children.length;
     let pieces = [];
     let promises = [];
     for (let i = 0; i < l; i++) {
@@ -888,16 +887,16 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
 
   /** Creates an object that represents a frozen version of the document */
   function documentStaticData() {
-    var start = Date.now();
-    var result = {};
-    var body = getDocument().body;
+    let start = Date.now();
+    let result = {};
+    let body = getDocument().body;
     resources = {};
     result.bodyAttrs = null;
     if (body) {
       result.bodyAttrs = getAttributes(body);
     }
     result.headAttrs = null;
-    var head = getDocument().head;
+    let head = getDocument().head;
     if (head) {
       result.headAttrs = getAttributes(head);
     }
