@@ -5,7 +5,6 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const dataPath = path.join(__dirname, "../pages");
-const atob = require("atob");
 
 if (!fs.existsSync(dataPath)) {
   fs.mkdirSync(dataPath);
@@ -13,27 +12,29 @@ if (!fs.existsSync(dataPath)) {
 
 const db = new sqlite3.Database("./history.sqlite", () => {
   db.exec(`
-    CREATE TABLE IF NOT EXISTS browsers (
+    CREATE TABLE IF NOT EXISTS browser (
       id TEXT PRIMARY KEY,
       created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       latest INT,
       oldest INT
     );
 
-    CREATE TABLE IF NOT EXISTS ignore (
-      id TEXT PRIMARY KEY,
-      url_hash TEXT,
-      domain_hash TEXT
-    );
-
     CREATE TABLE IF NOT EXISTS history (
-      browser_history_id TEXT UNIQUE PRIMARY KEY,
-      browser TEXT REFERENCES browsers (id),
+      id TEXT UNIQUE PRIMARY KEY,
+      browser_id TEXT REFERENCES browser (id),
       url TEXT,
       title TEXT,
       lastVisitTime TIMESTAMP,
       visitCount INT NOT NULL DEFAULT 0,
       typedCount INT NOT NULL DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS visit (
+      id TEXT UNIQUE PRIMARY KEY,
+      history_id TEXT REFERENCES history (id),
+      visitTime TIMESTAMP,
+      referringVisitId TEXT REFERENCES visit (id),
+      transition TEXT
     );
 
     CREATE TABLE IF NOT EXISTS page (
@@ -69,10 +70,37 @@ function dbSomething(command, sql, ...params) {
   });
 }
 
+function sendError(error, res) {
+  let errString = `Error: ${error}`;
+  if (error.stack) {
+    errString += `\n${error.stack}`;
+  }
+  res.status(500).type("text").send(errString);
+  console.error(errString);
+}
+
 const app = express();
 
+app.use((req, res, next) => {
+  console.log("Incoming:", req.method, req.url);
+  next();
+});
+
 app.use(bodyParser.urlencoded({extended: false}));
-app.use(bodyParser.json({limit: '25mb'}));
+app.use(bodyParser.json({limit: '100mb'}));
+
+app.use((req, res, next) => {
+  // Everything is CORS-enabled
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "POST, GET, PUT, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Cookie, Content-Type, User-Agent");
+  if (req.method === "OPTIONS") {
+    res.type("text");
+    res.send("");
+    return;
+  }
+  next();
+});
 
 app.get("/status", function(req, res) {
   if (!req.query.browserId) {
@@ -84,8 +112,8 @@ app.get("/status", function(req, res) {
   dbGet(`
     SELECT
       (SELECT COUNT(*) FROM history) AS history_count,
-      (SELECT latest FROM browsers WHERE id = ?) AS latest,
-      (SELECT oldest FROM browsers WHERE id = ?) AS oldest,
+      (SELECT latest FROM browser WHERE id = ?) AS latest,
+      (SELECT oldest FROM browser WHERE id = ?) AS oldest,
       (SELECT COUNT(*) FROM history, page WHERE history.url = page.url) AS fetched_count
   `, req.query.browserId, req.query.browserId).then((row) => {
     result.historyCount = row.history_count;
@@ -95,55 +123,79 @@ app.get("/status", function(req, res) {
     result.unfetchedCount = result.historyCount - result.fetchedCount;
     res.send(result);
   }).catch((error) => {
-    res.status(500).type("text").send(String(error));
+    sendError(error, res);
   });
 });
 
-app.post("/add-history", function(req, res) {
-  console.log("Adding history", req.body);
+app.post("/add-history-list", function(req, res) {
+  console.log("got history list!");
+  let browserId = req.body.browserId;
+  let historyItems = req.body.historyItems;
   let promise = Promise.resolve();
-  for (let item of req.body.items) {
-    item.typedCount = item.typedCount || 0;
-    console.log("Added history", item);
-    promise = promise.then(dbRun(`
-        INSERT OR REPLACE INTO history (browser_history_id, browser, url, title, lastVisitTime, visitCount, typedCount)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-      `, item.id, req.body.browserId, item.url, item.title, item.lastVisitTime, item.visitCount, item.typedCount)
-    );
-  }
+  Object.keys(historyItems).forEach((historyId) => {
+    let historyItem = historyItems[historyId];
+    promise = promise.then(() => {
+      return dbRun(`
+        INSERT OR REPLACE INTO history (
+          id,
+          browser_id,
+          url,
+          title,
+          lastVisitTime,
+          visitCount,
+          typedCount
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      `, historyId, browserId, historyItem.url, historyItem.title, historyItem.lastVisitTime, historyItem.visitCount, historyItem.typedCount);
+    });
+    Object.keys(historyItem.visits).forEach((visitId) => {
+      let visit = historyItem.visits[visitId];
+      promise = promise.then(() => {
+        return dbRun(`
+          INSERT OR REPLACE INTO visit (
+            id,
+            history_id,
+            visitTime,
+            referringVisitId,
+            transition
+          ) VALUES (?, ?, ?, ?, ?)
+        `, visitId, historyId, visit.visitTime, visit.referringVisitId, visit.transition);
+      });
+    });
+  });
   promise.then(() => {
     return dbRun(`
-      UPDATE browsers
+      UPDATE browser
       SET latest = (SELECT MAX(lastvisitTime)
-                    FROM history WHERE browser = ?),
+                    FROM history WHERE browser_id = ?),
           oldest = (SELECT MIN(lastvisitTime)
-                    FROM history WHERE browser = ?)
-    `, req.body.browserId, req.body.browserId);
+                    FROM history WHERE browser_id = ?)
+    `, browserId, browserId);
   }).then(() => {
     res.send("OK");
   }).catch((error) => {
-    res.status(500).type("text").send(String(error));
+    sendError(error, res);
   });
+
 });
 
 app.post("/register", function(req, res) {
   let browserId = req.body.browserId;
   dbGet(`
-    SELECT created FROM browsers
+    SELECT created FROM browser
     WHERE id = ?
   `, browserId).then((row) => {
     if (row) {
       res.send("Already created");
     } else {
       return dbRun(`
-        INSERT INTO browsers (id)
+        INSERT INTO browser (id)
         VALUES ($1)
       `, browserId).then(() => {
         res.send("Created");
       });
     }
   }).catch((error) => {
-    res.status(500).type("text").send(String(error));
+    sendError(error, res);
   });
 });
 
@@ -154,10 +206,9 @@ app.get("/get-history", function(req, res) {
     ORDER BY history.lastVisitTime DESC
     LIMIT 100
   `).then((rows) => {
-    console.log("sending", rows);
     res.send(rows);
   }).catch((error) => {
-    res.status(500).type("text").send(String(error));
+    sendError(error, res);
   });
 });
 
@@ -169,14 +220,13 @@ app.get("/get-needed-pages", function(req, res) {
     ORDER BY lastVisitTime DESC
     LIMIT 100
   `).then((rows) => {
-    console.log("sending", rows);
     let result = [];
     for (let row of rows) {
       result.push(row.url);
     }
     res.send(result);
   }).catch((error) => {
-    res.status(500).type("text").send(String(error));
+    sendError(error, res);
   });
 });
 
@@ -209,7 +259,7 @@ app.post("/add-fetched-page", function(req, res) {
       }
     });
   }).catch((error) => {
-    res.status(500).type("text").send(String(error));
+    sendError(error, res);
   });
 });
 
@@ -239,4 +289,4 @@ app.use(function(err, req, res, next) {
 
 let server = http.createServer(app);
 server.listen(11180);
-console.log("Listening on http://localhost:11180");
+console.info("Listening on http://localhost:11180");

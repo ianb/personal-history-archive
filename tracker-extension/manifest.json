@@ -1,41 +1,33 @@
 {
   "manifest_version": 2,
-  "name": "Personal History Archive",
+  "name": "Personal History Saver",
   "version": "0.1.0",
-  "description": "Save a personal archive of your browser history",
+  "description": "Saves all your history items to a local server",
   "author": "Ian Bicking <ian@ianbicking.org>",
   "homepage_url": "https://github.com/ianb/personal-history-archive",
   "applications": {
     "gecko": {
-      "id": "personal-history-archive@ianbicking.org"
+      "id": "personal-history-saver@ianbicking.org"
     }
   },
   "browser_action": {
     "default_icon": {
       "32": "icon.png"
     },
-    "default_title": "Personal history"
+    "default_title": "Personal history",
+    "browser_style": true,
+    "default_popup": "popup.html"
   },
   "background": {
     "scripts": [
       "browser-polyfill.js",
-      "background.js"
+      "continuous-saver.js"
     ]
   },
-  "content_scripts": [
-    {
-      "matches": ["http://localhost/"],
-      "js": [
-        "browser-polyfill.js",
-        "sitescript.js"
-      ]
-    }
-  ],
   "permissions": [
-    "http://localhost:11180/",
+    "http://localhost:11180/*",
+    "*://localhost/*",
     "history",
-    "storage",
-    "tabs",
-    "<all_urls>"
+    "storage"
   ]
 }
