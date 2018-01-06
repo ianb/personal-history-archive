@@ -1,20 +1,20 @@
 {
   "manifest_version": 2,
-  "name": "Personal History Archive",
+  "name": "Personal History Fetcher",
   "version": "0.1.0",
-  "description": "Save a personal archive of your browser history",
+  "description": "Saves full-page copies of pages from your history into a database",
   "author": "Ian Bicking <ian@ianbicking.org>",
   "homepage_url": "https://github.com/ianb/personal-history-archive",
   "applications": {
     "gecko": {
-      "id": "personal-history-archive@ianbicking.org"
+      "id": "personal-history-fetcher@ianbicking.org"
     }
   },
   "browser_action": {
     "default_icon": {
       "32": "icon.png"
     },
-    "default_title": "Personal history"
+    "default_title": "Personal fetcher"
   },
   "background": {
     "scripts": [
@@ -33,8 +33,6 @@
   ],
   "permissions": [
     "http://localhost:11180/",
-    "history",
-    "storage",
     "tabs",
     "<all_urls>"
   ]

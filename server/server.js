@@ -83,7 +83,7 @@ function sendError(error, res) {
 const app = express();
 
 app.use((req, res, next) => {
-  console.log("Incoming:", req.method, req.url);
+  console.info("Incoming:", req.method, req.url);
   next();
 });
 
@@ -182,7 +182,6 @@ app.post("/add-history-list", function(req, res) {
 
 app.post("/register", function(req, res) {
   let browserId = req.body.browserId;
-  let user_agent
   dbGet(`
     SELECT created FROM browser
     WHERE id = ?

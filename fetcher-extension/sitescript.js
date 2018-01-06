@@ -19,17 +19,6 @@ let model = {
   failed: new Map()
 };
 
-setTimeout(() => {
-  browser.runtime.sendMessage({
-    type: "init"
-  }).then((result) => {
-    browserId = result.browserId;
-    return register().then(refresh);
-  }).catch((error) => {
-    console.error("Error initializing:", error);
-  });
-}, 200);
-
 browser.runtime.onMessage.addListener((message) => {
   if (message.type == "escapeKey") {
     abortWorkerNow();
@@ -48,116 +37,6 @@ document.addEventListener("keyup", (event) => {
     abortWorkerNow();
   }
 });
-
-function register() {
-  return new Promise((resolve, reject) => {
-    let req = new ContentXMLHttpRequest();
-    req.open("POST", "/register");
-    req.setRequestHeader("Content-Type", "application/json");
-    req.onload = () => {
-      if (req.status != 200) {
-        console.error("Bad response to /register:", req.status);
-        reject(new Error("Bad response to /register"));
-      } else {
-        console.info("Registration succeeded", browserId);
-        resolve();
-      }
-    };
-    req.send(JSON.stringify({browserId}));
-  });
-}
-
-function sendHistory(historyItems) {
-  return new Promise((resolve, reject) => {
-    let req = new ContentXMLHttpRequest();
-    req.open("POST", "/add-history");
-    req.setRequestHeader("Content-Type", "application/json");
-    req.onload = () => {
-      if (req.status != 200) {
-        console.error("Bad response to /add-history:", req.status);
-        reject(req);
-      } else {
-        for (let item of historyItems) {
-          let last = item.lastVisitTime;
-          if (!model.latest) {
-            model.latest = last;
-          } else if (model.latest < last) {
-            model.latest = last;
-          }
-          if (!model.oldest) {
-            model.oldest = last;
-          } else if (model.oldest > last) {
-            model.oldest = last;
-          }
-        }
-        refresh();
-        resolve();
-      }
-    };
-    console.log("sending history", JSON.stringify(historyItems));
-    req.send(JSON.stringify({
-      browserId,
-      items: historyItems
-    }));
-  });
-}
-
-document.querySelector("#sendHistory").addEventListener("click", () => {
-  let continuous = document.querySelector("#sendHistoryContinuous").checked;
-  let endTime = model.oldest || Date.now();
-  let latest = model.latest || Date.now();
-  console.log("sending history since", endTime, "or until", latest);
-  if (continuous) {
-    sendContinuousHistory();
-  } else {
-    sendSomeHistory(endTime, latest);
-  }
-});
-
-function sendContinuousHistory() {
-  let endTime = model.oldest || Date.now();
-  let latest = model.latest || Date.now();
-  console.log("Starting continuous history sending");
-  return sendSomeHistory(endTime, latest).then((anySent) => {
-    if (anySent) {
-      console.log("Sending another batch!");
-      return sendContinuousHistory();
-    }
-  });
-}
-
-function sendSomeHistory(endTime, latest) {
-  return browser.runtime.sendMessage({
-    type: "history.search",
-    maxResults: 1000,
-    endTime: endTime - 1
-  }).then((results) => {
-    if (!results.length) {
-      console.log("No old items, sending new items", latest + 1, Date.now());
-      return browser.runtime.sendMessage({
-        type: "history.search",
-        maxResults: 100000,
-        startTime: latest + 1,
-        endTime: Date.now()
-      }).then((results) => {
-        if (!results.length) {
-          console.log("No recent items to send");
-          model.historyStatus = "fully up to date";
-          refresh();
-          return false;
-        }
-        model.historyStatus = `Up to date with ${results.length} recent items`;
-        return sendHistory(results).then(() => {
-          return true;
-        });
-      });
-    }
-    model.historyStatus = `Sent ${results.length} old items`;
-    return sendHistory(results).then(() => {
-      return true;
-    });
-  });
-}
 
 let fetchSomeButton = document.querySelector("#fetchSome");
 
@@ -180,29 +59,6 @@ fetchSomeButton.addEventListener("click", () => {
     console.error("Got error from /get-needed-pages:", error);
   });
 });
-
-function refresh() {
-  let req = new ContentXMLHttpRequest();
-  req.open("GET", `/status?browserId=${encodeURIComponent(browserId)}`);
-  req.onload = () => {
-    let data = JSON.parse(req.responseText);
-    Object.assign(model, data);
-    render();
-  };
-  req.send();
-  getRemoteHistory();
-}
-
-function getRemoteHistory() {
-  return fetch(SERVER + "/get-history").then((resp) => {
-    return resp.json();
-  }).then((rows) => {
-    model.history = rows;
-    render();
-  }).catch((error) => {
-    console.error("Error getting remote history:", error);
-  });
-}
 
 function render() {
   for (let key in model) {
@@ -321,7 +177,6 @@ function fetchPage(url) {
     result.timeToFetch = Date.now() - start;
     sendPage(url, result);
     model.fetching.delete(url);
-    refresh();
     startWorker();
   }).catch((error) => {
     model.fetching.delete(url);

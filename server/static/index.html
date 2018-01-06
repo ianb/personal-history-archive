@@ -27,34 +27,7 @@ body {
   </head>
   <body>
 
-<div>
-  <b>History items:</b>
-  <code class="historyCount"></code>
-  <b>Unfetched:</b>
-  <code class="unfetchedCount"></code>
-</div>
-
-<div>
-  <b>Latest history item timestamp:</b>
-  <code class="latest"></code>
-  <b>Oldest history item timestamp:</b>
-  <code class="oldest"></code>
-  <b>Status:</b>
-  <span class="historyStatus">-</span>
-</div>
-<div>
-  <b>Latest history date:</b>
-  <code class="latest-date"></code>
-  <b>Oldest history date:</b>
-  <code class="oldest-date"></code>
-</div>
-
 <fieldset>
-  <button id="sendHistory">Send History</button>
-  <label for="sendHistoryContinuous">
-    Keep sending?
-    <input type="checkbox" id="sendHistoryContinuous">
-  </label>
   <button id="fetchSome">Fetch some pages</button>
   <input type="text" id="fetch-batch" placeholder="Fetch size (6)">
 </fieldset>
@@ -66,13 +39,6 @@ body {
   <ul id="fetching"></ul>
   Problems:
   <ul id="failed"></ul>
-</div>
-
-<div>
-  History items:
-
-  <table id="history-items">
-  </table>
 </div>
 
   </body>
