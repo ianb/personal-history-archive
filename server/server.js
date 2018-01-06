@@ -16,7 +16,8 @@ const db = new sqlite3.Database("./history.sqlite", () => {
       id TEXT PRIMARY KEY,
       created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       latest INT,
-      oldest INT
+      oldest INT,
+      user_agent TEXT
     );
 
     CREATE TABLE IF NOT EXISTS history (
@@ -128,9 +129,9 @@ app.get("/status", function(req, res) {
 });
 
 app.post("/add-history-list", function(req, res) {
-  console.log("got history list!");
   let browserId = req.body.browserId;
   let historyItems = req.body.historyItems;
+  console.info("Processing history:", historyItems.length, "items");
   let promise = Promise.resolve();
   Object.keys(historyItems).forEach((historyId) => {
     let historyItem = historyItems[historyId];
@@ -171,6 +172,7 @@ app.post("/add-history-list", function(req, res) {
                     FROM history WHERE browser_id = ?)
     `, browserId, browserId);
   }).then(() => {
+    console.info("Finished importing:", historyItems.length, "items");
     res.send("OK");
   }).catch((error) => {
     sendError(error, res);
@@ -180,6 +182,7 @@ app.post("/add-history-list", function(req, res) {
 
 app.post("/register", function(req, res) {
   let browserId = req.body.browserId;
+  let user_agent
   dbGet(`
     SELECT created FROM browser
     WHERE id = ?
@@ -188,9 +191,9 @@ app.post("/register", function(req, res) {
       res.send("Already created");
     } else {
       return dbRun(`
-        INSERT INTO browser (id)
-        VALUES ($1)
-      `, browserId).then(() => {
+        INSERT INTO browser (id, user_agent)
+        VALUES (?, ?)
+      `, browserId, req.headers["user-agent"]).then(() => {
         res.send("Created");
       });
     }
