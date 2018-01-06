@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+set -e
+cd "$(dirname ${BASH_SOURCE[0]})/.."
+base="$(pwd)"
+PATH="node_modules/.bin:$PATH"
+webext="$base/node_modules/.bin/web-ext"
+
+binary=
+firefoxes="
+/Applications/FirefoxNightly.app
+/Applications/FirefoxDeveloperEdition.app
+/Applications/FirefoxAurora.app
+$(which firefox || true)
+"
+use_profile=
+use_scratch=
+
+for firefox in $firefoxes ; do
+  if [[ -e "$firefox" ]] ; then
+    binary="$firefox"
+    break
+  fi
+done
+
+help () {
+  echo "Usage: $(basename $0) [OPTIONS]"
+  echo "  Options:"
+  echo "    -b or --binary BINARY"
+  echo "      Use BINARY as the Firefox to run (default $binary)"
+  echo "    --use-profile PROFILE_NAME"
+  echo "      Use an existing profile based on the named profile; the profile will be copied to StickyProfile"
+  echo "    --use-scratch"
+  echo "      Use a scratch profile. Good for testing."
+}
+
+while [[ -n "$1" ]] ; do
+  case "$1" in
+    help|-h|--help)
+      help
+      exit
+      ;;
+    -b|--binary)
+      binary="$2"
+      shift
+      shift
+      ;;
+    --use-profile)
+      use_profile="$2"
+      shift
+      shift
+      ;;
+    --use-scratch)
+      use_scratch=1
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      help
+      exit 2
+      ;;
+  esac
+done
+
+if [[ -n "$use_profile" ]] ; then
+  if [[ -e ./StickyProfile ]] ; then
+    echo "An existing profile already exists. It was created from:"
+    echo "  $(cat ./StickyProfile/pha-orig-profile-name.txt)"
+    echo "Do you want to overwrite it with:"
+    echo "  $use_profile"
+    echo "(losing any changes you may have made in it)"
+    echo -n "[y/N] ? "
+    read answer
+    if [[ "$answer" != "y" ]] ; then
+      echo "Aborting."
+      exit
+    fi
+    rm -rf ./StickyProfile/
+  fi
+  echo "Copying profile '$use_profile' into ./StickyProfile"
+  ./node_modules/.bin/firefox-profile -p "$use_profile" -o ./StickyProfile/
+  echo -n "$use_profile" > ./StickyProfile/pha-orig-profile-name.txt
+elif [[ -z "$use_scratch" ]] && [[ ! -e ./StickyProfile/ ]] ; then
+  echo "You haven't used --use-profile before (which creates ./StickyProfile/)"
+  echo "You must profile that option once, or use --use-scratch"
+  echo
+  help
+  exit 2
+fi
+
+run_webext() {
+  echo "Running Firefox."
+  if [[ -n "$use_scratch" ]] ; then
+    $webext run --firefox "$binary" --browser-console --source-dir ./fetcher-extension/
+  else
+    echo "  Using profile $(cat ./StickyProfile/pha-orig-profile-name.txt)"
+    $webext run --firefox "$binary" --browser-console --source-dir ./fetcher-extension/ \
+      --keep-profile-changes --firefox-profile ./StickyProfile/
+  fi
+}
+
+run_webext
