@@ -1,19 +1,14 @@
 /* globals content, browser */
 
 const DEFAULT_PAGE_LIMIT = 6;
-const SERVER = "http://localhost:11180";
 
-let ContentXMLHttpRequest;
 let Content_fetch;
 if (typeof content === "undefined") {
-  ContentXMLHttpRequest = XMLHttpRequest;
   Content_fetch = fetch;
 } else {
-  ContentXMLHttpRequest = content.XMLHttpRequest;
   Content_fetch = content.fetch;
 }
 
-let browserId;
 let model = {
   fetching: new Map(),
   failed: new Map()
