@@ -87,7 +87,7 @@ function serverQueryStartTime(browserId) {
     }
     return resp.json();
   }).then((respJson) => {
-    return respJson.latest || 0;
+    return Math.floor(respJson.latest || 0);
   });
 }
 
