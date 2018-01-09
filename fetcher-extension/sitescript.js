@@ -42,7 +42,7 @@ fetchSomeButton.addEventListener("click", () => {
   }
   abortWorker = false;
   fetchSomeButton.textContent = "Stop fetching";
-  Content_fetch("/get-needed-pages").then((resp) => {
+  Content_fetch("/get-needed-pages?limit=10000").then((resp) => {
     return resp.json();
   }).then((pages) => {
     for (let url of pages) {
