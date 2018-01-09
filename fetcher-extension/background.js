@@ -48,7 +48,7 @@ browser.browserAction.onClicked.addListener(() => {
 setTimeout(() => {
   getServerPage().then((tabs) => {
     if (!tabs) {
-      browser.tabs.create({url: SERVER, pinned: true});
+      browser.tabs.create({url: SERVER, pinned: true, active: true});
     }
   }).catch((error) => {
     console.error("Error in getServerPage:", error);
@@ -95,7 +95,6 @@ function scrapeTab(tabId) {
 
 function fetchPage(url) {
   let focusTimer = null;
-  let startTime = Date.now();
   if (url.startsWith("https://www.youtube.com/watch?")) {
     // This keeps the YouTube videos from auto-playing:
     url += "&start=86400";
@@ -112,11 +111,6 @@ function fetchPage(url) {
     }).then((result) => {
       clearTimeout(focusTimer);
       return browser.tabs.remove(tab.id).then(() => {
-        // Remove our own repeated visit:
-        browser.history.deleteRange({
-          startTime,
-          endTime: Date.now()
-        });
         return result;
       });
     });
