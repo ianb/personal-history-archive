@@ -1,75 +1,9 @@
 const express = require("express");
 const bodyParser = require('body-parser');
-const sqlite3 = require('sqlite3').verbose();
-const path = require("path");
-const fs = require("fs");
 const http = require("http");
-const dataPath = path.join(__dirname, "../pages");
-
-if (!fs.existsSync(dataPath)) {
-  fs.mkdirSync(dataPath);
-}
-
-const db = new sqlite3.Database("./history.sqlite", () => {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS browser (
-      id TEXT PRIMARY KEY,
-      created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      latest INT,
-      oldest INT,
-      user_agent TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS history (
-      id TEXT UNIQUE PRIMARY KEY,
-      browser_id TEXT REFERENCES browser (id),
-      url TEXT,
-      title TEXT,
-      lastVisitTime TIMESTAMP,
-      visitCount INT NOT NULL DEFAULT 0,
-      typedCount INT NOT NULL DEFAULT 0
-    );
-
-    CREATE TABLE IF NOT EXISTS visit (
-      id TEXT UNIQUE PRIMARY KEY,
-      history_id TEXT REFERENCES history (id),
-      visitTime TIMESTAMP,
-      referringVisitId TEXT REFERENCES visit (id),
-      transition TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS page (
-      url TEXT PRIMARY KEY,
-      fetched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      timeToFetch INT,
-      redirectUrl TEXT
-    );
-  `);
-});
-
-function dbRun(sql, ...params) {
-  return dbSomething('run', sql, ...params);
-}
-
-function dbGet(sql, ...params) {
-  return dbSomething('get', sql, ...params);
-}
-
-function dbAll(sql, ...params) {
-  return dbSomething('all', sql, ...params);
-}
-
-function dbSomething(command, sql, ...params) {
-  return new Promise((resolve, reject) => {
-    db[command](sql, ...params, (error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
+const path = require("path");
+const { dbGet, dbRun, dbAll } = require("./db");
+const { writePage } = require("./json-files");
 
 function sendError(error, res) {
   let errString = `Error: ${error}`;
@@ -215,13 +149,14 @@ app.get("/get-history", function(req, res) {
 });
 
 app.get("/get-needed-pages", function(req, res) {
+  let limit = parseInt(req.query.limit || 100, 10);
   dbAll(`
     SELECT history.url FROM history
     LEFT JOIN page ON page.url = history.url
     WHERE page.url IS NULL
     ORDER BY lastVisitTime DESC
-    LIMIT 100
-  `).then((rows) => {
+    LIMIT ?
+  `, limit).then((rows) => {
     let result = [];
     for (let row of rows) {
       result.push(row.url);
@@ -232,34 +167,24 @@ app.get("/get-needed-pages", function(req, res) {
   });
 });
 
-function fixedEncodeURIComponent(str) {
-  return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
-    return '%' + c.charCodeAt(0).toString(16);
-  });
-}
-
 app.post("/add-fetched-page", function(req, res) {
-  let redirectUrl = req.body.data.url.split("#")[0];
-  let origUrl = req.body.url.split("#")[0];
+  let page = req.body;
+  let redirectUrl = page.data.url.split("#")[0];
+  let origUrl = page.url.split("#")[0];
+  page.data.originalUrl = page.url;
   if (redirectUrl == origUrl) {
     redirectUrl = null;
   } else {
     redirectUrl = req.body.data.url;
   }
+  page.data.fetchedTime = Date.now();
   dbRun(`
     INSERT OR REPLACE INTO page (url, fetched, redirectUrl, timeToFetch)
     VALUES (?, CURRENT_TIMESTAMP, ?, ?)
   `, req.body.url, redirectUrl, req.body.data.timeToFetch).then(() => {
-    let p = path.join(dataPath, fixedEncodeURIComponent(req.body.url));
-    fs.writeFile(p, JSON.stringify(req.body.data), 'UTF-8', (error) => {
-      if (error) {
-        res.status(500);
-        res.send("Failed");
-        console.error("Got error writing file", p, error);
-      } else {
-        res.send("OK");
-      }
-    });
+    return writePage(req.body.url, req.body.data);
+  }).then(() => {
+    res.send("OK");
   }).catch((error) => {
     sendError(error, res);
   });

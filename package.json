@@ -29,6 +29,7 @@
   },
   "scripts": {
     "server": "node server/server.js",
+    "resync": "node server/resync-pages.js",
     "lint:js": "eslint .",
     "firefox-profile": "firefox-profile"
   }
