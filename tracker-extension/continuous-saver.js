@@ -127,6 +127,9 @@ function serverRegister(browserId) {
 function getVisitsForHistoryItems(historyItems, startTime) {
   let result = {};
   let promises = [];
+  historyItems = historyItems.filter((item) => {
+    return !item.url.startsWith(SERVER);
+  });
   historyItems.forEach((historyItem) => {
     let visits = {};
     result[historyItem.id] = {

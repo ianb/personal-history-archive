@@ -170,6 +170,10 @@ app.post("/add-fetched-page", function(req, res) {
   } else {
     redirectUrl = req.body.data.url;
   }
+  if (redirectUrl) {
+    // Removes the YouTube start time we add
+    redirectUrl = redirectUrl.replace("&start=86400", "");
+  }
   page.data.fetchedTime = Date.now();
   dbRun(`
     INSERT OR REPLACE INTO page (url, fetched, redirectUrl, timeToFetch)

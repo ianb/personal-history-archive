@@ -2,6 +2,7 @@
 
 const DEFAULT_PAGE_LIMIT = 6;
 const DEFAULT_PAGE_TOTAL = 100;
+const SERVER = "http://localhost:11180";
 
 let Content_fetch;
 if (typeof content === "undefined") {
@@ -26,6 +27,9 @@ browser.runtime.onMessage.addListener((message) => {
 function abortWorkerNow() {
   fetchSomeButton.textContent = "Fetch some pages";
   abortWorker = true;
+  browser.runtime.sendMessage({
+    type: "focusMainTab"
+  });
 }
 
 document.addEventListener("keyup", (event) => {
@@ -144,6 +148,7 @@ function startWorker() {
     console.info("Already have", found, "pages running");
     return;
   }
+  let anyFetched = false;
   for (let url of model.fetching.keys()) {
     if (model.fetching.get(url)) {
       continue;
@@ -151,12 +156,18 @@ function startWorker() {
     if (model.failed.get(url)) {
       continue;
     }
+    anyFetched = true;
     fetchPage(url);
     model.fetching.set(url, true);
     found++;
     if (found >= limit) {
       break;
     }
+  }
+  if (!anyFetched) {
+    render();
+    abortWorkerNow();
+    return;
   }
   render();
 }
@@ -172,19 +183,21 @@ function fetchPage(url) {
       return;
     }
     result.timeToFetch = Date.now() - start;
-    sendPage(url, result);
+    let sendPromise = sendPage(url, result);
     model.fetching.delete(url);
     startWorker();
+    return sendPromise;
   }).catch((error) => {
     model.fetching.delete(url);
     model.failed.set(url, error);
+    render();
     startWorker();
   });
 }
 
 function sendPage(url, pageData) {
   console.info("sending", url, JSON.stringify(pageData));
-  return Content_fetch("/add-fetched-page", {
+  return fetch(`${SERVER}/add-fetched-page`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -193,7 +206,10 @@ function sendPage(url, pageData) {
       url,
       data: pageData
     })
-  }).then(() => {
+  }).then((resp) => {
+    if (!resp.ok) {
+      throw new Error(`Bad response: ${resp.status} ${resp.statusText}`);
+    }
     console.info("Send data on", url);
   }).catch((error) => {
     console.error("Error sending data for", url, ":", error);

@@ -206,6 +206,9 @@ app.post("/remove-page", function(req, res) {
 
 app.post("/clear-redirected", function(req, res) {
   let urls = req.body.url;
+  if (typeof urls == "string") {
+    urls = [urls];
+  }
   let promises = [];
   for (let url of urls) {
     promises.push(dbRun(`

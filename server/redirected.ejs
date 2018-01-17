@@ -29,8 +29,8 @@ td.url {
 
         <% for (let page of pages) { %>
           <tr>
-            <td><input type="checkbox" name="url" value="<%= page.url %>"></td>
-            <td class="url"><a href="<%= page.url %>" target=_blank><%= page.url %></a></td>
+            <td><input type="checkbox" name="url" value="<%= page.url %>" id="<%= page.url %>"></td>
+            <td class="url"><label for="<%= page.url %>"><a href="<%= page.url %>" target=_blank><%= page.url %></a></label></td>
             <td class="url"><%= page.redirectUrl %></td>
           </tr>
         <% } %>

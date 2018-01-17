@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const dataPath = path.join(__dirname, "../pages");
+const sha1 = require('sha1');
 
 if (!fs.existsSync(dataPath)) {
   fs.mkdirSync(dataPath);
@@ -13,7 +14,11 @@ function fixedEncodeURIComponent(str) {
 }
 
 function filenameForUrl(url) {
-  return path.join(dataPath, fixedEncodeURIComponent(url)) + "-page.json";
+  let base = fixedEncodeURIComponent(url);
+  if (base.length > 200) {
+    base = `${base.substr(0, 100)}-${sha1(url)}-trunc`;
+  }
+  return path.join(dataPath, base + "-page.json");
 }
 
 exports.writePage = function(url, pageData) {
@@ -36,11 +41,25 @@ exports.listPageUrls = function() {
         return;
       }
       let goodFiles = files.filter(
-        (p) => p.endsWith("-page.json")
+        (p) => p.endsWith("-page.json") && !p.endsWith("-trunc-page.json")
       ).map(
         (p) => decodeURIComponent(p.substr(0, p.length - ("-page.json").length))
       );
-      resolve(goodFiles);
+      let hardFilePromises = files.filter(
+        (p) => p.endsWith("-trunc-page.json")
+      ).map(
+        (p) => getUrlFromFile(p)
+      );
+      if (hardFilePromises.length) {
+        Promise.all(hardFilePromises).then((result) => {
+          for (let url of result) {
+            goodFiles.push(url);
+          }
+          resolve(goodFiles);
+        }).catch(reject);
+      } else {
+        resolve(goodFiles);
+      }
     });
   });
 };
@@ -57,10 +76,23 @@ exports.readPage = function(url) {
   });
 };
 
+function getUrlFromFile(basename) {
+  let p = path.join(dataPath, basename);
+  return new Promise((resolve, reject) => {
+    fs.readFile(p, {encoding: "UTF-8"}, (error, data) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(JSON.parse(data).url);
+    });
+  });
+}
+
 exports.deletePage = function(url) {
   return new Promise((resolve, reject) => {
     fs.unlink(filenameForUrl(url), (error, data) => {
-      if (error) {
+      if (error && error.code !== 'ENOENT') {
         reject(error);
         return;
       }

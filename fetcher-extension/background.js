@@ -21,8 +21,13 @@ browser.runtime.onMessage.addListener((message) => {
     }).catch((error) => {
       console.error("Error in getServerPage:", error);
     });
+  } else if (message.type == "focusMainTab") {
+    return getServerPage().then((tabs) => {
+      return browser.tabs.update(tabs[0].id, {active: true});
+    });
+  } else {
+    throw new Error("Bad message: " + JSON.stringify(message));
   }
-  throw new Error("Bad message: " + JSON.stringify(message));
 });
 
 browser.browserAction.onClicked.addListener(() => {
@@ -95,7 +100,7 @@ function scrapeTab(tabId) {
 
 function fetchPage(url) {
   let focusTimer = null;
-  if (url.startsWith("https://www.youtube.com/watch?")) {
+  if (/^https?:\/\/(www\.youtube\.com|m\.youtube\.com|youtu\.be)\/watch\?/.test(url)) {
     // This keeps the YouTube videos from auto-playing:
     url += "&start=86400";
   }
