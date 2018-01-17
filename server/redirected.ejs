@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Pages with redirects</title>
+    <style>
+
+body {
+  font-family: sans-serif;
+}
+
+td.url {
+  max-width: 50%;
+}
+
+    </style>
+  </head>
+  <body>
+    <h1>Pages fetched with redirects</h1>
+
+    <form action="./clear-redirected" method="POST">
+      <button type="submit">Clear selected pages</button>
+      <table style="width: 100%">
+        <tr>
+          <th></th>
+          <th>Original URL</th>
+          <th>Redirected to</th>
+        </tr>
+
+        <% for (let page of pages) { %>
+          <tr>
+            <td><input type="checkbox" name="url" value="<%= page.url %>"></td>
+            <td class="url"><a href="<%= page.url %>" target=_blank><%= page.url %></a></td>
+            <td class="url"><%= page.redirectUrl %></td>
+          </tr>
+        <% } %>
+
+      </table>
+    </form>
+
+  </body>
+</html>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Confirm delete</title>
+  </head>
+  <body>
+    <div>
+      To delete:
+      <ul>
+        <li><%= history_count %> history items</li>
+        <li><%= page_count %> fetched pages</li>
+      </ul>
+    </div>
+    <form action="./remove-page" method="POST">
+      <input type="hidden" name="confirmed" value="1">
+      <input type="hidden" name="url_pattern" value="<%= url_pattern %>">
+      <button type="submit">Confirm delete</button>
+    </form>
+  </body>
+</html>

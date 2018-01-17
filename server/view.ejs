@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>History</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script>
+    $(document).on("click", ".expander", (event) => {
+      let sub = $(event.target.parentNode).find(".visit");
+      console.log("sub is", sub[0], sub);
+      sub.toggle();
+    });
+    </script>
+
+    <style>
+
+html, body {
+  font-family: sans-serif;
+}
+
+html {
+  height: 100%;
+}
+
+iframe {
+  width: 100%;
+  height: 20em;
+}
+
+span.prop {
+  white-space: nowrap;
+  background-color: #ccf;
+  border-radius: 2px;
+  margin-right: 0.5em;
+  margin-left: 2px;
+  padding: 3px;
+}
+
+div.history {
+  border: 1px solid #999;
+  border-radius: 5px;
+  margin-bottom: 0.5em;
+  margin-top: 0.3em;
+  padding: 4px;
+}
+
+div.visit {
+  margin-left: 1em;
+}
+
+form {
+  display: inline;
+}
+
+    </style>
+  </head>
+  <body>
+    <h1>View: <%= url %></h1>
+
+    <div>
+      <span class="prop">Fetched: <%= formatDate(page.fetched) %></span>
+      <span class="prop">Time to fetch: <%= page.timeToFetch %></span>
+      <% if (page.redirectUrl && page.redirectUrl != url) { %>
+        <span class="prop">Redirected to: <%= page.redirectUrl %></span>
+      <% } %>
+      <form action="./mark-needs-login" method="POST">
+        <input type="hidden" name="url" value="<%= url %>">
+        <button type="submit">Mark needs login</button>
+      </form>
+      <form action="./remove-page" method="POST">
+        <input type="text" name="url_pattern" value="<%= urlEscaped %>">
+        <button type="submit">Remove (<code>%</code> is wildcard)</button>
+      </form>
+    </div>
+
+    <% for (let history_id of Object.keys(histories)) { %>
+      <% history = histories[history_id]; %>
+      <div class="history">
+        <span class="expander">–</span>
+        <span class="prop">Browser: <%= history.user_agent %></span>
+        <span class="prop">Title: <%= history.title %></span>
+        <span class="prop">Visits: <%= history.visitCount %></span>
+        <span class="prop">Last visit: <%= formatDate(history.lastVisitTime) %></span>
+
+        <% for (let visit_id of Object.keys(history.visits)) { %>
+          <% visit = history.visits[visit_id]; %>
+          <div class="visit" style="display: none">
+            <span class="prop">Time: <%= formatDate(visit.visitTime) %></span>
+            <span class="prop">Transition: <%= visit.transition %></span>
+            <% if (visit.referringVisitId) { %>
+              <span class="prop">
+                Referred:
+                <a target=_blank href="<%= visit.refer_url %>"><%= visit.refer_title || visit.refer_url %></a>
+              </span>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+
+    <iframe src="./content?url=<%= encodeURIComponent(url) %>"></iframe>
+  </body>
+</html>
