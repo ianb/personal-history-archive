@@ -17,7 +17,7 @@ function filenameForUrl(url) {
 }
 
 exports.writePage = function(url, pageData) {
-  let p = filenameForUrl(p);
+  let p = filenameForUrl(url);
   return new Promise((resolve, reject) => {
     fs.writeFile(p, JSON.stringify(pageData), 'UTF-8', (error) => {
       if (error) {
@@ -53,6 +53,18 @@ exports.readPage = function(url) {
         return;
       }
       resolve(JSON.parse(data));
+    });
+  });
+};
+
+exports.deletePage = function(url) {
+  return new Promise((resolve, reject) => {
+    fs.unlink(filenameForUrl(url), (error, data) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
     });
   });
 };
