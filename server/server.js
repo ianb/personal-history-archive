@@ -4,15 +4,8 @@ const http = require("http");
 const path = require("path");
 const { dbGet, dbRun, dbAll } = require("./db");
 const { writePage } = require("./json-files");
-
-function sendError(error, res) {
-  let errString = `Error: ${error}`;
-  if (error.stack) {
-    errString += `\n${error.stack}`;
-  }
-  res.status(500).type("text").send(errString);
-  console.error(errString);
-}
+const viewer = require("./viewer");
+const { sendError } = require("./responses");
 
 const app = express();
 
@@ -65,7 +58,7 @@ app.get("/status", function(req, res) {
 app.post("/add-history-list", function(req, res) {
   let browserId = req.body.browserId;
   let historyItems = req.body.historyItems;
-  console.info("Processing history:", historyItems.length, "items");
+  console.info("Processing history:", Object.keys(historyItems).length, "items");
   let promise = Promise.resolve();
   Object.keys(historyItems).forEach((historyId) => {
     let historyItem = historyItems[historyId];
@@ -106,7 +99,7 @@ app.post("/add-history-list", function(req, res) {
                     FROM history WHERE browser_id = ?)
     `, browserId, browserId);
   }).then(() => {
-    console.info("Finished importing:", historyItems.length, "items");
+    console.info("Finished importing:", Object.keys(historyItems).length, "items");
     res.send("OK");
   }).catch((error) => {
     sendError(error, res);
@@ -194,6 +187,8 @@ app.get("/echo", function(req, res) {
   res.type(req.query.type);
   res.send(req.query.content);
 });
+
+app.use("/viewer", viewer.app);
 
 app.use("/", express.static(path.join(__dirname, "static"), {
   index: ["index.html"],

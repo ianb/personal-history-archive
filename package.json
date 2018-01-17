@@ -10,15 +10,21 @@
     "atob": "^2.0.3",
     "body-parser": "^1.18.2",
     "btoa": "^1.1.2",
+    "ejs": "^2.5.7",
+    "ejs-lint": "^0.3.0",
+    "escape-string-regexp": "^1.0.5",
     "eslint-plugin-mozilla": "^0.4.10",
     "eslint-plugin-no-unsanitized": "^2.0.2",
     "eslint-plugin-promise": "^3.6.0",
     "express": "^4.16.2",
     "firefox-profile": "^1.1.0",
+    "nodemon": "^1.14.11",
     "readability": "git+https://github.com/mozilla/readability.git",
+    "shell-quote": "^1.6.1",
     "sqlite3": "^3.1.13",
     "web-ext": "^2.2.2",
-    "webextension-polyfill": "^0.2.1"
+    "webextension-polyfill": "^0.2.1",
+    "yargs": "^10.1.1"
   },
   "devDependencies": {},
   "homepage": "https://github.com/ianb/personal-history-archive",
@@ -28,9 +34,11 @@
     "url": "git+https://github.com/ianb/personal-history-archive.git"
   },
   "scripts": {
-    "server": "node server/server.js",
+    "server": "nodemon --watch server/ -e js,ejs server/server.js",
     "resync": "node server/resync-pages.js",
     "lint:js": "eslint .",
-    "firefox-profile": "firefox-profile"
+    "firefox-profile": "firefox-profile",
+    "for-each": "node server/for-each.js",
+    "ejslint": "ejslint server/*.ejs"
   }
 }

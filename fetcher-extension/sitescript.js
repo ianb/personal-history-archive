@@ -1,6 +1,7 @@
 /* globals content, browser */
 
 const DEFAULT_PAGE_LIMIT = 6;
+const DEFAULT_PAGE_TOTAL = 100;
 
 let Content_fetch;
 if (typeof content === "undefined") {
@@ -41,8 +42,9 @@ fetchSomeButton.addEventListener("click", () => {
     return;
   }
   abortWorker = false;
+  let numberOfPages = parseInt(document.querySelector("#fetch-total").value, 10) || DEFAULT_PAGE_TOTAL;
   fetchSomeButton.textContent = "Stop fetching";
-  Content_fetch("/get-needed-pages?limit=10000").then((resp) => {
+  Content_fetch(`/get-needed-pages?limit=${numberOfPages}`).then((resp) => {
     return resp.json();
   }).then((pages) => {
     for (let url of pages) {
@@ -139,7 +141,7 @@ function startWorker() {
     }
   }
   if (found >= limit) {
-    console.log("Already have", found, "pages running");
+    console.info("Already have", found, "pages running");
     return;
   }
   for (let url of model.fetching.keys()) {
@@ -181,7 +183,7 @@ function fetchPage(url) {
 }
 
 function sendPage(url, pageData) {
-  console.log("sending", url, JSON.stringify(pageData));
+  console.info("sending", url, JSON.stringify(pageData));
   return Content_fetch("/add-fetched-page", {
     method: "POST",
     headers: {
@@ -192,7 +194,7 @@ function sendPage(url, pageData) {
       data: pageData
     })
   }).then(() => {
-    console.log("Send data on", url);
+    console.info("Send data on", url);
   }).catch((error) => {
     console.error("Error sending data for", url, ":", error);
     throw error;
