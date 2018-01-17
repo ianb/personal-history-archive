@@ -12,7 +12,7 @@ const db = new sqlite3.Database("./history.sqlite", () => {
 
     CREATE TABLE IF NOT EXISTS history (
       id TEXT UNIQUE PRIMARY KEY,
-      browser_id TEXT REFERENCES browser (id),
+      browser_id TEXT REFERENCES browser (id) ON DELETE CASCADE,
       url TEXT,
       title TEXT,
       lastVisitTime TIMESTAMP,
@@ -22,7 +22,7 @@ const db = new sqlite3.Database("./history.sqlite", () => {
 
     CREATE TABLE IF NOT EXISTS visit (
       id TEXT UNIQUE PRIMARY KEY,
-      history_id TEXT REFERENCES history (id),
+      history_id TEXT REFERENCES history (id) ON DELETE CASCADE,
       visitTime TIMESTAMP,
       referringVisitId TEXT REFERENCES visit (id),
       transition TEXT
