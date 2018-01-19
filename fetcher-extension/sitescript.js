@@ -1,6 +1,6 @@
 /* globals content, browser */
 
-const DEFAULT_PAGE_LIMIT = 6;
+const DEFAULT_PAGE_LIMIT = 3;
 const DEFAULT_PAGE_TOTAL = 100;
 const SERVER = "http://localhost:11180";
 
@@ -51,8 +51,8 @@ fetchSomeButton.addEventListener("click", () => {
   Content_fetch(`/get-needed-pages?limit=${numberOfPages}`).then((resp) => {
     return resp.json();
   }).then((pages) => {
-    for (let url of pages) {
-      model.fetching.set(url, false);
+    for (let page of pages) {
+      model.fetching.set(page.url, false);
     }
     startWorker();
     render();
@@ -190,6 +190,16 @@ function fetchPage(url) {
   }).catch((error) => {
     model.fetching.delete(url);
     model.failed.set(url, error);
+    Content_fetch("/add-fetch-failure", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        url,
+        error_message: String(error)
+      })
+    });
     render();
     startWorker();
   });

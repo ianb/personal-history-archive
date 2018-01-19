@@ -144,15 +144,18 @@ app.get("/get-history", function(req, res) {
 app.get("/get-needed-pages", function(req, res) {
   let limit = parseInt(req.query.limit || 100, 10);
   dbAll(`
-    SELECT history.url FROM history
-    LEFT JOIN page ON page.url = history.url
+    SELECT history.url, fetch_error.error_message FROM history
+    LEFT JOIN page
+      ON page.url = history.url
+    LEFT JOIN fetch_error
+      ON fetch_error.url = history.url
     WHERE page.url IS NULL
-    ORDER BY lastVisitTime DESC
+    ORDER BY fetch_error.url IS NULL DESC, lastVisitTime DESC
     LIMIT ?
   `, limit).then((rows) => {
     let result = [];
     for (let row of rows) {
-      result.push(row.url);
+      result.push({url: row.url, lastError: row.error_message});
     }
     res.send(result);
   }).catch((error) => {
@@ -179,6 +182,11 @@ app.post("/add-fetched-page", function(req, res) {
     INSERT OR REPLACE INTO page (url, fetched, redirectUrl, timeToFetch)
     VALUES (?, CURRENT_TIMESTAMP, ?, ?)
   `, req.body.url, redirectUrl, req.body.data.timeToFetch).then(() => {
+    return dbRun(`
+      DELETE FROM fetch_error
+      WHERE url = ?
+    `, req.body.url);
+  }).then(() => {
     return writePage(req.body.url, req.body.data);
   }).then(() => {
     res.send("OK");
@@ -186,6 +194,20 @@ app.post("/add-fetched-page", function(req, res) {
     sendError(error, res);
   });
 });
+
+app.post("/add-fetch-failure", function(req, res) {
+  let url = req.body.url;
+  let error_message = req.body.error_message;
+  dbRun(`
+    INSERT OR REPLACE INTO fetch_error (url, error_message)
+    VALUES (?, ?)
+  `, url, error_message).then(() => {
+    res.send("OK");
+  }).catch((error) => {
+    sendError(error, res);
+  });
+});
+
 
 app.get("/echo", function(req, res) {
   res.type(req.query.type);
@@ -215,4 +237,4 @@ app.use(function(err, req, res, next) {
 
 let server = http.createServer(app);
 server.listen(11180);
-console.info("Listening on http://localhost:11180");
+console.info("\n\nListening on http://localhost:11180");

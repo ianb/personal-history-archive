@@ -144,6 +144,7 @@ app.get("/redirected", function(req, res) {
     WHERE (redirectUrl IS NOT NULL AND url != redirectUrl
            AND REPLACE(REPLACE(url, 'http:', 'https:'), 'www.', '') !=
            REPLACE(REPLACE(redirectUrl, 'http:', 'https:'), 'www.', ''))
+          AND NOT redirectOk
       OR not_logged_in
   `).then((rows) => {
     let html = redirectedTemplate({pages: rows});
@@ -157,7 +158,7 @@ app.post("/mark-needs-login", function(req, res) {
   let url = req.body.url;
   dbRun(`
     UPDATE page
-    SET not_logged_in = TRUE
+    SET not_logged_in = 1
     WHERE url = ?
   `, url).then(() => {
     res.redirect(`/viewer/view?url=${encodeURIComponent(url)}`);
@@ -217,6 +218,28 @@ app.post("/clear-redirected", function(req, res) {
     promises.push(deletePage(url));
   }
   Promise.all(promises).then(() => {
+    res.redirect("/viewer/redirected");
+  }).catch((error) => {
+    sendError(error, res);
+  });
+});
+
+app.post("/set-redirect-ok", function(req, res) {
+  let urls = req.body.url;
+  if (typeof urls == "string") {
+    urls = [urls];
+  }
+  let promise = Promise.resolve();
+  urls.forEach((url) => {
+    promise = promise.then(() => {
+      return dbRun(`
+        UPDATE page
+        SET redirectOk = 1
+        WHERE url = ?
+      `, url);
+    });
+  });
+  promise.then(() => {
     res.redirect("/viewer/redirected");
   }).catch((error) => {
     sendError(error, res);

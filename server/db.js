@@ -34,7 +34,14 @@ const db = new sqlite3.Database("./history.sqlite", () => {
       -- NULL means we don't know:
       not_logged_in BOOLEAN DEFAULT NULL,
       timeToFetch INT,
-      redirectUrl TEXT
+      redirectUrl TEXT,
+      redirectOk BOOLEAN DEFAULT FALSE
+    );
+
+    CREATE TABLE IF NOT EXISTS fetch_error (
+      url TEXT PRIMARY KEY,
+      attempted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      error_message TEXT
     );
   `);
 });

@@ -88,13 +88,24 @@ elif [[ -z "$use_scratch" ]] && [[ ! -e ./StickyProfile/ ]] ; then
   exit 2
 fi
 
+prefs="--pref=dom.webaudio.enabled=false --pref=media.autoplay.enabled=false"
+
+for name in permissions.default.camera permissions.default.desktop-notification permissions.default.geo permissions.default.microphone permissions.default.shortcuts ; do
+  prefs="$prefs --pref=$name=2"
+done
+
+for name in capability.policy.default.Window.alert capability.policy.default.Window.confirm capability.policy.default.Window.prompt ; do
+  prefs="$prefs --pref=$name=noAccess"
+done
+
+
 run_webext() {
   echo "Running Firefox."
   if [[ -n "$use_scratch" ]] ; then
-    $webext run --firefox "$binary" --browser-console --source-dir ./fetcher-extension/
+    $webext run $prefs --firefox "$binary" --browser-console --source-dir ./fetcher-extension/
   else
     echo "  Using profile $(cat ./StickyProfile/pha-orig-profile-name.txt)"
-    $webext run --firefox "$binary" --browser-console --source-dir ./fetcher-extension/ \
+    $webext run $prefs --firefox "$binary" --browser-console --source-dir ./fetcher-extension/ \
       --keep-profile-changes --firefox-profile ./StickyProfile/
   fi
 }
