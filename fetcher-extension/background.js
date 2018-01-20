@@ -151,7 +151,7 @@ function fetchPage(url) {
       if (tabId) {
         browser.tabs.remove(tabId);
       }
-      throw new Error(`Capturing ${url} timed out`);
+      throw new Error("Timeout");
     }
   );
 }

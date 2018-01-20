@@ -10,6 +10,7 @@
     "atob": "^2.0.3",
     "body-parser": "^1.18.2",
     "btoa": "^1.1.2",
+    "command-line-args": "^5.0.1",
     "ejs": "^2.5.7",
     "ejs-lint": "^0.3.0",
     "escape-string-regexp": "^1.0.5",
@@ -23,6 +24,7 @@
     "sha1": "^1.1.1",
     "shell-quote": "^1.6.1",
     "sqlite3": "^3.1.13",
+    "tmp": "0.0.33",
     "web-ext": "^2.2.2",
     "webextension-polyfill": "^0.2.1",
     "yargs": "^10.1.1"

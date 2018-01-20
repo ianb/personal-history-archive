@@ -2,6 +2,7 @@
 /Profile
 /StickyProfile
 /pages
+/jobs
 *.sqlite
 /package-lock.json
 .DS_Store

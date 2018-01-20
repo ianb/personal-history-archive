@@ -21,6 +21,8 @@ function filenameForUrl(url) {
   return path.join(dataPath, base + "-page.json");
 }
 
+exports.filenameForUrl = filenameForUrl;
+
 exports.writePage = function(url, pageData) {
   let p = filenameForUrl(url);
   return new Promise((resolve, reject) => {
@@ -97,6 +99,14 @@ exports.deletePage = function(url) {
         return;
       }
       resolve();
+    });
+  });
+};
+
+exports.pageExists = function(url) {
+  return new Promise((resolve, reject) => {
+    fs.exists(filenameForUrl(url), (exists) => {
+      resolve(exists);
     });
   });
 };
