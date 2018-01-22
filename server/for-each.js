@@ -2,9 +2,9 @@ const path = require("path");
 const fs = require("fs");
 const tmp = require('tmp');
 const { execFile } = require("child_process");
-const { filenameForUrl } = require("./json-files");
+const { filenameForUrl, readAnnotation, writeAnnotation, deleteAnnotation, readPage, writePage } = require("./json-files");
 const commandLineArgs = require('command-line-args');
-const { getAllPageData } = require("./page-model");
+const { getAllPageData, removePageFromDatabase } = require("./page-model");
 const jobPath = "./jobs/";
 
 if (!fs.existsSync(jobPath)) {
@@ -14,6 +14,7 @@ if (!fs.existsSync(jobPath)) {
 let optionDefinitions = [
   { name: "verbose", alias: "v", type: Boolean },
   { name: "job", alias: "j", type: String, defaultOption: `generic-${Math.floor(Date.now() / 60000)}` },
+  { name: "exec", alias: "e", type: Boolean, defaultOption: false },
 ];
 let options = commandLineArgs(optionDefinitions, {stopAtFirstUnknown: true});
 
@@ -75,6 +76,52 @@ function withTempData(data) {
   });
 }
 
+function applyCommands(pageCommands) {
+  let promises = [];
+  for (let url in pageCommands) {
+    let commands = pageCommands[url];
+    if (!commands) {
+      continue;
+    }
+    for (let command of commands) {
+      promises.push(applyCommand(url, command));
+    }
+  }
+  return Promise.all(promises);
+}
+
+function applyCommand(url, command) {
+  let c = command.command;
+  console.info("Applying", c, "to", url);
+  if (c == "annotate") {
+    return readAnnotation(url).then((a) => {
+      a[command.name] = command.value;
+      return writeAnnotation(url, a);
+    });
+  } else if (c == "remove-annotation") {
+    return readAnnotation(url).then((a) => {
+      delete a[command.name];
+      if (!Object.keys(a).length) {
+        return deleteAnnotation(url);
+      }
+      return writeAnnotation(url, a);
+    });
+  } else if (c == "set-attr") {
+    return readPage(url).then((p) => {
+      p[command.name] = p[command.value];
+      return writePage(url, p);
+    });
+  } else if (c == "remove-attr") {
+    return readPage(url).then((p) => {
+      delete p[command.name];
+      return writePage(url, p);
+    });
+  } else if (c == "remove-page") {
+    return removePageFromDatabase(url);
+  }
+  return Promise.reject(new Error(`Unknown command: ${c}`));
+}
+
 getAllPageData().then((pages) => {
   let promise = Promise.resolve();
   for (let page of pages) {
@@ -112,6 +159,8 @@ getAllPageData().then((pages) => {
             }
             data[page.url] = json;
             console.info("Added", json.length, "for URL", page.url);
+          } else {
+            data[page.url] = null;
           }
           resolve();
         });
@@ -133,5 +182,20 @@ getAllPageData().then((pages) => {
     console.info("Writing", Object.keys(data).length, "items to", jobFile);
     fs.writeFileSync(jobFile, JSON.stringify(data, null, "  "), {encoding: "UTF-8"});
   }
+}).then(() => {
+  if (options.exec) {
+    console.info("Applying commands");
+    return applyCommands(data);
+  }
+  console.info("Skipping commands; use -j", options.job, "--exec to apply");
+  return true;
+}).then((skipped) => {
+  if (skipped !== true) {
+    console.info("Applied to", Object.keys(data).length, "pages");
+  }
+}, (error) => {
+  console.warn("Error applying commands:", error);
+  exitCode = 3;
+}).then(() => {
   process.exit(exitCode);
 }).catch(() => {});

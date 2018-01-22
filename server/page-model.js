@@ -1,5 +1,5 @@
-const { dbAll } = require("./db");
-const { pageExists } = require("./json-files");
+const { dbAll, dbRun } = require("./db");
+const { pageExists, deletePage, deleteAnnotation } = require("./json-files");
 
 exports.getAllPageData = function() {
   return dbAll(`
@@ -75,5 +75,19 @@ exports.getAllPageData = function() {
       visit.transition = row.transition;
     }
     return result;
+  });
+};
+
+exports.removePageFromDatabase = function(url) {
+  return deletePage(url).then(() => {
+    return deleteAnnotation(url);
+  }).then(() => {
+    return dbRun(`
+      DELETE FROM page WHERE url = ?
+    `, url);
+  }).then(() => {
+    return dbRun(`
+      DELETE FROM fetch_error WHERE url = ?
+    `, url);
   });
 };
