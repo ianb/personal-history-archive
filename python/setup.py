@@ -6,6 +6,7 @@
 from setuptools import setup, find_packages
 
 requirements = [
+    "lxml",
 ]
 
 setup_requirements = [

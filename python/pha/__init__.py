@@ -4,6 +4,7 @@ import json
 import hashlib
 from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
+lxml = None
 
 class Archive:
     def __init__(self, path):
@@ -12,18 +13,19 @@ class Archive:
         self.conn = sqlite3.connect(self.sqlite_path)
         self.pages_path = os.path.join(path, 'pages')
 
+    def __repr__(self):
+        return '<Archive at %r>' % self.path
 
-class History:
-    def __init__(self, archive, url):
-        self.archive = archive
-        self.url = url
-        self.fetch()
+    @classmethod
+    def default_location(cls):
+        location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../"))
+        return cls(location)
 
-    def fetch(self):
-        c = self.archive.conn.cursor()
-        self.visits = {}
+    def histories(self):
+        c = self.conn.cursor()
         rows = c.execute("""
             SELECT
+              history.url,
               history.id AS history_id,
               history.browser_id,
               browser.user_agent,
@@ -37,11 +39,79 @@ class History:
               page.fetched IS NULL AS page_fetched
             FROM history, visit, browser
             LEFT JOIN page ON page.url = history.url
-            WHERE history.url = ?
+            WHERE history.id = visit.history_id
+              AND browser.id = history.browser_id
+            ORDER BY visit.visitTime DESC
+        """)
+        result = []
+        for row in rows:
+            url = row[0]
+            from_row = row[1:]
+            result.append(History(self, url, from_row=from_row))
+        return result
+
+    def histories_with_page(self):
+        c = self.conn.cursor()
+        rows = c.execute("""
+            SELECT
+              history.url,
+              history.id AS history_id,
+              history.browser_id,
+              browser.user_agent,
+              history.title,
+              history.lastVisitTime,
+              history.visitCount,
+              visit.id AS visit_id,
+              visit.visitTime,
+              visit.referringVisitId,
+              visit.transition,
+              page.fetched IS NULL AS page_fetched
+            FROM history, visit, browser, page
+            WHERE history.url = page.url
               AND history.id = visit.history_id
               AND browser.id = history.browser_id
             ORDER BY visit.visitTime DESC
-        """, (self.url,))
+        """)
+        result = []
+        for row in rows:
+            url = row[0]
+            from_row = row[1:]
+            result.append(History(self, url, from_row=from_row))
+        return result
+
+
+class History:
+    def __init__(self, archive, url, from_row=None):
+        self.archive = archive
+        self.url = url
+        self.fetch(from_row)
+
+    def fetch(self, from_row=None):
+        self.visits = {}
+        if not from_row:
+            c = self.archive.conn.cursor()
+            rows = c.execute("""
+                SELECT
+                  history.id AS history_id,
+                  history.browser_id,
+                  browser.user_agent,
+                  history.title,
+                  history.lastVisitTime,
+                  history.visitCount,
+                  visit.id AS visit_id,
+                  visit.visitTime,
+                  visit.referringVisitId,
+                  visit.transition,
+                  page.fetched IS NULL AS page_fetched
+                FROM history, visit, browser
+                LEFT JOIN page ON page.url = history.url
+                WHERE history.url = ?
+                  AND history.id = visit.history_id
+                  AND browser.id = history.browser_id
+                ORDER BY visit.visitTime DESC
+            """, (self.url,))
+        else:
+            rows = [from_row]
         for (history_id, browser_id, user_agent, title, lastVisitTime, visitCount, visit_id, visitTime, referringVisitId, transition, page_fetched) in rows:
             self.id = id
             self.browser_id = browser_id
@@ -55,7 +125,6 @@ class History:
             visit.referringVisitId = referringVisitId
             visit.transition = transition
             self.has_page = page_fetched
-        c.close()
 
     @property
     def page(self):
@@ -121,6 +190,12 @@ class Page:
             "body": body,
         }
 
+    @property
+    def lxml(self):
+        if lxml is None:
+            import lxml.html
+        return lxml.html.document_fromstring(self.html)
+
 
 def make_tag(tagname, attrs):
     return '<%s%s>' % (tagname, ' '.join(
@@ -140,9 +215,7 @@ class Visit:
 
 if __name__ == "__main__":
     import sys
-    location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../"))
-    print(location)
-    archive = Archive(location)
+    archive = Archive.default_location()
     history = History(archive, sys.argv[1])
     page = history.page
     print("History:", history, history.visits)
