@@ -2,9 +2,20 @@ import os
 import sqlite3
 import json
 import hashlib
+import re
 from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
+from urllib.parse import urlparse
 lxml = None
+
+www_regex = re.compile(r"^www[0-9]*\.")
+
+def domain(url):
+    d = urlparse(url).hostname
+    match = www_regex.search(d)
+    if match:
+        d = d[match.end():]
+    return d
 
 class Archive:
     def __init__(self, path):
@@ -44,10 +55,18 @@ class Archive:
             ORDER BY visit.visitTime DESC
         """)
         result = []
+        histories = {}
         for row in rows:
             url = row[0]
+            if url in histories:
+                visit = histories[url].visits[row[8]] = Visit(histories[url])
+                visit.visitTime = row[9]
+                visit.referringVisitId = row[10]
+                visit.transition = row[11]
+                continue
             from_row = row[1:]
-            result.append(History(self, url, from_row=from_row))
+            history = histories[url] = History(self, url, from_row=from_row)
+            result.append(history)
         return result
 
     def histories_with_page(self):
@@ -65,7 +84,7 @@ class Archive:
               visit.visitTime,
               visit.referringVisitId,
               visit.transition,
-              page.fetched IS NULL AS page_fetched
+              page.fetched AS page_fetched
             FROM history, visit, browser, page
             WHERE history.url = page.url
               AND history.id = visit.history_id
@@ -73,10 +92,19 @@ class Archive:
             ORDER BY visit.visitTime DESC
         """)
         result = []
+        histories = {}
         for row in rows:
             url = row[0]
+            if url in histories:
+                visit = histories[url].visits[row[8]] = Visit(histories[url])
+                visit.visitTime = row[9]
+                visit.referringVisitId = row[10]
+                visit.transition = row[11]
+                continue
             from_row = row[1:]
-            result.append(History(self, url, from_row=from_row))
+            history = histories[url] = History(self, url, from_row=from_row)
+            if history.has_page:
+                result.append(history)
         return result
 
 
@@ -85,6 +113,13 @@ class History:
         self.archive = archive
         self.url = url
         self.fetch(from_row)
+
+    def __repr__(self):
+        return '<History %s #visits=%i>' % (self.url, len(self.visits))
+
+    @property
+    def domain(self):
+        return domain(self.url)
 
     def fetch(self, from_row=None):
         self.visits = {}
@@ -102,7 +137,7 @@ class History:
                   visit.visitTime,
                   visit.referringVisitId,
                   visit.transition,
-                  page.fetched IS NULL AS page_fetched
+                  page.fetched AS page_fetched
                 FROM history, visit, browser
                 LEFT JOIN page ON page.url = history.url
                 WHERE history.url = ?
@@ -124,7 +159,7 @@ class History:
             visit.visitTime = visitTime
             visit.referringVisitId = referringVisitId
             visit.transition = transition
-            self.has_page = page_fetched
+            self.has_page = page_fetched and os.path.exists(Page.json_filename(self.archive, self.url))
 
     @property
     def page(self):
@@ -142,6 +177,14 @@ class Page:
         self.url = url
         self.fetch()
 
+    def __repr__(self):
+        return '<Page %s ~%ikb>' % (
+            self.url, (len(self.data["head"]) + len(self.data["body"])) / 1000)
+
+    @property
+    def domain(self):
+        return domain(self.url)
+
     @classmethod
     def json_filename(cls, archive, url):
         return os.path.join(archive.pages_path, cls.generate_base_filename(url) + "-page.json")
@@ -154,7 +197,7 @@ class Page:
     def generate_base_filename(cls, url):
         name = url_quote(url, '')
         if len(name) > 200:
-            name = name[:100] + hashlib.sha1(name.encode('ascii')).hexdigest()
+            name = "%s-%s-trunc" % (name[:100], hashlib.sha1(url.encode('ascii')).hexdigest())
         return name
 
     def fetch(self):
@@ -192,9 +235,10 @@ class Page:
 
     @property
     def lxml(self):
+        global lxml
         if lxml is None:
             import lxml.html
-        return lxml.html.document_fromstring(self.html)
+        return lxml.html.document_fromstring(self.html, base_url=self.url)
 
 
 def make_tag(tagname, attrs):
@@ -204,7 +248,8 @@ def make_tag(tagname, attrs):
 
 def sub_resources(s, resources):
     for name in resources:
-        s = s.replace(name, resources[name]["url"])
+        if resources[name].get("url"):
+            s = s.replace(name, resources[name]["url"])
     return s
 
 
