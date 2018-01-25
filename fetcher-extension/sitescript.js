@@ -206,7 +206,7 @@ function fetchPage(url) {
 }
 
 function sendPage(url, pageData) {
-  console.info("sending", url, JSON.stringify(pageData));
+  console.info("Sending:", url, Object.keys(pageData).join(", "));
   return fetch(`${SERVER}/add-fetched-page`, {
     method: "POST",
     headers: {

@@ -19,10 +19,16 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
     let start = Date.now();
     let readableDiv;
     let readable;
-    if (typeof Readable != "undefined") {
+    if (typeof Readability != "undefined") {
       let result = extractReadable();
-      readable = result.readable;
-      readableDiv = result.readableDiv;
+      if (result) {
+        readable = result.readable;
+        readableDiv = result.readableDiv;
+      } else {
+        readable = null;
+      }
+    } else {
+      console.info("Skipping readability: not installed");
     }
     let images = findImages([
       {element: document.head, isReadable: false},
@@ -146,10 +152,19 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
   }
 
   exports.documentStaticJson = function() {
-    let jsonPromise = Promise.resolve(makeStaticHtml.documentStaticData());
+    let jsonPromise;
+    try {
+      jsonPromise = Promise.resolve(makeStaticHtml.documentStaticData());
+    } catch (e) {
+      console.error("Error in documentStaticJson:", e, e.stack);
+      throw e;
+    }
     return jsonPromise.then((json) => {
       Object.assign(json, exports.extractData());
       return json;
+    }).catch((e) => {
+      console.error("Error in documentStaticJson:", e, e.stack);
+      throw e;
     });
   };
 
