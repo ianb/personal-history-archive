@@ -8,3 +8,4 @@
 .DS_Store
 /python/pha.egg-info
 .ipynb_checkpoints
+/.vscode
