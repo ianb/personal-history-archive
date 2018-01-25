@@ -6,9 +6,11 @@ import re
 from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
 from urllib.parse import urlparse
+from . import htmltools
 lxml = None
 
 www_regex = re.compile(r"^www[0-9]*\.")
+markup_regex = re.compile(r"<.*?>", re.S)
 
 def domain(url):
     d = urlparse(url).hostname
@@ -185,6 +187,11 @@ class Page:
     def domain(self):
         return domain(self.url)
 
+    @property
+    def title(self):
+        # FIXME: consider using self.data["opengraph"]["title"]
+        return self.data["docTitle"]
+
     @classmethod
     def json_filename(cls, archive, url):
         return os.path.join(archive.pages_path, cls.generate_base_filename(url) + "-page.json")
@@ -234,11 +241,30 @@ class Page:
         }
 
     @property
+    def readable_html(self):
+        if not self.data.get("readable"):
+            return ""
+        text = self.data["readable"]
+
+    @property
     def lxml(self):
         global lxml
         if lxml is None:
             import lxml.html
         return lxml.html.document_fromstring(self.html, base_url=self.url)
+
+    @property
+    def full_text(self):
+        body = sub_resources(self.data["body"], self.data["resources"])
+        # FIXME: make this work:
+        # body = htmltools.insert_links_into_text(body)
+        # FIXME: would be nice to preserve paragraphs
+        body = markup_regex.sub(" ", body)
+        return " ".join(body.split())
+
+    @property
+    def readable_text(self):
+        return (self.data.get("readable") or {}).get("textContent", "")
 
 
 def make_tag(tagname, attrs):
