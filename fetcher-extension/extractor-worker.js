@@ -22,8 +22,7 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
     if (typeof Readability != "undefined") {
       let result = extractReadable();
       if (result) {
-        readable = result.readable;
-        readableDiv = result.readableDiv;
+        readable = result;
       } else {
         readable = null;
       }
