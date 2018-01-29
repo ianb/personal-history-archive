@@ -48,6 +48,14 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     annotateHidden: true,
     // Adds data-display to anything whose styles make it display differently than the tags default display
     annotateDisplay: true,
+    // Takes a screenshot of the visible page if true:
+    screenshotVisible: true,
+    // Max width of the visible page:
+    screenshotVisibleWidth: 800,
+    // Takes a screenshot of the entire page:
+    screenshotFullPage: true,
+    // Max width of the entire page:
+    screenshotFullPageWidth: 320,
   };
 
   function getDocument() {
@@ -1005,6 +1013,14 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     result.docTitle = getDocument().title;
     result.openGraph = getOpenGraph();
     result.twitterCard = getTwitterCard();
+    if (CONFIG.screenshotVisible) {
+      result.screenshots = result.screenshots || {};
+      result.screenshots.visible = screenshotVisible(CONFIG.screenshotVisibleWidth);
+    }
+    if (CONFIG.screenshotFullPage) {
+      result.screenshots = result.screenshots || {};
+      result.screenshots.fullPage = screenshotFullPage(CONFIG.screenshotFullPageWidth)
+    }
     result.resources = resources;
 
     console.info("serializing setup took " + (Date.now() - start) + " milliseconds");
@@ -1069,6 +1085,90 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       }
     }
     return openGraph;
+  }
+
+  function screenshotVisible(width) {
+    let actualHeight = window.innerHeight;
+    let actualWidth = window.innerWidth;
+    let targetWidth = actualWidth;
+    let targetHeight = actualHeight;
+    if (actualWidth > width) {
+      targetWidth = width;
+      targetHeight = Math.floor(actualHeight * (width / actualWidth));
+    }
+    let area = {
+      top: window.scrollY,
+      left: window.scrollX,
+      bottom: window.scrollY + actualHeight,
+      right: window.scrollX + actualWidth
+    };
+    let size = {
+      height: targetHeight,
+      width: targetWidth
+    };
+    let image = screenshot(area, size);
+    return {
+      captureType: "visible",
+      originalDimensions: area,
+      size,
+      image
+    }
+  }
+
+  function getDocumentWidth() {
+    return Math.max(
+      document.body && document.body.clientWidth,
+      document.documentElement.clientWidth,
+      document.body && document.body.scrollWidth,
+      document.documentElement.scrollWidth);
+  }
+
+  function getDocumentHeight() {
+    return Math.max(
+      document.body && document.body.clientHeight,
+      document.documentElement.clientHeight,
+      document.body && document.body.scrollHeight,
+      document.documentElement.scrollHeight);
+  }
+
+  function screenshotFullPage(width) {
+    let actualHeight = getDocumentHeight();
+    let actualWidth = getDocumentWidth();
+    let targetWidth = actualWidth;
+    let targetHeight = actualHeight;
+    if (targetWidth > width) {
+      targetWidth = width;
+      targetHeight = Math.floor(actualHeight * (width / actualWidth));
+    }
+    let area = {
+      top: 0,
+      left: 0,
+      bottom: actualHeight,
+      right: actualWidth
+    };
+    let size = {
+      height: targetHeight,
+      width: targetWidth
+    };
+    let image = screenshot(area, size);
+    return {
+      captureType: "fullPage",
+      originalDimensions: area,
+      size,
+      image
+    }
+  }
+
+  function screenshot(area, size) {
+    let canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
+    let areaWidth = area.right - area.left;
+    let areaHeight = area.bottom - area.top;
+    canvas.width = size.width;
+    canvas.height = size.height;
+    let ctx = canvas.getContext('2d');
+    ctx.scale(size.width / areaWidth, size.height / areaHeight);
+    ctx.drawWindow(window, area.left, area.top, area.right - area.left, area.bottom - area.top, "#fff");
+    return canvas.toDataURL();
   }
 
   function getTwitterCard() {
