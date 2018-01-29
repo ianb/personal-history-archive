@@ -36,15 +36,10 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
     console.info("Image time:", Date.now() - start, "ms");
     let siteName = findSiteName();
     console.info("extractData time:", Date.now() - start, "ms");
-    let passwordFields = [];
-    for (let el of Array.from(document.querySelectorAll('input[type=password]'))) {
-      passwordFields.push(el.name || null);
-    }
     return {
       readable,
       images,
-      siteName,
-      passwordFields
+      siteName
     };
   };
 

@@ -1021,6 +1021,11 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       result.screenshots = result.screenshots || {};
       result.screenshots.fullPage = screenshotFullPage(CONFIG.screenshotFullPageWidth)
     }
+    result.passwordFields = getPasswordFieldNames();
+    if (!result.passwordFields.length) {
+      delete result.passwordFields;
+    }
+    result.isDirectImage = isDirectImage();
     result.resources = resources;
 
     console.info("serializing setup took " + (Date.now() - start) + " milliseconds");
@@ -1045,6 +1050,19 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     return Promise.all(promises).then(function() {
       return result;
     });
+  }
+
+  function getPasswordFieldNames() {
+    let names = [];
+    for (let el of document.querySelectorAll("input[type=password]")) {
+      let hasValue = !! el.value;
+      names.push({name: el.name, id: el.id, hasValue, isHidden: isElementHidden(el)});
+    }
+    return names;
+  }
+
+  function isDirectImage() {
+    return !!document.querySelector("link[href='resource://content-accessible/ImageDocument.css']");
   }
 
   function getOpenGraph() {

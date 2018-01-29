@@ -63,6 +63,9 @@ form {
       <% if (page.redirectUrl && page.redirectUrl != url) { %>
         <span class="prop">Redirected to: <%= page.redirectUrl %></span>
       <% } %>
+      <% if (pageJson.passwordFields && pageJson.passwordFields.length) { %>
+        <span class="prop">Password: <code><%= JSON.stringify(pageJson.passwordFields) %></code></span>
+      <% } %>
       <form action="./mark-needs-login" method="POST">
         <input type="hidden" name="url" value="<%= url %>">
         <button type="submit">Mark needs login</button>
