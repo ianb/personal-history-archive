@@ -46,6 +46,8 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     excludeHidden: false,
     // Adds data-hidden to anything that we might otherwise exclude
     annotateHidden: true,
+    // Adds data-display to anything whose styles make it display differently than the tags default display
+    annotateDisplay: true,
   };
 
   function getDocument() {
@@ -388,6 +390,88 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     xmlns: "*"
   };
 
+  // FIXME: should extend this to some more elements
+  // Use: getComputedStyle(document.createElement("TAGNAME")).display
+  const DEFAULT_DISPLAY = {
+    A: "inline",
+    APPLET: "inline",
+    ARTICLE: "block",
+    AREA: "none",
+    AUDIO: "none",
+    BASE: "none",
+    BASEFONT: "none",
+    BGSOUND: "inline",
+    BLOCKQUOTE: "block",
+    BODY: "flex",
+    BR: "inline",
+    BUTTON: "inline-block",
+    CANVAS: "inline",
+    COL: "table-column",
+    COLGROUP: "table-column-group",
+    DEL: "inline",
+    DETAILS: "block",
+    DIR: "block",
+    DIV: "block",
+    DL: "block",
+    EMBED: "inline",
+    FIELDSET: "block",
+    FOOTER: "block",
+    FONT: "inline",
+    FORM: "block",
+    FRAME: "inline",
+    FRAMESET: "block",
+    H1: "block",
+    H2: "block",
+    H3: "block",
+    H4: "block",
+    H5: "block",
+    H6: "block",
+    HEAD: "none",
+    HR: "block",
+    IFRAME: "inline",
+    IMG: "inline",
+    INPUT: "inline",
+    INS: "inline",
+    ISINDEX: "inline",
+    LABEL: "inline",
+    LI: "list-item",
+    LINK: "none",
+    NAV: "block",
+    MAP: "inline",
+    MARQUEE: "inline-block",
+    MENU: "block",
+    META: "none",
+    METER: "inline-block",
+    OBJECT: "inline",
+    OL: "block",
+    OPTGROUP: "block",
+    OPTION: "block",
+    OUTPUT: "inline",
+    P: "block",
+    PARAM: "none",
+    PRE: "block",
+    PROGRESS: "inline-block",
+    Q: "inline",
+    SCRIPT: "none",
+    SELECT: "inline-block",
+    SOURCE: "inline",
+    SPAN: "inline",
+    STYLE: "none",
+    TABLE: "table",
+    TBODY: "table-row-group",
+    TD: "table-cell",
+    TEXTAREA: "inline",
+    TFOOT: "table-footer-group",
+    TITLE: "none",
+    TH: "table-cell",
+    THEAD: "table-header-group",
+    TIME: "inline",
+    TR: "table-row",
+    TRACK: "inline",
+    UL: "block",
+    VIDEO: "inline"
+  }
+
   /** true if this element should be skipped/removed because it's not sensible to include in the frozen document
 
   Note these elements are skipped even if excludeHidden is false.
@@ -528,12 +612,19 @@ const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       }
     }
     let s = '<' + el.tagName;
-    if (!CONFIG.excludeHidden && CONFIG.annotateHidden && isElementHidden(el)) {
+    let elementHidden = isElementHidden(el);
+    if (!CONFIG.excludeHidden && CONFIG.annotateHidden && elementHidden) {
       s += ' data-hidden="true"';
     }
     if (CONFIG.sizeEverything || (CONFIG.sizeImages && el.tagName == "IMG")) {
       s += ` data-width="${el.clientWidth}"`;
       s += ` data-height="${el.clientHeight}"`;
+    }
+    if (CONFIG.annotateDisplay && !elementHidden) {
+      let display = getComputedStyle(el).display;
+      if (display != DEFAULT_DISPLAY[el.tagName]) {
+        s += ` data-display="${display}"`;
+      }
     }
     let attrs = el.attributes;
     if (attrs && attrs.length) {
