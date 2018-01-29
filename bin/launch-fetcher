@@ -88,7 +88,7 @@ elif [[ -z "$use_scratch" ]] && [[ ! -e ./StickyProfile/ ]] ; then
   exit 2
 fi
 
-prefs="--pref=dom.webaudio.enabled=false --pref=media.autoplay.enabled=false"
+prefs="--pref=dom.webaudio.enabled=false --pref=media.autoplay.enabled=false --pref=dom.disable_beforeunload=true"
 
 for name in permissions.default.camera permissions.default.desktop-notification permissions.default.geo permissions.default.microphone permissions.default.shortcuts ; do
   prefs="$prefs --pref=$name=2"
