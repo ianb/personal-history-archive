@@ -54,12 +54,40 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
       pathBase: loc.protocol + "//" + loc.host + loc.pathname.substr(0, loc.pathname.lastIndexOf("/") + 1)
     };
     let article;
+    let id = makeUuid();
+    let index = 1;
+    for (let el of document.getElementsByTagName("*")) {
+      el.setAttribute("data-tmp-id", `${id}-${index}`);
+      index++;
+    }
+    var documentClone = document.cloneNode(true); 
     try {
-      article = new Readability(uri, document).parse();
+      article = new Readability(uri, documentClone).parse();
+      let newDiv = document.createElement("div");
+      newDiv.innerHTML = article.content;
+      for (let el of newDiv.querySelectorAll("*[data-tmp-id]")) {
+        let id = el.getAttribute("data-tmp-id");
+        let origEl = document.querySelector(`*[data-tmp-id='${id}']`);
+        let found = false;
+        let parent = origEl.parentNode;
+        while (parent) {
+          if (parent.getAttribute && parent.getAttribute("data-isreadable")) {
+            found = true;
+            break;
+          }
+          parent = parent.parentNode;
+        }
+        if (!found) {
+          origEl.setAttribute("data-isreadable", "1");
+        }
+      }
     } catch (e) {
-      console.warn("Exception getting readable version:", e);
+      console.warn("Exception getting readable version:", String(e));
       console.warn("Traceback:", e.stack);
       article = {error: String(e), errorStack: e.stack};
+    }
+    for (let el of document.getElementsByTagName("*")) {
+      el.removeAttribute("data-tmp-id");
     }
     return article;
   }
@@ -146,15 +174,16 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
   }
 
   exports.documentStaticJson = function() {
-    let jsonPromise;
-    try {
-      jsonPromise = Promise.resolve(makeStaticHtml.documentStaticData());
-    } catch (e) {
-      console.error("Error in documentStaticJson:", e, e.stack);
-      throw e;
-    }
-    return jsonPromise.then((json) => {
+    let jsonPromise = Promise.resolve();
+    let json = {};
+    return jsonPromise.then(() => {
       Object.assign(json, exports.extractData());
+      return json;
+    }).then(() => {
+      return makeStaticHtml.documentStaticData();
+      return json;
+    }).then((staticJson) => {
+      Object.assign(json, staticJson);
       return json;
     }).catch((e) => {
       console.error("Error in documentStaticJson:", e, e.stack);
