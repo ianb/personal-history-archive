@@ -49,6 +49,8 @@ def create_index(archive, purge=True):
             VALUES
               (?, ?, ?, ?, ?, ?, ?, ?)
         """, (page.url, url_words, title, readable, readable_byline, readable_excerpt, meta_description, full_text))
+    c.close()
+    archive.conn.commit()
 
 if __name__ == "__main__":
     import sys
