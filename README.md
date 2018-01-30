@@ -18,6 +18,8 @@ You may want to review `http://localhost:11180/viewer/redirected` to see pages t
 
 ## for-each
 
+*Note: I'm not sure if this is a good approach*
+
 One too for annotating the fetched pages is `npm run for-each`. You can see some examples in `examples/`.
 
 This runs the script for each fetched page, and lets you continue in case of error. The invocation looks like:
@@ -41,3 +43,18 @@ The file should emit a JSON object or list of objects, with commands to be run:
 These commands are batched until the job completes successfully, then they are applied together.
 
 The `-j login` option is used for continuity in case of failures.
+
+## Python library
+
+There's a Python library in [the `python/` subdirectory](https://github.com/ianb/personal-history-archive/tree/master/python). You can install it like:
+
+```sh
+$ cd python
+$ pip install -e .
+```
+
+It is a Python 3 library, and you should probably use [Virtualenv](https://virtualenv.pypa.io/en/stable/) before installing it. There's some [information here](https://docs.python.org/3/library/venv.html).
+
+This adds a packages called `pha`. There's no docs on it currently, but you might want to look at the [example Notebook](https://github.com/ianb/personal-history-archive/tree/master/python/example.ipynb).
+
+In my own experience the Python library is a pleasant way to interact with the data.
