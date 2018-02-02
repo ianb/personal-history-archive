@@ -46,6 +46,8 @@ The `-j login` option is used for continuity in case of failures.
 
 ## Python library
 
+*Note: this library is where I would like to put most of the new work*
+
 There's a Python library in [the `python/` subdirectory](https://github.com/ianb/personal-history-archive/tree/master/python). You can install it like:
 
 ```sh
@@ -58,3 +60,9 @@ It is a Python 3 library, and you should probably use [Virtualenv](https://virtu
 This adds a packages called `pha`. There's no docs on it currently, but you might want to look at the [example Notebook](https://github.com/ianb/personal-history-archive/tree/master/python/example.ipynb).
 
 In my own experience the Python library is a pleasant way to interact with the data.
+
+## Collaborating
+
+If you have a question, probably the best thing is to [open a ticket](https://github.com/ianb/personal-history-archive/issues/new). If you are interested in implementing something, it would also be great to open a ticket so we can discuss.
+
+If you'd like to chat, I've created a channel `#pha` on irc.mozilla.org.
