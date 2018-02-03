@@ -60,25 +60,27 @@ const extractorWorker = (function() { // eslint-disable-line no-unused-vars
       el.setAttribute("data-tmp-id", `${id}-${index}`);
       index++;
     }
-    var documentClone = document.cloneNode(true); 
+    var documentClone = document.cloneNode(true);
     try {
       article = new Readability(uri, documentClone).parse();
-      let newDiv = document.createElement("div");
-      newDiv.innerHTML = article.content;
-      for (let el of newDiv.querySelectorAll("*[data-tmp-id]")) {
-        let id = el.getAttribute("data-tmp-id");
-        let origEl = document.querySelector(`*[data-tmp-id='${id}']`);
-        let found = false;
-        let parent = origEl.parentNode;
-        while (parent) {
-          if (parent.getAttribute && parent.getAttribute("data-isreadable")) {
-            found = true;
-            break;
+      if (article) {
+        let newDiv = document.createElement("div");
+        newDiv.innerHTML = article.content;
+        for (let el of newDiv.querySelectorAll("*[data-tmp-id]")) {
+          let id = el.getAttribute("data-tmp-id");
+          let origEl = document.querySelector(`*[data-tmp-id='${id}']`);
+          let found = false;
+          let parent = origEl.parentNode;
+          while (parent) {
+            if (parent.getAttribute && parent.getAttribute("data-isreadable")) {
+              found = true;
+              break;
+            }
+            parent = parent.parentNode;
           }
-          parent = parent.parentNode;
-        }
-        if (!found) {
-          origEl.setAttribute("data-isreadable", "1");
+          if (!found) {
+            origEl.setAttribute("data-isreadable", "1");
+          }
         }
       }
     } catch (e) {
