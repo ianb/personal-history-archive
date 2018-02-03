@@ -48,7 +48,7 @@ fetchSomeButton.addEventListener("click", () => {
   abortWorker = false;
   let numberOfPages = parseInt(document.querySelector("#fetch-total").value, 10) || DEFAULT_PAGE_TOTAL;
   fetchSomeButton.textContent = "Stop fetching";
-  Content_fetch(`/get-needed-pages?limit=${numberOfPages}`).then((resp) => {
+  fetch(`${SERVER}/get-needed-pages?limit=${numberOfPages}`).then((resp) => {
     return resp.json();
   }).then((pages) => {
     for (let page of pages) {
@@ -57,7 +57,7 @@ fetchSomeButton.addEventListener("click", () => {
     startWorker();
     render();
   }).catch((error) => {
-    console.error("Got error from /get-needed-pages:", error);
+    console.error("Got error from /get-needed-pages:", String(error));
   });
 });
 
@@ -121,6 +121,15 @@ function render() {
       li.textContent = url;
       list.appendChild(li);
     }
+    browser.runtime.sendMessage({
+      type: "setBadgeText",
+      text: String(model.fetching.size)
+    });
+  } else {
+    browser.runtime.sendMessage({
+      type: "setBadgeText",
+      text: ""
+    });
   }
   let failedList = document.querySelector("#failed");
   failedList.innerHTML = '';

@@ -30,6 +30,10 @@ browser.runtime.onMessage.addListener((message) => {
     return getServerPage().then((tabs) => {
       return browser.tabs.update(tabs[0].id, {active: true});
     });
+  } else if (message.type == "setBadgeText") {
+    console.error("setting bade text", message.text);
+    browser.browserAction.setBadgeText({text: message.text});
+    return Promise.resolve();
   } else {
     throw new Error("Bad message: " + JSON.stringify(message));
   }
