@@ -3,6 +3,7 @@ import sqlite3
 import json
 import hashlib
 import re
+import base64
 from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
 from urllib.parse import urlparse
@@ -34,28 +35,32 @@ class Archive:
         location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../"))
         return cls(location)
 
+    base_history_sql = """
+        SELECT
+            history.url,
+            history.id AS history_id,
+            history.browser_id,
+            browser.user_agent,
+            history.title,
+            history.lastVisitTime,
+            history.visitCount,
+            visit.id AS visit_id,
+            visit.visitTime,
+            visit.referringVisitId,
+            visit.transition,
+            page.fetched IS NOT NULL AS page_fetched
+        FROM history, visit, browser
+    """
+
     def histories(self):
         c = self.conn.cursor()
         rows = c.execute("""
-            SELECT
-              history.url,
-              history.id AS history_id,
-              history.browser_id,
-              browser.user_agent,
-              history.title,
-              history.lastVisitTime,
-              history.visitCount,
-              visit.id AS visit_id,
-              visit.visitTime,
-              visit.referringVisitId,
-              visit.transition,
-              page.fetched IS NULL AS page_fetched
-            FROM history, visit, browser
+            %s
             LEFT JOIN page ON page.url = history.url
             WHERE history.id = visit.history_id
               AND browser.id = history.browser_id
             ORDER BY visit.visitTime DESC
-        """)
+        """ % self.base_history_sql)
         result = []
         histories = {}
         for row in rows:
@@ -74,41 +79,48 @@ class Archive:
     def histories_with_page(self):
         c = self.conn.cursor()
         rows = c.execute("""
-            SELECT
-              history.url,
-              history.id AS history_id,
-              history.browser_id,
-              browser.user_agent,
-              history.title,
-              history.lastVisitTime,
-              history.visitCount,
-              visit.id AS visit_id,
-              visit.visitTime,
-              visit.referringVisitId,
-              visit.transition,
-              page.fetched AS page_fetched
-            FROM history, visit, browser, page
+            %s, page
             WHERE history.url = page.url
               AND history.id = visit.history_id
               AND browser.id = history.browser_id
             ORDER BY visit.visitTime DESC
-        """)
+        """ % self.base_history_sql)
         result = []
         histories = {}
+        rows = rows.fetchall()
         for row in rows:
             url = row[0]
-            if url in histories:
-                visit = histories[url].visits[row[8]] = Visit(histories[url])
-                visit.visitTime = row[9]
-                visit.referringVisitId = row[10]
-                visit.transition = row[11]
-                continue
-            from_row = row[1:]
-            history = histories[url] = History(self, url, from_row=from_row)
-            if history.has_page:
-                result.append(history)
+            if url not in histories:
+                from_row = row[1:]
+                history = histories[url] = History(self, url, from_row=from_row)
+                if history.has_page:
+                    result.append(history)
+            visit = histories[url].visits[row[8]] = Visit(histories[url])
+            visit.visitTime = row[9]
+            visit.referringVisitId = row[10]
+            visit.transition = row[11]
         return result
 
+    def get_history(self, url):
+        c = self.conn.cursor()
+        rows = c.execute("""
+            %s, page
+            WHERE history.url = page.url
+              AND history.id = visit.history_id
+              AND browser.id = history.browser_id
+              AND history.url = ?
+        """ % self.base_history_sql, (url,))
+        history = None
+        for row in rows:
+            url = row[0]
+            if history is None:
+                from_row = row[1:]
+                history = History(self, url, from_row=from_row)
+            visit = history.visits[row[8]] = Visit(history)
+            visit.visitTime = row[9]
+            visit.referringVisitId = row[10]
+            visit.transition = row[11]
+        return history
 
 class History:
     def __init__(self, archive, url, from_row=None):
@@ -231,7 +243,7 @@ class Page:
     def html(self):
         body = sub_resources(self.data["body"], self.data["resources"])
         head = sub_resources(self.data["head"], self.data["resources"])
-        return """<!DOCTYPE html>\n%(html_tag)%(head_tag)s<base href="%(base)s"><meta charset="UTF-8">%(head)s</head>%(body_tag)s%(body)s</body></html>""" % {
+        return """<!DOCTYPE html>\n%(html_tag)s%(head_tag)s<base href="%(base)s"><meta charset="UTF-8">%(head)s</head>%(body_tag)s%(body)s</body></html>""" % {
             "html_tag": make_tag("html", self.data["htmlAttrs"]),
             "head_tag": make_tag("head", self.data["headAttrs"]),
             "base": html_escape(self.url, quote=True),
@@ -266,10 +278,26 @@ class Page:
     def readable_text(self):
         return (self.data.get("readable") or {}).get("textContent", "")
 
+    def display_page(self):
+        from IPython.core.display import display, HTML
+        literal_data = make_data_url("text/html", self.html)
+        html = '''
+        <div>
+          <div>
+            <strong>%s</strong> <a href="%s" target=_blank>%s</a>
+          </div>
+          <iframe style="width: 100%%; height: 12em; overflow: scroll" scrolling="yes" src="%s"></iframe>
+        </div>
+        ''' % (html_escape(self.title), html_escape(self.url), html_escape(self.domain), literal_data)
+        display(HTML(html))
+
+def make_data_url(content_type, content):
+    encoded = base64.b64encode(content.encode('UTF-8')).decode('ASCII')
+    return 'data:%s;base64,%s' % (content_type, encoded.replace('\n', ''))
 
 def make_tag(tagname, attrs):
-    return '<%s%s>' % (tagname, ' '.join(
-        '%s="%s"' % (name, html_escape(value, quote=True)) for name, value in attrs))
+    return '<%s%s>' % (tagname, ''.join(
+        ' %s="%s"' % (name, html_escape(value, quote=True)) for name, value in attrs))
 
 
 def sub_resources(s, resources):

@@ -1,4 +1,5 @@
 import re
+import random
 from nltk.stem import PorterStemmer
 import lxml
 from urllib.parse import urlparse, parse_qsl
