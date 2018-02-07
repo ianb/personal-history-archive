@@ -9,6 +9,7 @@ requirements = [
     "lxml",
     "cssselect",
     "nltk",
+    "sumy",
 ]
 
 setup_requirements = [
