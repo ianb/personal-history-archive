@@ -1,0 +1,3 @@
+# These are not strict requirements, but useful libraries that can be used with pha:
+-e https://www.github.com/ianb/textteaser.git#egg=TextTeaser
+jupyter
