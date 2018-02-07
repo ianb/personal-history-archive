@@ -18,7 +18,7 @@ def domain(url):
     match = www_regex.search(d)
     if match:
         d = d[match.end():]
-    return d
+    return d.lower()
 
 class Archive:
     def __init__(self, path):
@@ -122,6 +122,45 @@ class Archive:
             visit.transition = row[11]
         return history
 
+    def sample_histories_with_page(self, number, unique_url=True, unique_domain=False):
+        c = self.conn.cursor()
+        rows = c.execute("""
+            %s, page
+            WHERE history.url = page.url
+              AND history.id = visit.history_id
+              AND browser.id = history.browser_id
+            ORDER BY RANDOM()
+        """ % self.base_history_sql)
+        result = []
+        histories = {}
+        seen_domains = set()
+        seen_url_patterns = set()
+        rows = rows.fetchall()
+        for row in rows:
+            url = row[0]
+            if url not in histories:
+                if len(result) >= number:
+                    return result
+                from_row = row[1:]
+                history = histories[url] = History(self, url, from_row=from_row)
+                history_url_pattern = strip_url_to_pattern(url)
+                history_domain = history.domain
+                if not history.has_page:
+                    continue
+                if unique_url and history_url_pattern in seen_url_patterns:
+                    continue
+                if unique_domain and history_domain in seen_domains:
+                    continue
+                seen_url_patterns.add(history_url_pattern)
+                seen_domains.add(history_domain)
+                result.append(history)
+            visit = histories[url].visits[row[8]] = Visit(histories[url])
+            visit.visitTime = row[9]
+            visit.referringVisitId = row[10]
+            visit.transition = row[11]
+        return result
+
+
 class History:
     def __init__(self, archive, url, from_row=None):
         self.archive = archive
@@ -157,7 +196,6 @@ class History:
                 WHERE history.url = ?
                   AND history.id = visit.history_id
                   AND browser.id = history.browser_id
-                ORDER BY visit.visitTime DESC
             """, (self.url,))
         else:
             rows = [from_row]
@@ -253,24 +291,23 @@ class Page:
         }
 
     @property
-    def readable_html(self):
-        if not self.data.get("readable"):
-            return ""
-        text = self.data["readable"]
-
-    @property
     def lxml(self):
         global lxml
         if lxml is None:
             import lxml.html
         return lxml.html.document_fromstring(self.html, base_url=self.url)
 
+    style_regex = re.compile(r'<style[^>]*>.*?</style>', re.IGNORECASE | re.DOTALL)
+
     @property
     def full_text(self):
-        body = sub_resources(self.data["body"], self.data["resources"])
+        body = self.data["body"]
+        body = self.style_regex.sub('', body)
+        body = sub_resources(body, self.data["resources"])
         # FIXME: make this work:
         # body = htmltools.insert_links_into_text(body)
         # FIXME: would be nice to preserve paragraphs
+        # FIXME: remove <style> tags
         body = markup_regex.sub(" ", body)
         return " ".join(body.split())
 
@@ -278,9 +315,49 @@ class Page:
     def readable_text(self):
         return (self.data.get("readable") or {}).get("textContent", "")
 
-    def display_page(self):
+    @property
+    def readable_html(self):
+        if not self.data.get("readable") or not self.data["readable"].get("content"):
+            return None
+        readable = self.data["readable"]
+        byline = ""
+        if readable.get("byline"):
+            byline = '<h2>%s</h2>' % html_escape(readable["byline"])
+        excerpt = ""
+        if readable.get("excerpt"):
+            excerpt = '<blockquote>%s</blockquote>' % html_escape(readable["excerpt"])
+        html = '''<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>%(title)s</title>
+    <base href="%(base)s">
+  </head>
+  <body>
+    <h1>%(title)s</h1>
+    %(byline)s
+    %(excerpt)s
+    <div class="content">%(content)s</div>
+  </body>
+</html>
+''' % dict(
+            title=html_escape(readable.get("title") or self.title),
+            base=html_escape(self.url, quote=True),
+            byline=byline,
+            excerpt=excerpt,
+            content=readable["content"],
+        )
+        return html
+
+
+    def display_page(self, *, readable=False):
         from IPython.core.display import display, HTML
-        literal_data = make_data_url("text/html", self.html)
+        html = None
+        if readable:
+            html = self.readable_html
+        if not html:
+            html = self.html
+        literal_data = make_data_url("text/html", html)
         html = '''
         <div>
           <div>
@@ -291,9 +368,11 @@ class Page:
         ''' % (html_escape(self.title), html_escape(self.url), html_escape(self.domain), literal_data)
         display(HTML(html))
 
+
 def make_data_url(content_type, content):
     encoded = base64.b64encode(content.encode('UTF-8')).decode('ASCII')
     return 'data:%s;base64,%s' % (content_type, encoded.replace('\n', ''))
+
 
 def make_tag(tagname, attrs):
     return '<%s%s>' % (tagname, ''.join(
@@ -304,6 +383,28 @@ def sub_resources(s, resources):
     for name in resources:
         if resources[name].get("url"):
             s = s.replace(name, resources[name]["url"])
+    return s
+
+
+def strip_url_to_pattern(url):
+    """Makes a URL into a string that represents its shape or pattern
+
+    E.g., https://www.foo.com/article/1 turns to foo.com/C/#
+    """
+    ## FIXME: whitelist a couple query string parameters, like ?q (query) and ?p (in some articles)
+    d = domain(url)
+    path = urlparse(url).path
+    path = re.sub(r'/+', '/', path)
+    path = path.strip('/')
+    if not path:
+        return d
+    parts = path.split('/')
+    s = d
+    for part in parts:
+        if re.search(r'^[0-9]+$', part):
+            s += '/#'
+        else:
+            s += '/C'
     return s
 
 
