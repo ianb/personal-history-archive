@@ -28,7 +28,7 @@ def normalize_classes(c, shuffle=False):
         return []
     if isinstance(c, str):
         c = c.split()
-    result = filter(None, [sort_words(stem_words(wordify_class(a_class))) for a_class in c])
+    result = list(filter(None, [sort_words(stem_words(wordify_class(a_class))) for a_class in c]))
     if shuffle and len(result) > 1:
         random.shuffle(result)
     return result
