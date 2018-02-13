@@ -13,6 +13,7 @@ def wordify_class(c):
     c = mixed_regex.sub(r"\1-\2", c)
     c = c.replace("_", "-")
     c = non_char_regex.sub("", c)
+    c = c.strip("-")
     return "-".join(c.lower().split("-"))
 
 def stem_words(c):
