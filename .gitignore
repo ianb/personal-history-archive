@@ -10,3 +10,4 @@
 .ipynb_checkpoints
 /.vscode
 tmp
+/python/data
