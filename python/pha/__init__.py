@@ -26,9 +26,10 @@ class Archive:
         self.sqlite_path = os.path.join(path, 'history.sqlite')
         self.conn = sqlite3.connect(self.sqlite_path)
         self.pages_path = os.path.join(path, 'pages')
+        self.update_status()
 
     def __repr__(self):
-        return '<Archive at %r>' % self.path
+        return '<Archive at %r %i/%i fetched, %i errored>' % (self.path, self.fetched_count, self.history_count, self.error_count)
 
     @classmethod
     def default_location(cls):
@@ -51,6 +52,16 @@ class Archive:
             page.fetched IS NOT NULL AS page_fetched
         FROM history, visit, browser
     """
+
+    def update_status(self):
+        c = self.conn.cursor()
+        c.execute("""
+            SELECT
+                (SELECT COUNT(*) FROM history) AS history_count,
+                (SELECT COUNT(*) FROM history, page WHERE history.url = page.url) AS fetched_count,
+                (SELECT COUNT(*) FROM history, fetch_error WHERE history.url = fetch_error.url) AS error_count
+        """)
+        (self.history_count, self.fetched_count, self.error_count) = c.fetchone()
 
     def histories(self):
         c = self.conn.cursor()
@@ -411,13 +422,3 @@ def strip_url_to_pattern(url):
 class Visit:
     def __init__(self, history):
         self.history = history
-
-
-if __name__ == "__main__":
-    import sys
-    archive = Archive.default_location()
-    history = History(archive, sys.argv[1])
-    page = history.page
-    print("History:", history, history.visits)
-    print("Page:", page)
-    print("HTML:\n", page.html)
