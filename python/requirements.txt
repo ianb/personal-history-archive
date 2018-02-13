@@ -1,3 +1,9 @@
-# These are not strict requirements, but useful libraries that can be used with pha:
--e https://www.github.com/ianb/textteaser.git#egg=TextTeaser
+# These are not strict requirements, but useful libraries that can be used with pha, and are used in the notebooks:
+-e ./#egg=pha
+-e git+https://www.github.com/ianb/textteaser.git#egg=TextTeaser
 jupyter
+keras
+tensorflow
+# FIXME: maybe we shouldn't bother using h5py directly
+h5py
+pandas
