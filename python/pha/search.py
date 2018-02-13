@@ -57,7 +57,6 @@ def create_index(archive, purge=True):
     return count
 
 def search(archive, query):
-    result = []
     c = archive.conn.cursor()
     rows = c.execute("""
         SELECT url FROM search_index WHERE search_index MATCH ? ORDER BY rank

@@ -22,7 +22,6 @@ def normalize_sentence(sentence):
 
 def sumy_summary(page, sentence_count=5, *, language="english"):
     from sumy.parsers.html import HtmlParser
-    from sumy.parsers.plaintext import PlaintextParser
     from sumy.nlp.tokenizers import Tokenizer
     from sumy.summarizers.lsa import LsaSummarizer as Summarizer
     from sumy.nlp.stemmers import Stemmer
