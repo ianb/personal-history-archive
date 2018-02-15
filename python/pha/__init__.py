@@ -362,27 +362,13 @@ class Page:
 
 
     def display_page(self, *, readable=False):
-        from IPython.core.display import display, HTML
+        from .notebooktools import display_html
         html = None
         if readable:
             html = self.readable_html
         if not html:
             html = self.html
-        literal_data = make_data_url("text/html", html)
-        html = '''
-        <div>
-          <div>
-            <strong>%s</strong> <a href="%s" target=_blank>%s</a>
-          </div>
-          <iframe style="width: 100%%; height: 12em; overflow: scroll" scrolling="yes" src="%s"></iframe>
-        </div>
-        ''' % (html_escape(self.title), html_escape(self.url), html_escape(self.domain), literal_data)
-        display(HTML(html))
-
-
-def make_data_url(content_type, content):
-    encoded = base64.b64encode(content.encode('UTF-8')).decode('ASCII')
-    return 'data:%s;base64,%s' % (content_type, encoded.replace('\n', ''))
+        display_html(html, title=self.title, link=self.url, link_title=self.domain)
 
 
 def make_tag(tagname, attrs):
