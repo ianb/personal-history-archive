@@ -4,10 +4,10 @@ Creating a dump of your personal browser history for analysis. This is a tool fo
 
 This consists of several parts:
 
-* A [browser extension](./tracker-extension) (for Firefox and Chrome) to send your history to a local server
-* A [server](./server) to store that history in a local SQLite database and JSON files
-* A [second extension](./fetcher-extension) to fetch and serialize full copies of those pages
-* A [python library](./python) to use and analyze the history
+* A [browser extension](./tracker-extension#readme) (for Firefox and Chrome) to send your history to a local server
+* A [server](./server#readme) to store that history in a local SQLite database and JSON files
+* A [second extension](./fetcher-extension#readme) to fetch and serialize full copies of those pages
+* A [python library](./python#readme) to use and analyze the history
 
 ## Installation
 
