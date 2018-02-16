@@ -2,11 +2,18 @@
 See this for SQLite FTS5/full text installation instructions: https://sqlite.org/fts5.html
 
 Or: brew upgrade sqlite3 --with-fts5
+
+Use: `python -m pha.search` to create a fresh index.
 """
 from . import htmltools
 from collections.abc import Sequence
 
 def create_index(archive, purge=True):
+    """
+    Creates an index of all pages, in a SQLite table.
+
+    If `purge` is true, then throw away any past index.
+    """
     c = archive.conn.cursor()
     c.execute("""
         CREATE VIRTUAL TABLE IF NOT EXISTS search_index
@@ -57,6 +64,9 @@ def create_index(archive, purge=True):
     return count
 
 def search(archive, query):
+    """
+    Searches pages from an archive. Returns a list-like object.
+    """
     c = archive.conn.cursor()
     rows = c.execute("""
         SELECT url FROM search_index WHERE search_index MATCH ? ORDER BY rank

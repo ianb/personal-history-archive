@@ -1,3 +1,8 @@
+"""
+Fetch a remote file, if it hasn't been fetched before.
+
+Typically used in Jupyter Notebooks.
+"""
 import os
 import shutil
 from urllib.request import urlopen

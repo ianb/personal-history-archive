@@ -9,6 +9,9 @@ import subprocess
 default_glove_path = None
 
 def set_glove_path(value):
+    """
+    Sets the path where we can find GloVe installed, for all future calls to vectorize.
+    """
     global default_glove_path
     default_glove_path = value
 
@@ -20,6 +23,11 @@ def vectorize(
     debug_print=False,
     vocab_min_count=5,
     window_size=15):
+    """
+    Takes a corpus (list of words, or one big string with spaces separating words) and creates a mapping from words to vectors.
+
+    This calls the scripts in GloVe and processes the results, it doesn't implement any vectorization itself.
+    """
     glove_path = glove_path or default_glove_path
     if not os.path.exists(glove_path):
         raise OSError("No such directory: %s" % glove_path)

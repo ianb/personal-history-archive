@@ -1,3 +1,6 @@
+"""
+Tools for use in Jupyter Notebooks, especially display_html()
+"""
 import base64
 from IPython.core.display import display, HTML
 from cgi import escape as html_escape
@@ -8,6 +11,11 @@ def make_data_url(content_type, content):
     return 'data:%s;base64,%s' % (content_type, encoded.replace('\n', ''))
 
 def display_html(html_page, header='', footer='', height="12em", title=None, link=None, link_title=None):
+    """
+    Display an HTML page inline in a Jupyter notebook.
+
+    The page will go in an iframe. The header and footer are optional extra HTML. The title, link, and link_title are all used as part of a header.
+    """
     if isinstance(html_page, lxml.etree.ElementBase):
         html_page = lxml.html.tostring(html_page)
     if isinstance(html_page, bytes):

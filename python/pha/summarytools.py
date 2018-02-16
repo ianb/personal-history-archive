@@ -1,3 +1,6 @@
+"""
+Helpers for summarization, using either textteaser or sumy
+"""
 import re
 
 text_teaser_instance = None

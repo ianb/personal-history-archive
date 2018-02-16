@@ -1,3 +1,8 @@
+"""
+Some helpers for use with HTML.
+
+Mostly normalize_classes()
+"""
 import re
 import random
 from nltk.stem import PorterStemmer
@@ -23,6 +28,16 @@ def sort_words(c):
     return "-".join(sorted(c.split("-")))
 
 def normalize_classes(c, shuffle=False):
+    """Takes an HTML class attribute (or element) and returns a normalized form of the classes:
+
+    * Each class name is split into "words", either based on dashes or mixed case
+    * Numbers are removed
+    * Each word is stemmed
+    * The words are sorted
+    * They are combined back using dashes.
+
+    If `shuffle` is true, then (if there is more than one class), the classes will be randomly shuffled.
+    """
     if isinstance(c, lxml.etree.ElementBase):
         c = c.get("class")
     if not c:
@@ -42,6 +57,12 @@ def _url_ignore_word(w):
     return w.strip() and number_regex.search(w) or (len(w) > 10 and hex_only.search(w))
 
 def url_words(url):
+    """
+    Tries to reduce a URL to a set of "words" that define the URL. This leaves out numbers,
+    things that look like hex tokens, and the TLD.
+
+    Typically used for searchable full text indexing of the URL.
+    """
     result = []
     parsed = urlparse(url)
     hostname = parsed.hostname
