@@ -18,7 +18,7 @@ archive = Archive.default_location()
 
 Or `Archive(path)`, but since we don't have configurable places to put `history.sqlite` and `pages/`, the default location always works.
 
-The key objects are all implemented in [`__init__.py`](./__init__.py): `Archive`, `History`, `Visit`, and `Page`.
+The key objects are all implemented in [`__init__.py`](./pha/__init__.py): `Archive`, `History`, `Visit`, and `Page`.
 
 * `History` is one history URL item in one browser. If you connect multiple browsers and merge their history, there could be more than one item for a given URL (but the code doesn't account for that well). These are based on the browser [`HistoryItem`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/HistoryItem). A history item could represent multiple visits.
 * `Visit` is one visit. Each visit is attached as `history.visits`, which is a dictionary of visit IDs to `Visit` objects. The object is based on [`VisitItem`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/VisitItem).
