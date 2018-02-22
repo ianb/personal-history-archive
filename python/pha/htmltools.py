@@ -82,3 +82,149 @@ def url_words(url):
         if not _url_ignore_word(value):
             result.extend([name, value])
     return result
+
+DEFAULT_DISPLAY = {
+    "a": "inline",
+    "applet": "inline",
+    "article": "block",
+    "area": "none",
+    "audio": "none",
+    "base": "none",
+    "basefont": "none",
+    "bgsound": "inline",
+    "blockquote": "block",
+    "body": "flex",
+    "br": "inline",
+    "button": "inline-block",
+    "canvas": "inline",
+    "col": "table-column",
+    "colgroup": "table-column-group",
+    "del": "inline",
+    "details": "block",
+    "dir": "block",
+    "div": "block",
+    "dl": "block",
+    "embed": "inline",
+    "fieldset": "block",
+    "footer": "block",
+    "font": "inline",
+    "form": "block",
+    "frame": "inline",
+    "frameset": "block",
+    "h1": "block",
+    "h2": "block",
+    "h3": "block",
+    "h4": "block",
+    "h5": "block",
+    "h6": "block",
+    "head": "none",
+    "hr": "block",
+    "iframe": "inline",
+    "img": "inline",
+    "input": "inline",
+    "ins": "inline",
+    "isindex": "inline",
+    "label": "inline",
+    "li": "list-item",
+    "link": "none",
+    "nav": "block",
+    "map": "inline",
+    "marquee": "inline-block",
+    "menu": "block",
+    "meta": "none",
+    "meter": "inline-block",
+    "object": "inline",
+    "ol": "block",
+    "optgroup": "block",
+    "option": "block",
+    "output": "inline",
+    "p": "block",
+    "param": "none",
+    "pre": "block",
+    "progress": "inline-block",
+    "q": "inline",
+    "script": "none",
+    "select": "inline-block",
+    "source": "inline",
+    "span": "inline",
+    "style": "none",
+    "table": "table",
+    "tbody": "table-row-group",
+    "td": "table-cell",
+    "textarea": "inline",
+    "tfoot": "table-footer-group",
+    "title": "none",
+    "th": "table-cell",
+    "thead": "table-header-group",
+    "time": "inline",
+    "tr": "table-row",
+    "track": "inline",
+    "ul": "block",
+    "video": "inline"
+}
+
+blockish_display_values = ["block", "table-cell", "table", "flex", "list-item"]
+
+def _make_blockish_selector():
+    blockish_elements = set()
+    for tagname, display_value in DEFAULT_DISPLAY.items():
+        if display_value in blockish_display_values:
+            blockish_elements.add(tagname)
+    blockish_selectors = ', '.join(
+        '%s:not([data-display])' % tagname for tagname in sorted(blockish_elements))
+    extra_selectors = ', '.join(
+        "*[data-display='%s']" % display for display in sorted(blockish_display_values))
+    return "%s, %s" % (blockish_selectors, extra_selectors)
+
+blockish_selector = _make_blockish_selector()
+
+def iter_block_level_elements(el):
+    return el.cssselect(blockish_selector)
+
+def iter_block_level_text(el):
+    """
+    Goes through the document, returning `[(text, element), ...]` for block-level elements.
+    When block-level elements are nested, the text of the outer element only includes text that
+    isn't in an inner element. Elements that have no text or only whitespace text are omitted.
+    """
+    for child in el.iter():
+        if not is_blockish(child):
+            continue
+        text_chunks = get_unblockish_text(child)
+        text_chunks = [s.strip() for s in text_chunks if s and s.strip()]
+        if text_chunks:
+            yield (' '.join(text_chunks), child)
+
+def is_blockish(el):
+    display = el.get("data-display") or DEFAULT_DISPLAY.get(el.tag, "block")
+    return display in blockish_display_values
+
+def get_unblockish_text(el):
+    chunks = [el.text]
+    for child in el:
+        if not is_blockish(child):
+            chunks.extend(get_unblockish_text(child))
+        chunks.append(child.tail)
+    return chunks
+
+def element_to_css(el):
+    """
+    Create a CSS selector that will select the given element
+    """
+    singleton_elements = ["body", "head"]
+    parts = []
+    context = el
+    while True:
+        if context.tag in singleton_elements:
+            parts.insert(0, context.tag)
+            break
+        if context.get("id"):
+            parts.insert(0, "#" + context.get("id"))
+            break
+        parent = context.getparent()
+        position = parent.index(context)
+        parts.insert(0, "*:nth-child(%s)" % (position + 1))
+        context = parent
+    return " > ".join(parts)
+
+

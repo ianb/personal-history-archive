@@ -13,6 +13,28 @@ lxml = None
 www_regex = re.compile(r"^www[0-9]*\.")
 markup_regex = re.compile(r"<.*?>", re.S)
 
+STANDARD_SCRIPT = '''\
+<script>
+window.addEventListener("load", function () {
+  var element;
+  var match = /css=([^&=]+)/.exec(location.hash);
+  if (match) {
+    var selector = decodeURIComponent(match[1]);
+    element = document.querySelector(selector);
+    if (!element) {
+      console.warn("No element found matching:", selector);
+    } else {
+      element.scrollIntoView();
+    }
+  } else if (location.hash) {
+    element = document.getElementById(location.hash.substr(1));
+  }
+  if (element) {
+    element.style.outline = "1px dotted rgba(1.0, 0, 0, 0.5)";
+  }
+});
+</script>'''
+
 def domain(url):
     d = urlparse(url).hostname
     match = www_regex.search(d)
@@ -292,10 +314,11 @@ class Page:
     def html(self):
         body = sub_resources(self.data["body"], self.data["resources"])
         head = sub_resources(self.data["head"], self.data["resources"])
-        return """<!DOCTYPE html>\n%(html_tag)s%(head_tag)s<base href="%(base)s"><meta charset="UTF-8">%(head)s</head>%(body_tag)s%(body)s</body></html>""" % {
+        return """<!DOCTYPE html>\n%(html_tag)s%(head_tag)s<base href="%(base)s"><meta charset="UTF-8">%(standard_script)s%(head)s</head>%(body_tag)s%(body)s</body></html>""" % {
             "html_tag": make_tag("html", self.data["htmlAttrs"]),
             "head_tag": make_tag("head", self.data["headAttrs"]),
             "base": html_escape(self.url, quote=True),
+            "standard_script": STANDARD_SCRIPT,
             "head": head,
             "body_tag": make_tag("body", self.data["bodyAttrs"]),
             "body": body,
