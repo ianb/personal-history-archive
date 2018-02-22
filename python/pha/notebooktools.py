@@ -5,6 +5,7 @@ import base64
 from IPython.core.display import display, HTML
 from cgi import escape as html_escape
 import lxml
+import time
 
 def make_data_url(content_type, content):
     encoded = base64.b64encode(content.encode('UTF-8')).decode('ASCII')
@@ -43,3 +44,38 @@ def display_html(html_page, header='', footer='', height="12em", title=None, lin
     </div>
     ''' % (header, html_escape(height), literal_data, footer)
     display(HTML(html))
+
+chooser_id = int(time.time())
+
+def display_chooser(links, height="12em"):
+    display(HTML(display_chooser_html(links, height=height)))
+
+def display_chooser_html(links, height="12em"):
+    global chooser_id
+    if not links:
+        return '<div>Nothing to choose from</div>'
+    chooser_id, my_id = chooser_id + 1, "chooser-%s" % chooser_id
+    links_html = []
+    for link in links:
+        if isinstance(link, str):
+            link = {"src": link}
+        if not link.get("title"):
+            link["title"] = link["src"]
+        links_html.append('''
+        <button onclick="document.querySelector('#%s iframe').src = %s">%s</button>
+        ''' % (
+            my_id,
+            html_escape(repr(link["src"])),
+            html_escape(link["title"]),
+        ))
+    return '''\
+<div id="%(id)s">
+  %(links)s
+  <iframe style="width: 100%% ; height: %(height)s;  overflow: scroll" scrolling="yes"></iframe>
+</div>
+''' % dict(
+        id=my_id,
+        links=' '.join(links_html),
+        height=height,
+    )
+
