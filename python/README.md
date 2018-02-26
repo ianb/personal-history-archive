@@ -4,6 +4,7 @@ To install:
 
 ```sh
 $ pip install -e python/
+# Optional requirements:
 $ pip install -r python/requirements.txt
 ```
 

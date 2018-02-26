@@ -2,6 +2,26 @@
 
 Creating a dump of your personal browser history for analysis. This is a tool for people who want to research browsing behavior and content, starting with the only dataset you'll really be able to create: data about yourself.
 
+If you use this tool you can:
+
+* Extract your history from multiple browsers into a database
+* Fetch high quality versions of your history items:
+  * Get frozen pages from the browser (no worries about JavaScript)
+  * Fetch pages using your cookies and authentication (get personal and personalized versions of pages)
+  * All HTML is well-formed, links are made absolute
+  * HTML can be re-rendered easily
+* The frozen HTML has additional annotations to make it easier to interpret:
+  * Hidden elements are marked as such
+  * Elements whose `display` style is changed are marked as such (useful if you want to look for any block-like element)
+  * The [Readability](https://github.com/mozilla/readability) library is used to extract a "readable" form
+  * Elements in the original document that form the readable view are marked as such
+  * The natural/rendered sizes of images are included
+  * A first-page screenshot is taken, and a full-length thumbnail
+* A [Python library](./python/#readme) is included to help interpret your results:
+  * Load and query history items and pages
+  * Parse pages (using [lxml](http://lxml.de/))
+  * A [growing list of miscellany](./python#helpers)...
+
 This consists of several parts:
 
 * A [browser extension](./tracker-extension#readme) (for Firefox and Chrome) to send your history to a local server
