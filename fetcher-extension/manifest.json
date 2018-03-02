@@ -19,6 +19,7 @@
   "background": {
     "scripts": [
       "browser-polyfill.js",
+      "scrape-tab.js",
       "background.js"
     ]
   },
