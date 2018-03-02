@@ -102,11 +102,11 @@ done
 run_webext() {
   echo "Running Firefox."
   if [[ -n "$use_scratch" ]] ; then
-    $webext run $prefs --firefox "$binary" --source-dir ./fetcher-extension/
+    $webext run $prefs --firefox "$binary" --source-dir ./tracker-extension/ --start-url http://localhost:11180/fetcher.html
   else
     echo "  Using profile $(cat ./StickyProfile/pha-orig-profile-name.txt)"
-    $webext run $prefs --firefox "$binary" --source-dir ./fetcher-extension/ \
-      --keep-profile-changes --firefox-profile ./StickyProfile/
+    $webext run $prefs --firefox "$binary" --source-dir ./tracker-extension/ \
+      --keep-profile-changes --firefox-profile ./StickyProfile/ --start-url http://localhost:11180/fetcher.html
   fi
 }
 

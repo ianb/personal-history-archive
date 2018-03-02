@@ -21,13 +21,29 @@
   "background": {
     "scripts": [
       "browser-polyfill.js",
-      "continuous-saver.js"
+      "scraper/scrape-tab.js",
+      "continuous-saver.js",
+      "history-tracker.js",
+      "autofetch/background.js"
     ]
   },
+  "content_scripts": [
+    {
+      "matches": ["http://localhost/fetcher.html"],
+      "js": [
+        "browser-polyfill.js",
+        "autofetch/sitescript.js"
+      ]
+    }
+  ],
   "permissions": [
     "http://localhost:11180/*",
     "*://localhost/*",
+    "<all_urls>",
     "history",
-    "storage"
+    "storage",
+    "tabs",
+    "webNavigation",
+    "webRequest"
   ]
 }

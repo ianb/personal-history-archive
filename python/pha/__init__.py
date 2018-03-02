@@ -6,7 +6,7 @@ import re
 import base64
 from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from . import htmltools
 lxml = None
 
@@ -41,6 +41,9 @@ def domain(url):
     if match:
         d = d[match.end():]
     return d.lower()
+
+def query(url):
+    return parse_qs(urlparse(url).query)
 
 class Archive:
     def __init__(self, path):
@@ -85,15 +88,17 @@ class Archive:
         """)
         (self.history_count, self.fetched_count, self.error_count) = c.fetchone()
 
-    def histories(self):
+    def histories(self, *, extra_query=None, extra_args=(), order_by=None):
+        order_by = order_by or 'visit.visitTime DESC'
         c = self.conn.cursor()
         rows = c.execute("""
             %s
             LEFT JOIN page ON page.url = history.url
             WHERE history.id = visit.history_id
               AND browser.id = history.browser_id
-            ORDER BY visit.visitTime DESC
-        """ % self.base_history_sql)
+              %s
+            ORDER BY %s
+        """ % (self.base_history_sql, extra_query or "", order_by), extra_args)
         result = []
         histories = {}
         for row in rows:
@@ -108,6 +113,9 @@ class Archive:
             history = histories[url] = History(self, url, from_row=from_row)
             result.append(history)
         return result
+
+    def get_histories_by_url(self, *, like, order_by=None):
+        return self.histories(extra_query="AND history.url LIKE ?", extra_args=(like,), order_by=order_by)
 
     def histories_with_page(self):
         c = self.conn.cursor()
@@ -137,9 +145,9 @@ class Archive:
     def get_history(self, url):
         c = self.conn.cursor()
         rows = c.execute("""
-            %s, page
-            WHERE history.url = page.url
-              AND history.id = visit.history_id
+            %s
+            LEFT JOIN page ON page.url = history.url
+            WHERE history.id = visit.history_id
               AND browser.id = history.browser_id
               AND history.url = ?
         """ % self.base_history_sql, (url,))
@@ -207,6 +215,10 @@ class History:
     def domain(self):
         return domain(self.url)
 
+    @property
+    def query(self):
+        return query(self.url)
+
     def fetch(self, from_row=None):
         self.visits = {}
         if not from_row:
@@ -254,6 +266,23 @@ class History:
             return None
         self._page = Page(self.archive, self.url, self)
         return self._page
+
+    def next_histories(self):
+        visit_ids = tuple(self.visits.keys())
+        print("Attempt with ids:", visit_ids)
+        marks = ", ".join(["?"] * len(visit_ids))
+        c = self.archive.conn.cursor()
+        # FIXME: this isn't very efficient
+        rows = c.execute("""
+        SELECT DISTINCT history.url
+        FROM history, visit
+        WHERE history.id = visit.history_id
+              AND visit.referringVisitId IN (%s)
+        """ % marks, visit_ids)
+        histories = []
+        for row in rows:
+            histories.append(self.archive.get_history(row[0]))
+        return histories
 
 
 class Page:

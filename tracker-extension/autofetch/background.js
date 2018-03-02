@@ -1,11 +1,9 @@
 /* globals browser */
 
-const SERVER = "http://localhost:11180";
-const SERVER_BASE = "http://localhost";
 const FETCH_TIMEOUT = 45000;
 const IDLE_WAIT_TIME = 2000;
 
-browser.runtime.onMessage.addListener((message) => {
+function autofetchOnMessage(message) {
   if (message.type == "fetchPage") {
     if (message.url.startsWith("https://addons.mozilla.org")) {
       return Promise.reject(new Error("Cannot load special URL"));
@@ -37,49 +35,12 @@ browser.runtime.onMessage.addListener((message) => {
   } else {
     throw new Error("Bad message: " + JSON.stringify(message));
   }
-});
-
-browser.browserAction.onClicked.addListener(() => {
-  return browser.tabs.query({
-    active: true
-  }).then((tabs) => {
-    return scrapeTab(tabs[0].id);
-  }).then((json) => {
-    return browser.tabs.create({url: `${SERVER}/show-json.html`}).then((tab) => {
-      return browser.tabs.executeScript({
-        file: "inject-json.js"
-      }).then(() => {
-        return browser.tabs.sendMessage({json});
-      });
-    });
-  }).catch((error) => {
-    let s = `Error: ${error}\n\n${error.stack}`;
-    let errorUrl = `${SERVER}/echo?type=text/plain&content=${encodeURIComponent(s)}`;
-    browser.tabs.create({url: errorUrl});
-  });
-});
-
-setTimeout(() => {
-  getServerPage().then((tabs) => {
-    if (!tabs) {
-      browser.tabs.create({url: SERVER, pinned: true, active: true});
-    } else {
-      browser.tabs.update(tabs[0].id, {active: true});
-    }
-    browser.tabs.query({}).then((tabs) => {
-      return browser.tabs.remove(tabs.filter((t) => t.url == "about:newtab").map((t) => t.id));
-    }).catch((error) => {
-      console.error("Error closing newtabs:", error);
-    });
-  }).catch((error) => {
-    console.error("Error in getServerPage:", error);
-  });
-}, 2000);
+}
 
 function getServerPage() {
   return browser.tabs.query({
     currentWindow: true,
-    url: [SERVER + "/*", SERVER_BASE + "/*"]
+    url: [SERVER + "/fetcher.html", SERVER_BASE + "/fetcher.html"]
   }).then((tabs) => {
     let filtered = [];
     for (let tab of tabs) {
@@ -109,7 +70,7 @@ function fetchPage(url) {
         browser.tabs.update(tab.id, {active: true});
       }, 10000);
       return browser.tabs.executeScript(tab.id, {
-        file: "escape-catcher.js",
+        file: "autofetch/escape-catcher.js",
         runAt: "document_start"
       }).then(() => {
         return scrapeTab(tab.id);

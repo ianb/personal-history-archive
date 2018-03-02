@@ -5,6 +5,7 @@ let currentServerTimestamp;
 let lastError;
 let lastUpdated;
 const SERVER = "http://localhost:11180";
+const SERVER_BASE = "http://localhost";
 const VERY_BIG_MAX_RESULTS = 1e9;
 const UPDATE_SEARCH_PERIOD = 60 * 60 * 1000; // 1 hour
 
@@ -41,7 +42,9 @@ browser.runtime.onMessage.addListener((message) => {
       browserId,
       currentServerTimestamp,
       lastUpdated,
-      lastError: lastError ? String(lastError) : null
+      lastError: lastError ? String(lastError) : null,
+      currentPages: Array.from(currentPages.values()),
+      pendingPages
     });
   } else if (message.type == "sendNow") {
     return sendNewHistory(message.force).catch((error) => {
@@ -49,6 +52,7 @@ browser.runtime.onMessage.addListener((message) => {
       throw error;
     });
   }
+  autofetchOnMessage(message);
   console.error("Bad message:", message);
 });
 

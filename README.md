@@ -2,7 +2,11 @@
 
 Creating a dump of your personal browser history for analysis. This is a tool for people who want to research browsing behavior and content, starting with the only dataset you'll really be able to create: data about yourself.
 
-If you use this tool you can:
+## Motivation
+
+## Features
+
+Using this tool you can:
 
 * Extract your history from multiple browsers into a database
 * Fetch high quality versions of your history items:
@@ -21,6 +25,10 @@ If you use this tool you can:
   * Load and query history items and pages
   * Parse pages (using [lxml](http://lxml.de/))
   * A [growing list of miscellany](./python#helpers)...
+
+## Examples
+
+## Overview
 
 This consists of several parts:
 

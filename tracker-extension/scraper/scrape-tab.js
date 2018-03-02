@@ -1,15 +1,15 @@
 function scrapeTab(tabId) {
   return waitForStableTab(tabId).then(() => {
     return browser.tabs.executeScript(tabId, {
-      file: "make-static-html.js"
+      file: "scraper/make-static-html.js"
     });
   }).then(() => {
     return browser.tabs.executeScript(tabId, {
-      file: "Readability.js"
+      file: "scraper/Readability.js"
     });
   }).then(() => {
     return browser.tabs.executeScript(tabId, {
-      file: "extractor-worker.js"
+      file: "scraper/extractor-worker.js"
     });
   }).then(() => {
     return browser.tabs.executeScript(tabId, {
