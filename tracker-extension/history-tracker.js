@@ -1,0 +1,347 @@
+let standardRequestFilter = {
+  urls: ["http://*/*", "https://*/*"],
+  types: ["main_frame"]
+};
+
+
+// FIXME: track pinned tabs
+let currentPages = new Map();
+let pendingAnnotations = new Map();
+let activeTabId;
+let pendingPages = [];
+// This represents pages we'd like to serialize, but haven't yet, as a mapping of tabId
+// to URL
+let pagesToSerialize = new Map();
+let urlsAlreadySerialized = new Set();
+
+class Page {
+  constructor(options) {
+    this.id = makeUuid();
+    this.url = options.url;
+    this.loadTime = options.timeStamp;
+    this.unloadTime = null;
+    this.transitionType = options.transitionType;
+    for (let name of ["client_redirect", "server_redirect", "forward_back", "from_address_bar"]) {
+      this[name] = options.transitionQualifiers && options.transitionQualifiers.includes(name);
+    }
+    this.previousId = options.previous && options.previous.id;
+    this.newTab = !!options.newTab;
+    this.isHashChange = !!options.isHashChange;
+    this.initialLoadId = options.initialLoadId || null;
+    this.fragmentHistory = [];
+    this.active = false;
+    this.activeCount = 0;
+    this.closed = false;
+    this.closedReason = null;
+    this._activeStartTime = null;
+    this._activeCumulatedTime = 0;
+    this.method = null;
+    this.statusCode = null;
+    this.contentType = null;
+    this.hasSetCookie = null;
+  }
+
+  toJSON() {
+    let clone = {...this};
+    delete clone._activeStartTime;
+    delete clone._activeCumulatedTime;
+    delete clone.closed;
+    clone.activeTime = this.activeTime;
+    return clone;
+  }
+
+  setActive() {
+    this.active = true;
+    this._activeStartTime = Date.now();
+    this.activeCount++;
+  }
+
+  setInactive() {
+    this.active = false;
+    if (Date.now() - this._activeStartTime < 1000) {
+      // It got deactivated so quickly we shouldn't include it in activeCount
+      this.activeCount--;
+    }
+    this._activeCumulatedTime += Date.now() - this._activeStartTime;
+    this._activeStartTime = null;
+  }
+
+  get activeTime() {
+    let adjust = 0;
+    if (this.active) {
+      adjust = Date.now() - this._activeStartTime;
+    }
+    return this._activeCumulatedTime + adjust;
+  }
+
+  close(reason) {
+    if (this.active) {
+      this.setInactive();
+    }
+    this.unloadTime = Date.now();
+    this.closed = true;
+    this.closedReason = reason;
+  }
+};
+
+
+function addNewPage({tabId, url, timeStamp, transitionType, transitionQualifiers, sourceTabId, newTab, isHashChange}) {
+  let previous;
+  if (sourceTabId) {
+    previous = currentPages.get(sourceTabId);
+  } else if (tabId) {
+    previous = currentPages.get(tabId);
+    if (previous) {
+      closePage(tabId, "navigation");
+    }
+  }
+  let page = new Page({url, timeStamp, transitionType, transitionQualifiers, previous, newTab, isHashChange});
+  if (isHashChange && previous) {
+    page.initialLoadId = previous.initialLoadId || previous.id;
+  }
+  currentPages.set(tabId, page);
+  if (tabId == activeTabId) {
+    page.setActive();
+  }
+  let annotations = pendingAnnotations.get(tabId);
+  if (annotations) {
+    pendingAnnotations.delete(tabId);
+    annotatePage(annotations);
+  }
+}
+
+function closePage(tabId, reason) {
+  if (!tabId) {
+    throw new Error("closePage with no tabId");
+  }
+  let page = currentPages.get(tabId);
+  console.log("closing", tabId, reason, page && page.url);
+  page.close(reason);
+  currentPages.delete(tabId);
+  pendingAnnotations.delete(tabId);
+  pendingPages.push(page);
+}
+
+function addNewFragment({tabId, url, timeStamp, transitionType, transitionQualifiers}) {
+  addNewPage({tabId, url, timeStamp, transitionType, transitionQualifiers, isHashChange: true});
+}
+
+function annotatePage({tabId, url, originUrl, method, statusCode, contentType, hasSetCookie}) {
+  // FIXME: I think we don't need originUrl
+  let page = currentPages.get(tabId);
+  if (!page) {
+    console.warn("Cannot annotate tab", tabId, "url:", url);
+    return;
+  }
+  if (page.url == url) {
+    page.method = method;
+    page.statusCode = statusCode;
+    page.contentType = contentType;
+    page.hasSetCookie = hasSetCookie;
+  } else {
+    pendingAnnotations.set(tabId, {
+      url, method, statusCode, contentType, hasSetCookie
+    });
+  }
+}
+
+function setActiveTabId(tabId) {
+  if (activeTabId) {
+    currentPages.get(activeTabId).setInactive();
+  }
+  let current = currentPages.get(tabId);
+  if (!current) {
+    console.warn("Unexpectedly unable to get page from tab", tabId);
+  } else {
+    current.setActive();
+  }
+  activeTabId = tabId;
+}
+
+browser.webNavigation.onCommitted.addListener((event) => {
+  if (event.frameId) {
+    return;
+  }
+  let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
+  addPageToSerialize(tabId, url);
+  addNewPage({
+    tabId, url, timeStamp, transitionType, transitionQualifiers
+  });
+});
+
+browser.webNavigation.onCreatedNavigationTarget.addListener((event) => {
+  if (event.frameId) {
+    return;
+  }
+  let {sourceTabId, tabId, timeStamp, url} = event;
+  addPageToSerialize(tabId, url);
+  addNewPage({
+    tabId, url, timeStamp, sourceTabId, newTab: true
+  });
+});
+
+browser.webNavigation.onHistoryStateUpdated.addListener((event) => {
+  if (event.frameId) {
+    return;
+  }
+  let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
+  addPageToSerialize(tabId, url);
+  addNewPage({
+    tabId, url, timeStamp, transitionType, transitionQualifiers
+  });
+});
+
+browser.webNavigation.onReferenceFragmentUpdated.addListener((event) => {
+  if (event.frameId) {
+    return;
+  }
+  let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
+  addPageToSerialize(tabId, url);
+  addNewFragment({
+    tabId, url, timeStamp, transitionType, transitionQualifiers
+  });
+});
+
+browser.webRequest.onHeadersReceived.addListener((event) => {
+  if (event.frameId) {
+    return;
+  }
+  let {method, originUrl, responseHeaders, statusCode, tabId, url} = event;
+  let contentType;
+  let hasSetCookie;
+  if (!responseHeaders) {
+    console.error("no response headers", method, originUrl, url, tabId, statusCode);
+  }
+  if (responseHeaders) {
+    hasSetCookie = false;
+    for (let header of responseHeaders) {
+      if (header.name.toLowerCase() === "content-type") {
+        contentType = header.value;
+      } else if (header.name.toLowerCase() == "set-cookie") {
+        hasSetCookie = true;
+      }
+    }
+  }
+  annotatePage({
+    tabId, url, originUrl, method, statusCode, contentType, hasSetCookie
+  })
+}, standardRequestFilter, ["responseHeaders"]);
+
+browser.tabs.onActivated.addListener((event) => {
+  let current = currentPages.get(event.tabId);
+  console.log("Set active:", event.tabId, current ? current.url : "unknown");
+  setActiveTabId(event.tabId);
+});
+
+browser.tabs.onRemoved.addListener((event) => {
+  closePage(event.tabId, "tabClose");
+});
+
+browser.tabs.query({}).then((tabs) => {
+  let activeTabId;
+  for (let tab of tabs) {
+    if (tab.active) {
+      activeTabId = tab.id;
+    }
+    // FIXME: use isArticle and isInReadableMode
+    // FIXME: use lastAccessed (not sure if this is meaningful?)
+    // FIXME: use openerTabId (maybe not worth it?)
+    addPageToSerialize(tab.id, tab.url);
+    addNewPage({
+      tabId: tab.id,
+      url: tab.url,
+      timeStamp: Date.now(),
+      transitionType: "existed_onload",
+      transitionQualifiers: []
+    });
+  }
+});
+
+function pagePossiblyAllowed(url) {
+  let u = new URL(url);
+  if (!["http:", "https:", "file:", "data:"].includes(u.protocol)) {
+    return false;
+  }
+  if (u.hostname == "addons.mozilla.org" || u.hostname == "testpilot.firefox.com") {
+    return false;
+  }
+  return true;
+}
+
+async function checkIfUrlNeeded(url) {
+  if (!pagePossiblyAllowed(url)) {
+    return false;
+  }
+  if (urlsAlreadySerialized.has(url)) {
+    return false;
+  }
+  let resp = await fetch(`${SERVER}/check-page-needed?url=${encodeURIComponent(url)}`);
+  if (!resp.ok) {
+    console.error("Error if URL needs serialization:", resp);
+    return false;
+  }
+  let body = await resp.json();
+  let needed = !body || body.needed;
+  if (!needed) {
+    urlsAlreadySerialized.add(url);
+  }
+  return needed;
+}
+
+async function addPageToSerialize(tabId, url) {
+  console.log("ready to load:", tabId, url);
+  // Any old page is now invalid:
+  pagesToSerialize.delete(tabId);
+  let needed = await checkIfUrlNeeded(url);
+  console.log("attempting to serialize", tabId, url, "needed:", needed);
+  if (needed) {
+    console.log("loading was not necessary:", tabId, url);
+    pagesToSerialize.set(tabId, url);
+    startQueue(tabId, url);
+  }
+}
+
+async function startQueue(tabId, url) {
+  await setTimeoutPromise(1000);
+  let scraped;
+  try {
+    scraped = await scrapeTab(tabId, url);
+  } catch (e) {
+    console.warn("Failed to fetch", JSON.stringify(url), "Error:", e);
+  }
+  if (!scraped) {
+    console.info("Could not scrape", url, "from", tabId);
+    if (pagesToSerialize.get(tabId) == url) {
+      pagesToSerialize.delete(tabId);
+    }
+    return;
+  }
+  console.log("Successfully sending", url, "from", tabId);
+  sendPage(url, scraped);
+}
+
+function flush() {
+  let pages = Array.from(currentPages.values());
+  pages = pages.concat(pendingPages);
+  return fetch(`${SERVER}/add-activity-list`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      browser_id: browserId,
+      activityItems: pages
+    })
+  }).then((resp) => {
+    if (!resp.ok) {
+      throw new Error(`Bad response: ${resp.status} ${resp.statusText}`);
+    }
+    console.info("Sent", pages.length, "pages of activity");
+    pendingPages = [];
+  }).catch((error) => {
+    console.error("Error sending activity:", error);
+    throw error;
+  });
+}
+
+setInterval(flush, UPDATE_SEARCH_PERIOD / 4 + 1000);

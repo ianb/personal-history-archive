@@ -51,6 +51,11 @@ browser.runtime.onMessage.addListener((message) => {
       console.error("Error in sendNow:", error);
       throw error;
     });
+  } else if (message.type == "flushNow") {
+    return flush().catch((error) => {
+      console.error("Error in flushNow:", error);
+      throw error;
+    });
   }
   autofetchOnMessage(message);
   console.error("Bad message:", message);

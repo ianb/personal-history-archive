@@ -43,6 +43,28 @@ const db = new sqlite3.Database("./history.sqlite", () => {
       attempted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       error_message TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS activity (
+      id TEXT PRIMARY KEY,
+      browser_id TEXT REFERENCES browser (id) ON DELETE CASCADE,
+      url TEXT NOT NULL,
+      loadTime INT,
+      unloadTime INT,
+      transitionType TEXT,
+      client_redirect BOOLEAN DEFAULT FALSE,
+      server_redirect BOOLEAN DEFAULT FALSE,
+      forward_back BOOLEAN DEFAULT FALSE,
+      from_address_bar BOOLEAN DEFAULT FALSE,
+      previousId TEXT REFERENCES activity (id) ON DELETE SET NULL,
+      initialLoadId TEXT REFERENCES activity (id) ON DELETE SET NULL,
+      newTab BOOLEAN DEFAULT FALSE,
+      activeCount INT,
+      closedReason TEXT,
+      method TEXT,
+      statusCode INT,
+      contentType TEXT,
+      hasSetCookie BOOLEAN
+    );
   `);
 });
 

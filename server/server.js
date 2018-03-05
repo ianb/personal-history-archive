@@ -104,7 +104,51 @@ app.post("/add-history-list", function(req, res) {
   }).catch((error) => {
     sendError(error, res);
   });
+});
 
+app.post("/add-activity-list", function(req, res) {
+  let browserId = req.body.browserId;
+  let activityItems = req.body.activityItems;
+  let promise = Promise.resolve();
+  Object.keys(activityItems).forEach((activityId) => {
+    let activity = activityItems[activityId];
+    promise = promise.then(() => {
+      let columns = `
+      id
+      browser_id
+      url
+      loadTime
+      unloadTime
+      transitionType
+      client_redirect
+      server_redirect
+      forward_back
+      from_address_bar
+      previousId
+      initialLoadId
+      newTab
+      activeCount
+      closedReason
+      method
+      statusCode
+      contentType
+      hasSetCookie
+      `.split(/\s+/g).filter(x => x);
+      let marks = columns.map(x => "?");
+      let values = columns.map(x => activity[x]);
+      return dbRun(`
+        INSERT OR REPLACE INTO activity (
+          ${columns.join(", ")}
+        ) VALUES (${marks.join(",")})
+      `, ...values);
+    });
+  });
+  promise.then(() => {
+    console.info("Imported activities:", activityItems.length);
+    res.send("OK");
+  }).catch((error) => {
+    sendError(error, res);
+  });
 });
 
 app.post("/register", function(req, res) {
@@ -157,6 +201,18 @@ app.get("/get-needed-pages", function(req, res) {
     for (let row of rows) {
       result.push({url: row.url, lastError: row.error_message});
     }
+    res.send(result);
+  }).catch((error) => {
+    sendError(error, res);
+  });
+});
+
+app.get("/check-page-needed", function(req, res) {
+  let url = req.query.url;
+  dbGet(`
+    SELECT COUNT(*) AS counter FROM page WHERE page.url = ?
+  `, url).then((row) => {
+    let result = {needed: !row.counter};
     res.send(result);
   }).catch((error) => {
     sendError(error, res);

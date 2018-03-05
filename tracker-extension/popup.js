@@ -38,4 +38,13 @@ document.querySelector("#sendAllNow").addEventListener("click", () => {
   });
 });
 
+document.querySelector("#flush").addEventListener("click", () => {
+  showStatus({status: "Sending activity..."});
+  browser.runtime.sendMessage({type: "flushNow"}).then(() => {
+    requestStatus();
+  }).catch((error) => {
+    showError(error);
+  });
+});
+
 requestStatus();

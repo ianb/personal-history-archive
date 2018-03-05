@@ -1,46 +1,44 @@
-function scrapeTab(tabId) {
-  return waitForStableTab(tabId).then(() => {
-    return browser.tabs.executeScript(tabId, {
-      file: "scraper/make-static-html.js"
-    });
-  }).then(() => {
-    return browser.tabs.executeScript(tabId, {
-      file: "scraper/Readability.js"
-    });
-  }).then(() => {
-    return browser.tabs.executeScript(tabId, {
-      file: "scraper/extractor-worker.js"
-    });
-  }).then(() => {
-    return browser.tabs.executeScript(tabId, {
-      code: "extractorWorker.documentStaticJson()"
-    });
-  }).then((resultList) => {
-    return resultList[0];
+async function scrapeTab(tabId, requireUrl) {
+  let start = Date.now();
+  let foundUrl = await waitForStableTab(tabId)
+  if (foundUrl !== requireUrl) {
+    console.log("Change", requireUrl, "to", foundUrl);
+    throw new Error("URL changed from what was expected");
+  }
+  await browser.tabs.executeScript(tabId, {
+    file: "scraper/make-static-html.js"
   });
+  await browser.tabs.executeScript(tabId, {
+    file: "scraper/Readability.js"
+  });
+  await browser.tabs.executeScript(tabId, {
+    file: "scraper/extractor-worker.js"
+  });
+  let resultList = await browser.tabs.executeScript(tabId, {
+    code: "extractorWorker.documentStaticJson()"
+  });
+  resultList[0].timeToFetch = Date.now() - start;
+  return resultList[0];
 }
 
-function waitForStableTab(tabId, attempts = 3) {
+async function waitForStableTab(tabId, attempts = 3) {
   let originalUrl;
-  return browser.tabs.get(tabId).then((tab) => {
-    originalUrl = tab.url;
-    return waitForIdle(tabId);
-  }).then(() => {
-    if (!attempts) {
-      return;
-    }
-    return setTimeoutPromise(IDLE_WAIT_TIME).then(() => {
-      return browser.tabs.get(tabId).then((tab) => {
-        if (tab.url != originalUrl) {
-          return waitForStableTab(tabId, attempts - 1);
-        }
-      });
-    });
-  });
+  let tab = await browser.tabs.get(tabId);
+  originalUrl = tab.url;
+  await waitForIdle(tabId);
+  if (!attempts) {
+    return tab.url;
+  }
+  await setTimeoutPromise(IDLE_WAIT_TIME);
+  tab = await browser.tabs.get(tabId);
+  if (tab.url != originalUrl) {
+    return await waitForStableTab(tabId, attempts - 1);
+  }
+  return tab.url;
 }
 
 function waitForIdle(tabId) {
-  return browser.tabs.executeScript({
+  return browser.tabs.executeScript(tabId, {
     code: "null",
     runAt: "document_start"
   });

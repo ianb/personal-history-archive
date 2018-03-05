@@ -22,6 +22,7 @@
     "scripts": [
       "browser-polyfill.js",
       "scraper/scrape-tab.js",
+      "scraper/send-page.js",
       "continuous-saver.js",
       "history-tracker.js",
       "autofetch/background.js"
@@ -32,6 +33,7 @@
       "matches": ["http://localhost/fetcher.html"],
       "js": [
         "browser-polyfill.js",
+        "scraper/send-page.js",
         "autofetch/sitescript.js"
       ]
     }
