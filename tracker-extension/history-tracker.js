@@ -22,13 +22,12 @@ class Page {
     this.unloadTime = null;
     this.transitionType = options.transitionType;
     for (let name of ["client_redirect", "server_redirect", "forward_back", "from_address_bar"]) {
-      this[name] = options.transitionQualifiers && options.transitionQualifiers.includes(name);
+      this[name] = (!!options.transitionQualifiers) && options.transitionQualifiers.includes(name);
     }
     this.previousId = options.previous && options.previous.id;
     this.newTab = !!options.newTab;
     this.isHashChange = !!options.isHashChange;
     this.initialLoadId = options.initialLoadId || null;
-    this.fragmentHistory = [];
     this.active = false;
     this.activeCount = 0;
     this.closed = false;
