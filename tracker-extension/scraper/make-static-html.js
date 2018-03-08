@@ -25,7 +25,8 @@ function makeUuid() { // eslint-disable-line no-unused-vars
   });
 }
 
-const makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
+// We use var so if this gets loaded twice it won't give an error
+var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   let exports = {};
 
   let CONFIG = {

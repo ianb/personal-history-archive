@@ -8,7 +8,7 @@
     extractData() does the main work
     */
 
-const extractorWorker = (function() { // eslint-disable-line no-unused-vars
+var extractorWorker = (function() { // eslint-disable-line no-unused-vars
   /** Extracts data:
       - Gets the Readability version of the page (`.readable`)
       - Finds images in roughly the preferred order (`.images`)
