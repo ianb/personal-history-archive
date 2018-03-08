@@ -11,3 +11,4 @@
 /.vscode
 tmp
 /python/data
+build

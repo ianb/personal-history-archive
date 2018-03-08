@@ -36,6 +36,13 @@
         "scraper/send-page.js",
         "autofetch/sitescript.js"
       ]
+    },
+    {
+      "matches": ["http://localhost/debug.html"],
+      "js": [
+        "browser-polyfill.js",
+        "debug-show.js"
+      ]
     }
   ],
   "permissions": [

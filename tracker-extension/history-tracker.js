@@ -147,7 +147,12 @@ function annotatePage({tabId, url, originUrl, method, statusCode, contentType, h
 
 function setActiveTabId(tabId) {
   if (activeTabId) {
-    currentPages.get(activeTabId).setInactive();
+    let current = currentPages.get(activeTabId);
+    if (current) {
+      current.setInactive();
+    } else {
+      console.warn("Trying to change activeTabId from", activeTabId, "to", tabId, "but the original tab isn't being tracked");
+    }
   }
   let current = currentPages.get(tabId);
   if (!current) {
@@ -163,6 +168,10 @@ browser.webNavigation.onCommitted.addListener((event) => {
     return;
   }
   let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
+  if (!url) {
+    console.warn("Got onCommitted with no URL", tabId);
+    return;
+  }
   addPageToSerialize(tabId, url);
   addNewPage({
     tabId, url, timeStamp, transitionType, transitionQualifiers
@@ -174,6 +183,10 @@ browser.webNavigation.onCreatedNavigationTarget.addListener((event) => {
     return;
   }
   let {sourceTabId, tabId, timeStamp, url} = event;
+  if (!url) {
+    console.warn("Got onCreatedNavigationTarget with no URL", tabId);
+    return;
+  }
   addPageToSerialize(tabId, url);
   addNewPage({
     tabId, url, timeStamp, sourceTabId, newTab: true
@@ -185,6 +198,10 @@ browser.webNavigation.onHistoryStateUpdated.addListener((event) => {
     return;
   }
   let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
+  if (!url) {
+    console.warn("Got onHistoryStateUpdated with no URL", tabId);
+    return;
+  }
   addPageToSerialize(tabId, url);
   addNewPage({
     tabId, url, timeStamp, transitionType, transitionQualifiers
@@ -196,6 +213,10 @@ browser.webNavigation.onReferenceFragmentUpdated.addListener((event) => {
     return;
   }
   let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
+  if (!url) {
+    console.warn("Got onReferenceFragmentUpdated with no URL", tabId);
+    return;
+  }
   addPageToSerialize(tabId, url);
   addNewFragment({
     tabId, url, timeStamp, transitionType, transitionQualifiers
