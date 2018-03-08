@@ -40,7 +40,7 @@ document.addEventListener("keyup", (event) => {
 
 let fetchSomeButton = document.querySelector("#fetchSome");
 
-fetchSomeButton.addEventListener("click", () => {
+fetchSomeButton.addEventListener("click", async () => {
   if (!abortWorker) {
     abortWorkerNow();
     return;
@@ -48,17 +48,13 @@ fetchSomeButton.addEventListener("click", () => {
   abortWorker = false;
   let numberOfPages = parseInt(document.querySelector("#fetch-total").value, 10) || DEFAULT_PAGE_TOTAL;
   fetchSomeButton.textContent = "Stop fetching";
-  fetch(`${SERVER}/get-needed-pages?limit=${numberOfPages}`).then((resp) => {
-    return resp.json();
-  }).then((pages) => {
-    for (let page of pages) {
-      model.fetching.set(page.url, false);
-    }
-    startWorker();
-    render();
-  }).catch((error) => {
-    console.error("Got error from /get-needed-pages:", String(error));
-  });
+  let resp = await fetch(`${SERVER}/get-needed-pages?limit=${numberOfPages}`);
+  let pages = await resp.json();
+  for (let page of pages) {
+    model.fetching.set(page.url, false);
+  }
+  startWorker();
+  render();
 });
 
 function render() {
@@ -181,12 +177,13 @@ function startWorker() {
   render();
 }
 
-function fetchPage(url) {
-  let start = Date.now();
-  browser.runtime.sendMessage({
-    type: "fetchPage",
-    url
-  }).then((result) => {
+async function fetchPage(url) {
+  try {
+    let start = Date.now();
+    let result = await browser.runtime.sendMessage({
+      type: "fetchPage",
+      url
+    });
     if (!result) {
       console.error("Error fetching url:", url);
       return;
@@ -194,11 +191,11 @@ function fetchPage(url) {
     let sendPromise = sendPage(url, result);
     model.fetching.delete(url);
     startWorker();
-    return sendPromise;
-  }).catch((error) => {
+    return await sendPromise;
+  } catch (error) {
     model.fetching.delete(url);
     model.failed.set(url, error);
-    Content_fetch("/add-fetch-failure", {
+    fetch("/add-fetch-failure", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -210,5 +207,5 @@ function fetchPage(url) {
     });
     render();
     startWorker();
-  });
+  }
 }

@@ -3,59 +3,58 @@
 const FETCH_TIMEOUT = 45000;
 const IDLE_WAIT_TIME = 2000;
 
-function autofetchOnMessage(message) {
+async function autofetchOnMessage(message) {
   if (message.type == "fetchPage") {
     if (message.url.startsWith("https://addons.mozilla.org")) {
-      return Promise.reject(new Error("Cannot load special URL"));
+      throw new Error("Cannot load special URL");
     }
     return fetchPage(message.url);
   } else if (message.type == "escapeKey") {
-    getServerPage().then((tabs) => {
-      if (!tabs) {
-        return;
-      }
-      for (let tab of tabs) {
-        browser.tabs.sendMessage(tab.id, {
+    let tabs = await getServerPage();
+    if (!tabs) {
+      return;
+    }
+    for (let tab of tabs) {
+      try {
+        await browser.tabs.sendMessage(tab.id, {
           type: "escapeKey"
-        }).catch((error) => {
-          console.error("Error sending message to tab:", error);
         });
+      } catch (error) {
+        console.error("Error sending message to tab:", error);
       }
-    }).catch((error) => {
-      console.error("Error in getServerPage:", error);
-    });
+    }
   } else if (message.type == "focusMainTab") {
-    return getServerPage().then((tabs) => {
-      return browser.tabs.update(tabs[0].id, {active: true});
-    });
+    let tabs = await getServerPage();
+    return await browser.tabs.update(tabs[0].id, {active: true});
   } else if (message.type == "setBadgeText") {
-    console.error("setting bade text", message.text);
     browser.browserAction.setBadgeText({text: message.text});
-    return Promise.resolve();
+    return;
   } else {
     throw new Error("Bad message: " + JSON.stringify(message));
   }
 }
 
-function getServerPage() {
-  return browser.tabs.query({
+async function getServerPage() {
+  let tabs = await browser.tabs.query({
     currentWindow: true,
     url: [SERVER + "/fetcher.html", SERVER_BASE + "/fetcher.html"]
-  }).then((tabs) => {
-    let filtered = [];
-    for (let tab of tabs) {
-      if (tab.url.startsWith(SERVER)) {
-        filtered.push(tab);
-      }
-    }
-    if (!filtered.length) {
-      return null;
-    }
-    return filtered;
   });
+  let filtered = [];
+  for (let tab of tabs) {
+    if (tab.url.startsWith(SERVER)) {
+      filtered.push(tab);
+    }
+  }
+  if (!filtered.length) {
+    return null;
+  }
+  return filtered;
+  }
 }
 
 function fetchPage(url) {
+  // FIXME: convert to async/await. This will be harder because timeoutPromise is not a
+  // normal promise pattern
   let focusTimer = null;
   if (/^https?:\/\/(www\.youtube\.com|m\.youtube\.com|youtu\.be)\/watch\?/.test(url)) {
     // This keeps the YouTube videos from auto-playing:

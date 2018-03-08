@@ -340,10 +340,10 @@ async function startQueue(tabId, url) {
   sendPage(url, scraped);
 }
 
-function flush() {
+async function flush() {
   let pages = Array.from(currentPages.values());
   pages = pages.concat(pendingPages);
-  return fetch(`${SERVER}/add-activity-list`, {
+  let resp = await fetch(`${SERVER}/add-activity-list`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -352,16 +352,12 @@ function flush() {
       browser_id: browserId,
       activityItems: pages
     })
-  }).then((resp) => {
-    if (!resp.ok) {
-      throw new Error(`Bad response: ${resp.status} ${resp.statusText}`);
-    }
-    console.info("Sent", pages.length, "pages of activity");
-    pendingPages = [];
-  }).catch((error) => {
-    console.error("Error sending activity:", error);
-    throw error;
   });
+  if (!resp.ok) {
+    throw new Error(`Bad response: ${resp.status} ${resp.statusText}`);
+  }
+  console.info("Sent", pages.length, "pages of activity");
+  pendingPages = [];
 }
 
 setInterval(flush, UPDATE_SEARCH_PERIOD / 4 + 1000);

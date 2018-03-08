@@ -63,66 +63,59 @@ browser.runtime.onMessage.addListener((message) => {
 
 setInterval(sendNewHistory, UPDATE_SEARCH_PERIOD);
 
-function sendNewHistory(force) {
-  let startTime;
-  return serverQueryStartTime(browserId).then((foundStartTime) => {
+async function sendNewHistory(force) {
+    try {
+    let startTime;
+    let foundStartTime = await serverQueryStartTime(browserId);
     startTime = foundStartTime || 0;
     if (force) {
       startTime = 0;
     }
     currentServerTimestamp = startTime;
-    return browser.history.search({
+    let results = await browser.history.search({
       text: "",
       startTime: startTime || 0,
       maxResults: VERY_BIG_MAX_RESULTS
     });
-  }).then((results) => {
-    return getVisitsForHistoryItems(results, startTime);
-  }).then((annotatedHistory) => {
-    return serverSendHistory(browserId, annotatedHistory);
-  }).then(() => {
+    let annotatedHistory = await getVisitsForHistoryItems(results, startTime);
+    await serverSendHistory(browserId, annotatedHistory);
     lastUpdated = Date.now();
-  }).catch((error) => {
+  } catch (error) {
     lastError = error;
     throw error;
-  });
+  }
 }
 
-function serverQueryStartTime(browserId) {
+async function serverQueryStartTime(browserId) {
   let url = `${SERVER}/status?browserId=${encodeURIComponent(browserId)}`;
-  return fetch(url).then((resp) => {
-    if (!resp.ok) {
-      throw new Error(`Bad response: ${resp.status}`);
-    }
-    return resp.json();
-  }).then((respJson) => {
-    return Math.floor(respJson.latest || 0);
-  });
+  let resp = await fetch(url);
+  if (!resp.ok) {
+    throw new Error(`Bad response: ${resp.status}`);
+  }
+  let respJson = await resp.json();
+  return Math.floor(respJson.latest || 0);
 }
 
-function serverSendHistory(browserId, annotatedHistory) {
+async function serverSendHistory(browserId, annotatedHistory) {
   let body = JSON.stringify({
     browserId,
     historyItems: annotatedHistory
   });
   console.info("Sending history", annotatedHistory.length, "items and", Math.floor(body.length / 1000), "kb");
-  return fetch(`${SERVER}/add-history-list`, {
+  let resp = await fetch(`${SERVER}/add-history-list`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body
-  }).then((resp) => {
-    if (!resp.ok) {
-      throw new Error(`Bad response: ${resp.status}`);
-    }
-  }).catch((error) => {
-    throw error;
   });
+  if (!resp.ok) {
+    throw new Error(`Bad response: ${resp.status}`);
+  }
 }
 
-function serverRegister(browserId) {
-  fetch(`${SERVER}/register`, {
+async function serverRegister(browserId) {
+  let resp = await fetch(`${SERVER}/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -131,6 +124,9 @@ function serverRegister(browserId) {
       browserId
     })
   });
+  if (!resp.ok) {
+    throw new Error(`Bad response to /register`);
+  }
 }
 
 function getVisitsForHistoryItems(historyItems, startTime) {
