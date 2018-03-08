@@ -10,39 +10,35 @@ function insertPage(url, pageData) {
   `, url, fetchedTime, redirectUrl, pageData.timeToFetch);
 }
 
-function insertAllPages() {
-  return listPageUrls().then((urls) => {
-    return Promise.all(urls.map(u => readPage(u)));
-  }).then((datas) => {
-    return Promise.all(datas.map(data => insertPage(data.originalUrl, data)));
-  });
+async function insertAllPages() {
+  let urls = await listPageUrls();
+  let datas = await Promise.all(urls.map(u => readPage(u)));
+  return Promise.all(datas.map(data => insertPage(data.originalUrl, data)));
 }
 
-function clearPages() {
+async function clearPages() {
   let existing = {};
-  return listPageUrls().then((urls) => {
-    for (let url of urls) {
-      existing[url] = true;
+  let urls = await listPageUrls();
+  for (let url of urls) {
+    existing[url] = true;
+  }
+  let rows = await dbAll(`
+    SELECT url FROM page
+  `);
+  let toRemove = [];
+  for (let row of rows) {
+    if (!existing[row.url]) {
+      toRemove.push(row.url);
     }
-    return dbAll(`
-      SELECT url FROM page
-    `);
-  }).then((rows) => {
-    let toRemove = [];
-    for (let row of rows) {
-      if (!existing[row.url]) {
-        toRemove.push(row.url);
-      }
-    }
-    console.info("Found", toRemove.length, "orphaned pages");
-    let promises = [];
-    for (let url of toRemove) {
-      promises.push(dbRun(`
-        DELETE FROM page WHERE url = ?
-      `, url));
-    }
-    return Promise.all(promises);
-  });
+  }
+  console.info("Found", toRemove.length, "orphaned pages");
+  let promises = [];
+  for (let url of toRemove) {
+    promises.push(dbRun(`
+      DELETE FROM page WHERE url = ?
+    `, url));
+  }
+  return Promise.all(promises);
 }
 
 insertAllPages().then(() => {
