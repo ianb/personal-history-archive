@@ -74,10 +74,11 @@ describe("Test history collection", function() {
     driver = await getDriver();
   });
 
-  after(function() {
+  after(async function() {
     console.log("running after() now...");
     if (!process.env.NO_CLOSE) {
-      return driver.quit();
+      // FIXME: arg, this doesn't quit! Bug in geckodriver?
+      return await driver.quit();
     }
     console.info("Note: leaving browser open");
     return null;
