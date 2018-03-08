@@ -11,6 +11,8 @@ function getTextarea() {
   let el = document.querySelector("textarea");
   if (!el) {
     el = document.createElement("textarea");
+    el.style.width = "100%";
+    el.style.height = "20em";
     document.body.appendChild(el);
   }
   return el;
