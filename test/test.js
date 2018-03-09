@@ -19,6 +19,7 @@ const { By, until, Key } = webdriver;
 const path = require("path");
 
 const SERVER = "http://localhost:11180";
+const SERVER_STATIC = `${SERVER}/test-static`;
 const addonFileLocation = path.join(process.cwd(), "build", "tracker-extension.zip");
 
 function getDriver() {
@@ -85,27 +86,25 @@ describe("Test history collection", function() {
   });
 
   it("will browse about", async function() {
-    let query = "minneapolis wikipedia";
-    let queryDest = "https://en.wikipedia.org/wiki/Minneapolis";
-    this.timeout(60000);
+    this.timeout(15000);
     let driver = await getDriver();
     // Give the add-on a moment to load:
     await promiseTimeout(1000);
-    await driver.get("https://google.com");
-    await driver.findElement(By.name('q')).sendKeys(query + "\n");
-    //await driver.findElement(By.name('btnK')).click();
-    await driver.wait(until.titleIs(`${query} - Google Search`));
-    await driver.wait(until.elementLocated(By.css(".r a")));
-    await driver.findElement(By.css(".r a")).click();
+    await driver.get(`${SERVER_STATIC}/search.html`);
+    await driver.findElement(By.name('q')).sendKeys("test query\n");
+    await driver.findElement(By.css('button')).click();
+    await driver.wait(until.titleIs("Search results"));
+    await driver.wait(until.elementLocated(By.css("a.result")));
+    await driver.findElement(By.css("a.result")).click();
     await driver.wait(async () => {
       let url = await driver.getCurrentUrl();
-      return !url.includes("google.com");
+      return !url.includes("search-results.html");
     });
     await driver.navigate().back();
-    await driver.wait(until.elementLocated(By.css(".r a")));
+    await driver.wait(until.elementLocated(By.css("a.result")));
     let mod = process.platform == "darwin" ? Key.COMMAND : Key.CONTROL;
     let selectLinkOpeninNewTab = Key.chord(mod, Key.RETURN);
-    await driver.findElement(By.css(".r a")).sendKeys(selectLinkOpeninNewTab);
+    await driver.findElement(By.css("a.result")).sendKeys(selectLinkOpeninNewTab);
     // We want to be sure the Cmd+click opens a tab before we do the next step:
     await promiseTimeout(1000);
     await driver.get(`${SERVER}/debug.html`);
@@ -127,23 +126,16 @@ describe("Test history collection", function() {
     console.log("Verifying urls,", urls);
     let expectedUrls = [
       'about:blank',
-      'https://www.google.com/',
-      /^https:\/\/www.google.com\/search\?.*q=minneapolis/,
-      queryDest,
-      /^https:\/\/www.google.com\/search\?.*q=minneapolis/,
-      queryDest,
-      queryDest, // FIXME: why does this show up twice here?
-      'http://localhost:11180/debug.html',
+      `${SERVER_STATIC}/search.html`,
+      `${SERVER_STATIC}/search-results.html?q=test+query`,
+      `${SERVER_STATIC}/search-destination.html`,
+      `${SERVER_STATIC}/search-results.html?q=test+query`,
+      `${SERVER_STATIC}/search-destination.html`,
+      `${SERVER_STATIC}/search-destination.html`,
+      `${SERVER}/debug.html`,
     ];
-    assert.equal(urls.length, expectedUrls.length);
-    for (let i=0; i<urls.length; i++) {
-      if (expectedUrls[i] instanceof RegExp) {
-        assert(expectedUrls[i].test(urls[i]), `Bad URL: ${urls[i]} does not match ${expectedUrls[i]}`);
-      } else {
-        assert.equal(urls[i], expectedUrls[i]);
-      }
-    }
     console.log("urls:", urls);
+    assert.deepEqual(urls, expectedUrls);
     // Apparently driver.get() doesn't act like from_address_bar
     assert.deepEqual(property("from_address_bar"), [
       false, false, false, false, false, false, false, false,

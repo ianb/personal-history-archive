@@ -276,6 +276,11 @@ app.use("/", express.static(path.join(__dirname, "static"), {
   maxAge: null
 }));
 
+app.use("/test-static", express.static(path.join(__dirname, "../test/static"), {
+  index: ["index.html"],
+  maxAge: null
+}));
+
 app.use(function(err, req, res, next) {
   console.error("Error:", String(err), "\n", err.stack, "\n\n");
   res.header("Content-Type", "text/plain; charset=utf-8");
