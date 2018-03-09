@@ -76,7 +76,6 @@ describe("Test history collection", function() {
   });
 
   after(async function() {
-    console.log("running after() now...");
     if (!process.env.NO_CLOSE) {
       // FIXME: arg, this doesn't quit! Bug in geckodriver?
       return await driver.quit();
@@ -100,6 +99,9 @@ describe("Test history collection", function() {
       let url = await driver.getCurrentUrl();
       return !url.includes("search-results.html");
     });
+    await driver.wait(until.elementLocated(By.css("#first-link")));
+    await driver.findElement(By.css("#first-link")).click();
+    await driver.navigate().back();
     await driver.navigate().back();
     await driver.wait(until.elementLocated(By.css("a.result")));
     let mod = process.platform == "darwin" ? Key.COMMAND : Key.CONTROL;
@@ -107,13 +109,16 @@ describe("Test history collection", function() {
     await driver.findElement(By.css("a.result")).sendKeys(selectLinkOpeninNewTab);
     // We want to be sure the Cmd+click opens a tab before we do the next step:
     await promiseTimeout(1000);
+
+    /***********************
+     *  fetch the results  */
     await driver.get(`${SERVER}/debug.html`);
     await driver.wait(until.elementLocated(By.css("textarea")));
     let result = await driver.findElement(By.css("textarea")).getAttribute("value");
     result = JSON.parse(result);
 
-    console.log("Got browsing data:", result);
-
+    /************************
+     *  analyze the results */
     let pages = result.currentPages.concat(result.pendingPages);
     pages.sort((a, b) => a.loadTime > b.loadTime ? 1 : -1)
     function idToIndex(id) {
@@ -123,37 +128,39 @@ describe("Test history collection", function() {
       return pages.map(p => p[name]);
     }
     let urls = pages.map(p => p.url);
-    console.log("Verifying urls,", urls);
     let expectedUrls = [
       'about:blank',
       `${SERVER_STATIC}/search.html`,
       `${SERVER_STATIC}/search-results.html?q=test+query`,
       `${SERVER_STATIC}/search-destination.html`,
+      `${SERVER_STATIC}/search-destination.html#first`,
+      `${SERVER_STATIC}/search-destination.html`,
       `${SERVER_STATIC}/search-results.html?q=test+query`,
       `${SERVER_STATIC}/search-destination.html`,
-      `${SERVER_STATIC}/search-destination.html`,
+      `${SERVER_STATIC}/search-destination.html`, // This item should not be here
       `${SERVER}/debug.html`,
     ];
-    console.log("urls:", urls);
     assert.deepEqual(urls, expectedUrls);
     // Apparently driver.get() doesn't act like from_address_bar
     assert.deepEqual(property("from_address_bar"), [
-      false, false, false, false, false, false, false, false,
-    ]);
+      false, false, false, false, false, false, false, false, false, false
+    ], "from_address_bar");
     // We went "back" to the 4th item (the google search)
     assert.deepEqual(property("forward_back"), [
-      false, false, false, false, true, false, false, false,
-    ]);
+      false, false, false, false, false, true, true, false, false, false
+    ], "forward_back");
     assert.deepEqual(property("transitionType"), [
       'existed_onload',
       'link',
       'form_submit', // search result
       'link', // clicked on search result
+      'link', // clicked on anchor link
       'link', // clicked on back...?
+      'link', // clicked on back again
       undefined, // apparently open in new window is misunderstood
       'link', // driver.get looks like link?
       'link', // I don't understand this entry at all
-    ]);
+    ], "transitionType");
     assert.deepEqual(pages.map(p => idToIndex(p.previousId)), [
       -1, // Didn't come from anywhere, about:blank
       0, // search page
@@ -161,17 +168,21 @@ describe("Test history collection", function() {
       2, // click on link
       3, // went "back" to this page... FIXME: is this right?
       4, // came from previous search result,
-      5, // mysterious extra copy of a page
-      4, // this was opened by the add-on, but appears to come form the search results
+      5, // something else...
+      6, // back again
+      7, // mysterious extra copy of a page
+      6, // this was opened by the add-on, but appears to come form the search results
     ]);
     assert.deepEqual(property("newTab"), [
-      false, false, false, false, false, true, false, false,
-    ]);
+      false, false, false, false, false, false, false, true, false, false,
+    ], "newTab");
     assert.deepEqual(pages.map(p => !!p.unloadTime), [
-      true, true, true, true, true, true,
+      true, true, true, true, true, true, true, true,
       false, false, // only the last two pages are still loaded
-    ]);
+    ], "is unloaded");
     assert.deepEqual(property("closedReason"), [
+      'navigation',
+      'navigation',
       'navigation',
       'navigation',
       'navigation',
@@ -180,7 +191,7 @@ describe("Test history collection", function() {
       'navigation',
       null,
       null, // Only the last two pages haven't been redirected away
-    ]);
+    ], "closedReason");
     return true;
   });
 
