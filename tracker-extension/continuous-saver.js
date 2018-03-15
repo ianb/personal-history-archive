@@ -18,7 +18,7 @@ browser.storage.local.get(["browserId"]).then((result) => {
   } else {
     browserId = result.browserId;
   }
-  serverRegister(browserId);
+  serverRegister();
 }).catch((error) => {
   console.error("Error getting browserId:", error);
 });
@@ -53,7 +53,7 @@ browser.runtime.onMessage.addListener((message) => {
     });
   } else if (message.type == "flushNow") {
     return flush().catch((error) => {
-      console.error("Error in flushNow:", error);
+      console.error("Error in flushNow:", String(error), error);
       throw error;
     });
   }
@@ -78,7 +78,7 @@ async function sendNewHistory(force) {
       maxResults: VERY_BIG_MAX_RESULTS
     });
     let annotatedHistory = await getVisitsForHistoryItems(results, startTime);
-    await serverSendHistory(browserId, annotatedHistory);
+    await serverSendHistory(annotatedHistory);
     lastUpdated = Date.now();
   } catch (error) {
     lastError = error;
@@ -87,46 +87,17 @@ async function sendNewHistory(force) {
 }
 
 async function serverQueryStartTime(browserId) {
-  let url = `${SERVER}/status?browserId=${encodeURIComponent(browserId)}`;
-  let resp = await fetch(url);
-  if (!resp.ok) {
-    throw new Error(`Bad response: ${resp.status}`);
-  }
-  let respJson = await resp.json();
-  return Math.floor(respJson.latest || 0);
+  let status = await communication.status();
+  return Math.floor(status || 0);
 }
 
-async function serverSendHistory(browserId, annotatedHistory) {
-  let body = JSON.stringify({
-    browserId,
-    historyItems: annotatedHistory
-  });
+async function serverSendHistory(annotatedHistory) {
   console.info("Sending history", annotatedHistory.length, "items and", Math.floor(body.length / 1000), "kb");
-  let resp = await fetch(`${SERVER}/add-history-list`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body
-  });
-  if (!resp.ok) {
-    throw new Error(`Bad response: ${resp.status}`);
-  }
+  await communication.add_history_list(annotatedHistory);
 }
 
-async function serverRegister(browserId) {
-  let resp = await fetch(`${SERVER}/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      browserId
-    })
-  });
-  if (!resp.ok) {
-    throw new Error(`Bad response to /register`);
-  }
+async function serverRegister() {
+  await communication.register_browser();
 }
 
 function getVisitsForHistoryItems(historyItems, startTime) {

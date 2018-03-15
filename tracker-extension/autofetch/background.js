@@ -29,6 +29,12 @@ async function autofetchOnMessage(message) {
   } else if (message.type == "setBadgeText") {
     browser.browserAction.setBadgeText({text: message.text});
     return;
+  } else if (message.type == "add_fetched_page") {
+    return communication.add_fetched_page(message.url, message.page);
+  } else if (message.type == "get_needed_pages") {
+    return communication.get_needed_pages(message.limit);
+  } else if (message.type == "add_fetch_failure") {
+    return communication.add_fetch_failure(message.url, message.error_message);
   } else {
     throw new Error("Bad message: " + JSON.stringify(message));
   }
@@ -49,7 +55,6 @@ async function getServerPage() {
     return null;
   }
   return filtered;
-  }
 }
 
 function fetchPage(url) {

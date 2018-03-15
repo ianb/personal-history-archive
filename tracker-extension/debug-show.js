@@ -1,3 +1,7 @@
+function element(selector) {
+  return document.querySelector(selector);
+}
+
 function requestStatus() {
   browser.runtime.sendMessage({type: "requestStatus"}).then((status) => {
     console.log("going to get status", status);
@@ -7,25 +11,17 @@ function requestStatus() {
   });
 }
 
-function getTextarea() {
-  let el = document.querySelector("textarea");
-  if (!el) {
-    el = document.createElement("textarea");
-    el.style.width = "100%";
-    el.style.height = "20em";
-    document.body.appendChild(el);
-  }
-  return el;
-}
-
 function showStatus(status) {
-  getTextarea().value = JSON.stringify(status, null, "  ");
+  element("#status").value = JSON.stringify(status, null, "  ");
 }
 
 function showError(error) {
-  getTextarea().value = JSON.stringify({error}, null, "  ");
+  element("#status").value = JSON.stringify({error}, null, "  ");
 }
 
-console.log("I'm sending a request...");
+element("#flush").addEventListener("click", async () => {
+  await browser.runtime.sendMessage({type: "flushNow"});
+  element("#flush-status").textContent = `finished at ${Date.now()}`;
+});
 
 requestStatus();

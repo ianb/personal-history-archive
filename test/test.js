@@ -112,10 +112,13 @@ describe("Test history collection", function() {
 
     /***********************
      *  fetch the results  */
-    await driver.get(`${SERVER}/debug.html`);
-    await driver.wait(until.elementLocated(By.css("textarea")));
-    let result = await driver.findElement(By.css("textarea")).getAttribute("value");
+    await driver.get(`${SERVER}/test-static/debug.html`);
+    await driver.wait(until.elementLocated(By.css("#status")));
+    let result = await driver.findElement(By.css("#status")).getAttribute("value");
     result = JSON.parse(result);
+    await driver.findElement(By.css("#flush")).click();
+    let status = await driver.findElement(By.css("#flush-status"));
+    await driver.wait(until.elementTextContains(status, "finished"));
 
     /************************
      *  analyze the results */
@@ -129,7 +132,6 @@ describe("Test history collection", function() {
     }
     let urls = pages.map(p => p.url);
     let expectedUrls = [
-      'about:blank',
       `${SERVER_STATIC}/search.html`,
       `${SERVER_STATIC}/search-results.html?q=test+query`,
       `${SERVER_STATIC}/search-destination.html`,
@@ -138,19 +140,18 @@ describe("Test history collection", function() {
       `${SERVER_STATIC}/search-results.html?q=test+query`,
       `${SERVER_STATIC}/search-destination.html`,
       `${SERVER_STATIC}/search-destination.html`, // This item should not be here
-      `${SERVER}/debug.html`,
+      `${SERVER}/test-static/debug.html`,
     ];
     assert.deepEqual(urls, expectedUrls);
     // Apparently driver.get() doesn't act like from_address_bar
     assert.deepEqual(property("from_address_bar"), [
-      false, false, false, false, false, false, false, false, false, false
+      false, false, false, false, false, false, false, false, false
     ], "from_address_bar");
     // We went "back" to the 4th item (the google search)
     assert.deepEqual(property("forward_back"), [
-      false, false, false, false, false, true, true, false, false, false
+      false, false, false, false, true, true, false, false, false
     ], "forward_back");
     assert.deepEqual(property("transitionType"), [
-      'existed_onload',
       'link',
       'form_submit', // search result
       'link', // clicked on search result
@@ -170,18 +171,16 @@ describe("Test history collection", function() {
       4, // came from previous search result,
       5, // something else...
       6, // back again
-      7, // mysterious extra copy of a page
-      6, // this was opened by the add-on, but appears to come form the search results
+      5, // mysterious extra copy of a page
     ]);
     assert.deepEqual(property("newTab"), [
-      false, false, false, false, false, false, false, true, false, false,
+      false, false, false, false, false, false, true, false, false,
     ], "newTab");
     assert.deepEqual(pages.map(p => !!p.unloadTime), [
-      true, true, true, true, true, true, true, true,
+      true, true, true, true, true, true, true,
       false, false, // only the last two pages are still loaded
     ], "is unloaded");
     assert.deepEqual(property("closedReason"), [
-      'navigation',
       'navigation',
       'navigation',
       'navigation',

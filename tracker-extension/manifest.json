@@ -21,6 +21,8 @@
   "background": {
     "scripts": [
       "browser-polyfill.js",
+      "build/buildSettings.js",
+      "communication.js",
       "scraper/scrape-tab.js",
       "scraper/send-page.js",
       "continuous-saver.js",
@@ -38,7 +40,7 @@
       ]
     },
     {
-      "matches": ["http://localhost/debug.html"],
+      "matches": ["http://localhost/test-static/debug.html"],
       "js": [
         "browser-polyfill.js",
         "debug-show.js"
@@ -53,6 +55,7 @@
     "storage",
     "tabs",
     "webNavigation",
-    "webRequest"
+    "webRequest",
+    "nativeMessaging"
   ]
 }

@@ -258,6 +258,7 @@ browser.tabs.onRemoved.addListener((event) => {
 });
 
 browser.tabs.query({}).then((tabs) => {
+  return;
   let activeTabId;
   for (let tab of tabs) {
     if (tab.active) {
@@ -295,14 +296,8 @@ async function checkIfUrlNeeded(url) {
   if (urlsAlreadySerialized.has(url)) {
     return false;
   }
-  let resp = await fetch(`${SERVER}/check-page-needed?url=${encodeURIComponent(url)}`);
-  if (!resp.ok) {
-    console.error("Error if URL needs serialization:", resp);
-    return false;
-  }
-  let body = await resp.json();
-  let needed = !body || body.needed;
-  if (!needed) {
+  let needed = await communication.check_page_needed(url);
+  if (needed) {
     urlsAlreadySerialized.add(url);
   }
   return needed;
@@ -337,25 +332,13 @@ async function startQueue(tabId, url) {
     return;
   }
   console.log("Successfully sending", url, "from", tabId);
-  sendPage(url, scraped);
+  await communication.add_fetched_page(url, scraped);
 }
 
 async function flush() {
   let pages = Array.from(currentPages.values());
   pages = pages.concat(pendingPages);
-  let resp = await fetch(`${SERVER}/add-activity-list`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      browser_id: browserId,
-      activityItems: pages
-    })
-  });
-  if (!resp.ok) {
-    throw new Error(`Bad response: ${resp.status} ${resp.statusText}`);
-  }
+  await communication.add_activity_list(pages);
   console.info("Sent", pages.length, "pages of activity");
   pendingPages = [];
 }

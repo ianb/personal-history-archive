@@ -48,8 +48,7 @@ fetchSomeButton.addEventListener("click", async () => {
   abortWorker = false;
   let numberOfPages = parseInt(document.querySelector("#fetch-total").value, 10) || DEFAULT_PAGE_TOTAL;
   fetchSomeButton.textContent = "Stop fetching";
-  let resp = await fetch(`${SERVER}/get-needed-pages?limit=${numberOfPages}`);
-  let pages = await resp.json();
+  let pages = await browser.runtime.sendMessage({type: "get_needed_pages", limit: numberOfPages});
   for (let page of pages) {
     model.fetching.set(page.url, false);
   }
@@ -188,23 +187,14 @@ async function fetchPage(url) {
       console.error("Error fetching url:", url);
       return;
     }
-    let sendPromise = sendPage(url, result);
+    let sendPromise = browser.runtime.sendMessage({type: "add_fetched_page", url, page: result});
     model.fetching.delete(url);
     startWorker();
     return await sendPromise;
   } catch (error) {
     model.fetching.delete(url);
     model.failed.set(url, error);
-    fetch("/add-fetch-failure", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        url,
-        error_message: String(error)
-      })
-    });
+    browser.runtime.sendMessage({type: "add_fetch_failure", url, error_message: String(error)});
     render();
     startWorker();
   }
