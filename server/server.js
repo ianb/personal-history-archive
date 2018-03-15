@@ -295,6 +295,11 @@ app.use(function(err, req, res, next) {
   res.send(message);
 });
 
+if (process.env.SAVE_PID) {
+  console.log("Wrote PID to", process.env.SAVE_PID);
+  require("fs").writeFileSync(process.env.SAVE_PID, String(process.pid), {encoding: "UTF-8"});
+}
+
 let server = http.createServer(app);
 server.listen(11180);
 console.info("\n\nListening on http://localhost:11180");
