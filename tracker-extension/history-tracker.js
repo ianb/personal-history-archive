@@ -317,7 +317,7 @@ async function addPageToSerialize(tabId, url) {
 }
 
 async function startQueue(tabId, url) {
-  await setTimeoutPromise(1000);
+  await setTimeoutPromise(buildSettings.historyPauseBeforeCollection);
   let scraped;
   try {
     scraped = await scrapeTab(tabId, url);

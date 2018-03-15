@@ -1,7 +1,6 @@
 /* globals browser */
 
 const FETCH_TIMEOUT = 45000;
-const IDLE_WAIT_TIME = 2000;
 
 async function autofetchOnMessage(message) {
   if (message.type == "fetchPage") {
