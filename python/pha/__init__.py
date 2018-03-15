@@ -13,6 +13,9 @@ lxml = None
 www_regex = re.compile(r"^www[0-9]*\.")
 markup_regex = re.compile(r"<.*?>", re.S)
 
+with open(os.path.abspath(os.path.join(__file__, "../schema.sql"))) as fp:
+    schema_sql = fp.read()
+
 STANDARD_SCRIPT = '''\
 <script>
 window.addEventListener("load", function () {
@@ -50,7 +53,14 @@ class Archive:
         self.path = path
         self.sqlite_path = os.path.join(path, 'history.sqlite')
         self.conn = sqlite3.connect(self.sqlite_path)
+        self.conn.row_factory = sqlite3.Row
+        c = self.conn.cursor()
+        c.executescript(schema_sql)
+        c.close()
+        self.conn.commit()
         self.pages_path = os.path.join(path, 'pages')
+        if not os.path.exists(self.pages_path):
+            os.makedirs(self.pages_path)
         self.update_status()
 
     def __repr__(self):
