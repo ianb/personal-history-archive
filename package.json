@@ -44,7 +44,6 @@
     "resync": "node server/resync-pages.js",
     "lint:js": "eslint .",
     "firefox-profile": "firefox-profile",
-    "for-each": "node server/for-each.js",
     "lint:ejs": "ejslint server/*.ejs",
     "build:zip": "mkdir -p build && web-ext build --source-dir tracker-extension/ --ignore-files '**/README.md' --ignore-files '**/*.template' --overwrite-dest && mv web-ext-artifacts/personal_history_saver*.zip build/tracker-extension.zip && rmdir web-ext-artifacts || true",
     "build": "mkdir -p tracker-extension/build && python python/pha/sub-env-vars.py < tracker-extension/buildSettings.js.tmpl > tracker-extension/build/buildSettings.js",

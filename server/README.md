@@ -12,4 +12,3 @@ A brief layout of the code:
 * [`static/`](./static/) has a couple static files
 * [`responses.js`](./responses.js) has a helper for generating responses.
 * [`resync-pages.js`](./resync-pages.js) implements `npm run resync`, which can be used to reconstruct the database from the JSON in `pages/`
-* [`for-each.js`](./for-each.js) is a script run by `npm run for-each`. It was an idea for doing post-processing on the pages, but I don't think it's a good idea any more.
