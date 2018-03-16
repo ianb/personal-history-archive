@@ -10,7 +10,6 @@ this.communication = (function () {
     kwargs = kwargs || {};
     let id = responderId++;
     port.postMessage({name, args, kwargs, id});
-    console.warn("Sending message with ID", id);
     return new Promise((resolve, reject) => {
       responders.set(id, {resolve, reject});
     });
@@ -18,14 +17,13 @@ this.communication = (function () {
 
   port.onMessage.addListener((message) => {
     let id = message.id;
-    console.warn("got return message", id, message);
     let responder = responders.get(id);
     if ('result' in message) {
       responder.resolve(message.result);
     } else if (message.error) {
       responder.reject(new Error(message.error));
     } else {
-      console.warn("Response without result/error:", message);
+      log.warn("Response without result/error:", message);
     }
     responders.delete(id);
   });
@@ -59,6 +57,10 @@ this.communication = (function () {
 
   exports.add_fetch_failure = function(url, error_message) {
     return portCall("add_fetch_failure", [url, error_message]);
+  };
+
+  exports.log = function(...args) {
+    return portCall("log", args);
   };
 
   exports.status = function() {

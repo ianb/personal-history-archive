@@ -20,7 +20,7 @@ browser.runtime.onMessage.addListener((message) => {
   if (message.type == "escapeKey") {
     abortWorkerNow();
   } else {
-    console.warn("sitescript got unexpected message:", message);
+    log.warn("sitescript got unexpected message:", message);
   }
 });
 
@@ -149,7 +149,7 @@ function startWorker() {
     }
   }
   if (found >= limit) {
-    console.info("Already have", found, "pages running");
+    log.info("Already have", found, "pages running");
     return;
   }
   let anyFetched = false;
@@ -184,7 +184,7 @@ async function fetchPage(url) {
       url
     });
     if (!result) {
-      console.error("Error fetching url:", url);
+      log.error("Error fetching url:", url);
       return;
     }
     let sendPromise = browser.runtime.sendMessage({type: "add_fetched_page", url, page: result});

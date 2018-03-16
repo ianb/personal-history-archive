@@ -13,14 +13,14 @@ browser.storage.local.get(["browserId"]).then((result) => {
   if (!result.browserId) {
     browserId = makeUuid();
     browser.storage.local.set({browserId}).catch((error) => {
-      console.error("Error setting browserId", error);
+      log.error("Error setting browserId", error);
     });
   } else {
     browserId = result.browserId;
   }
   serverRegister();
 }).catch((error) => {
-  console.error("Error getting browserId:", error);
+  log.error("Error getting browserId:", error);
 });
 
 function makeUuid() { // eslint-disable-line no-unused-vars
@@ -48,17 +48,17 @@ browser.runtime.onMessage.addListener((message) => {
     });
   } else if (message.type == "sendNow") {
     return sendNewHistory(message.force).catch((error) => {
-      console.error("Error in sendNow:", error);
+      log.error("Error in sendNow:", error);
       throw error;
     });
   } else if (message.type == "flushNow") {
     return flush().catch((error) => {
-      console.error("Error in flushNow:", String(error), error);
+      log.error("Error in flushNow:", String(error), error);
       throw error;
     });
   }
   autofetchOnMessage(message);
-  console.error("Bad message:", message);
+  log.error("Bad message:", message);
 });
 
 setInterval(sendNewHistory, UPDATE_SEARCH_PERIOD);
@@ -92,7 +92,7 @@ async function serverQueryStartTime(browserId) {
 }
 
 async function serverSendHistory(annotatedHistory) {
-  console.info("Sending history", annotatedHistory.length, "items and", Math.floor(body.length / 1000), "kb");
+  log.info("Sending history", annotatedHistory.length, "items and", Math.floor(body.length / 1000), "kb");
   await communication.add_history_list(annotatedHistory);
 }
 

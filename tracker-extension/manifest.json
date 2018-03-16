@@ -22,9 +22,9 @@
     "scripts": [
       "browser-polyfill.js",
       "build/buildSettings.js",
+      "log.js",
       "communication.js",
       "scraper/scrape-tab.js",
-      "scraper/send-page.js",
       "continuous-saver.js",
       "history-tracker.js",
       "autofetch/background.js"
@@ -35,7 +35,8 @@
       "matches": ["http://localhost/fetcher.html"],
       "js": [
         "browser-polyfill.js",
-        "scraper/send-page.js",
+        "build/buildSettings.js",
+        "log.js",
         "autofetch/sitescript.js"
       ]
     },
@@ -43,6 +44,8 @@
       "matches": ["http://localhost/test-static/debug.html"],
       "js": [
         "browser-polyfill.js",
+        "build/buildSettings.js",
+        "log.js",
         "debug-show.js"
       ]
     }

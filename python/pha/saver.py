@@ -7,6 +7,8 @@ import stat
 import json
 import sys
 import struct
+import time
+import pprint
 from . import Page
 
 message_handlers = {}
@@ -167,6 +169,21 @@ def status(archive, browserId):
     row = c.fetchone()
     return dict(row)
 
+@addon
+def log(archive, *args):
+    filename = os.path.join(archive.path, "addon.log")
+    with open(filename, "a") as fp:
+        print("Log", int(time.time() * 1000), file=fp)
+        if len(str(args)) < 70:
+            args = (args,)
+        for arg in args:
+            s = pprint.pformat(arg, compact=True)
+            s = s.splitlines()
+            for line in s:
+                print("   ", line, file=fp)
+        if not args:
+            print("    (no arguments)", file=fp)
+
 def write_page(archive, url, data):
     filename = Page.json_filename(archive, url)
     with open(filename, "wb") as fp:
@@ -180,7 +197,12 @@ def run_saver(storage_directory=None):
         archive = Archive(storage_directory)
     while True:
         message = get_message()
-        print("Message:", repr(message), file=sys.stderr)
+        m_name = "%(name)s(%(args)%(kwargs))" % dict(
+            name=message["name"],
+            args=", ".join(json.dumps(s) for s in message.get("args", [])),
+            kwargs=", ".join("%s=%s" % (name, json.dumps(value)) for name, value in message.get("kwargs", {}).items()),
+        )
+        print("Message:", m_name)
         handler = message_handlers.get(message["name"])
         if not handler:
             sys.stderr.write("Error: got unexpected message name: %r" % message["name"])

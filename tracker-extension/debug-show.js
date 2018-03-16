@@ -4,7 +4,6 @@ function element(selector) {
 
 function requestStatus() {
   browser.runtime.sendMessage({type: "requestStatus"}).then((status) => {
-    console.log("going to get status", status);
     showStatus(status);
   }).catch((error) => {
     showError(error);

@@ -103,7 +103,7 @@ function addNewPage({tabId, url, timeStamp, transitionType, transitionQualifiers
     page.setActive();
   }
   let annotations = pendingAnnotations.get(tabId);
-  if (annotations) {
+  if (annotations && annotations.url === url) {
     pendingAnnotations.delete(tabId);
     annotatePage(annotations);
   }
@@ -117,7 +117,6 @@ function closePage(tabId, reason) {
   console.log("closing", tabId, reason, page && page.url);
   page.close(reason);
   currentPages.delete(tabId);
-  pendingAnnotations.delete(tabId);
   pendingPages.push(page);
 }
 
@@ -129,7 +128,7 @@ function annotatePage({tabId, url, originUrl, method, statusCode, contentType, h
   // FIXME: I think we don't need originUrl
   let page = currentPages.get(tabId);
   if (!page) {
-    console.warn("Cannot annotate tab", tabId, "url:", url);
+    log.warn("Cannot annotate tab", tabId, "url:", url);
     return;
   }
   if (page.url == url) {
@@ -139,7 +138,7 @@ function annotatePage({tabId, url, originUrl, method, statusCode, contentType, h
     page.hasSetCookie = hasSetCookie;
   } else {
     pendingAnnotations.set(tabId, {
-      url, method, statusCode, contentType, hasSetCookie
+      tabId, url, method, statusCode, contentType, hasSetCookie
     });
   }
 }
@@ -258,7 +257,6 @@ browser.tabs.onRemoved.addListener((event) => {
 });
 
 browser.tabs.query({}).then((tabs) => {
-  return;
   let activeTabId;
   for (let tab of tabs) {
     if (tab.active) {
@@ -322,7 +320,7 @@ async function startQueue(tabId, url) {
   try {
     scraped = await scrapeTab(tabId, url);
   } catch (e) {
-    console.warn("Failed to fetch", JSON.stringify(url), "Error:", e);
+    console.warn("Failed to fetch", JSON.stringify(url), "Error:", String(e), e);
   }
   if (!scraped) {
     console.info("Could not scrape", url, "from", tabId);

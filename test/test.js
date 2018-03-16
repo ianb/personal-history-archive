@@ -20,6 +20,7 @@ const path = require("path");
 
 const SERVER = "http://localhost:11180";
 const SERVER_STATIC = `${SERVER}/test-static`;
+const COMMAND_MOD = process.platform == "darwin" ? Key.COMMAND : Key.CONTROL;
 const addonFileLocation = path.join(process.cwd(), "build", "tracker-extension.zip");
 
 function getDriver() {
@@ -67,18 +68,45 @@ function promiseTimeout(time) {
   });
 }
 
+async function closeBrowser(driver) {
+  // This works around some geckodriver bugs in driver.quit()
+  let handles = await driver.getAllWindowHandles();
+  for (let handle of handles) {
+    await driver.switchTo().window(handle);
+    await driver.close();
+  }
+  try {
+    driver.quit();
+  } catch (error) {
+    // Ignore it (probably the browser is closed by now)
+  }
+}
+
+async function collectInformation(driver) {
+  await driver.get(`${SERVER}/test-static/debug.html`);
+  await driver.wait(until.elementLocated(By.css("#status")));
+  let result = await driver.findElement(By.css("#status")).getAttribute("value");
+  result = JSON.parse(result);
+  await driver.findElement(By.css("#flush")).click();
+  let status = await driver.findElement(By.css("#flush-status"));
+  await driver.wait(until.elementTextContains(status, "finished"));
+  return result;
+}
+
 describe("Test history collection", function() {
   this.timeout(120000);
   let driver;
 
   before(async function() {
     driver = await getDriver();
+    // Give the add-on a moment to load:
+    await promiseTimeout(1000);
   });
 
   after(async function() {
     if (!process.env.NO_CLOSE) {
-      // FIXME: arg, this doesn't quit! Bug in geckodriver?
-      return await driver.quit();
+      closeBrowser(driver);
+      return null;
     }
     console.info("Note: leaving browser open");
     return null;
@@ -86,9 +114,6 @@ describe("Test history collection", function() {
 
   it("will browse about", async function() {
     this.timeout(15000);
-    let driver = await getDriver();
-    // Give the add-on a moment to load:
-    await promiseTimeout(1000);
     await driver.get(`${SERVER_STATIC}/search.html`);
     await driver.findElement(By.name('q')).sendKeys("test query\n");
     await driver.findElement(By.css('button')).click();
@@ -104,26 +129,24 @@ describe("Test history collection", function() {
     await driver.navigate().back();
     await driver.navigate().back();
     await driver.wait(until.elementLocated(By.css("a.result")));
-    let mod = process.platform == "darwin" ? Key.COMMAND : Key.CONTROL;
-    let selectLinkOpeninNewTab = Key.chord(mod, Key.RETURN);
+    let selectLinkOpeninNewTab = Key.chord(COMMAND_MOD, Key.RETURN);
     await driver.findElement(By.css("a.result")).sendKeys(selectLinkOpeninNewTab);
     // We want to be sure the Cmd+click opens a tab before we do the next step:
     await promiseTimeout(1000);
 
     /***********************
      *  fetch the results  */
-    await driver.get(`${SERVER}/test-static/debug.html`);
-    await driver.wait(until.elementLocated(By.css("#status")));
-    let result = await driver.findElement(By.css("#status")).getAttribute("value");
-    result = JSON.parse(result);
-    await driver.findElement(By.css("#flush")).click();
-    let status = await driver.findElement(By.css("#flush-status"));
-    await driver.wait(until.elementTextContains(status, "finished"));
+    let result = await collectInformation(driver);
 
     /************************
      *  analyze the results */
     let pages = result.currentPages.concat(result.pendingPages);
     pages.sort((a, b) => a.loadTime > b.loadTime ? 1 : -1)
+    if (pages[0].url == "about:blank") {
+      // Sometimes about:blank shows up in the history, and sometimes it doesn't (presumably related
+      // to load time), so we remove it if it is the first
+      pages.shift();
+    }
     function idToIndex(id) {
       return pages.map(p => p.id).indexOf(id);
     }
@@ -191,6 +214,21 @@ describe("Test history collection", function() {
       null,
       null, // Only the last two pages haven't been redirected away
     ], "closedReason");
+    return true;
+  });
+
+  it("Will detect 404s", async function() {
+    this.timeout(10000);
+    await driver.get(`${SERVER_STATIC}/does-not-exist.html`);
+    await promiseTimeout(1000);
+    console.log("now at here");
+    let result = await collectInformation(driver);
+    console.log("done collection");
+    let page = result.pendingPages.filter(p => p.url.endsWith("does-not-exist.html"))[0];
+    console.log("all pages are", result.pendingPages.filter(p => p.url.endsWith("does-not-exist.html")));
+    console.log("page is:", page);
+    assert.equal(page.statusCode, 404, `Status code not 404: ${page.statusCode}`);
+    assert(page.contentType.startsWith("text/html"), `contentType: ${page.contentType}`);
     return true;
   });
 

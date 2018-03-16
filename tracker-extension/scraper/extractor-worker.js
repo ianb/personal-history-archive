@@ -27,15 +27,15 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
         readable = null;
       }
     } else {
-      console.info("Skipping readability: not installed");
+      log.info("Skipping readability: not installed");
     }
     let images = findImages([
       {element: document.head, isReadable: false},
       {element: readableDiv, isReadable: true},
       {element: document.body, isReadable: false}]);
-    console.info("Image time:", Date.now() - start, "ms");
+    log.info("Image time:", Date.now() - start, "ms");
     let siteName = findSiteName();
-    console.info("extractData time:", Date.now() - start, "ms");
+    log.info("extractData time:", Date.now() - start, "ms");
     return {
       readable,
       images,
@@ -84,8 +84,8 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
         }
       }
     } catch (e) {
-      console.warn("Exception getting readable version:", String(e));
-      console.warn("Traceback:", e.stack);
+      log.warn("Exception getting readable version:", String(e));
+      log.warn("Traceback:", e.stack);
       article = {error: String(e), errorStack: e.stack};
     }
     for (let el of document.getElementsByTagName("*")) {
@@ -188,7 +188,7 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
       Object.assign(json, staticJson);
       return json;
     }).catch((e) => {
-      console.error("Error in documentStaticJson:", e, e.stack);
+      log.error("Error in documentStaticJson:", e, e.stack);
       throw e;
     });
   };

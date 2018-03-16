@@ -19,7 +19,7 @@ async function autofetchOnMessage(message) {
           type: "escapeKey"
         });
       } catch (error) {
-        console.error("Error sending message to tab:", error);
+        log.error("Error sending message to tab:", error);
       }
     }
   } else if (message.type == "focusMainTab") {
@@ -89,7 +89,7 @@ function fetchPage(url) {
       if (tabId) {
         browser.tabs.remove(tabId);
       }
-      console.error("Error fetching page", url, error);
+      log.error("Error fetching page", url, error);
       throw error;
     }),
     () => {

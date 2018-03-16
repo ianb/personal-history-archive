@@ -2,7 +2,7 @@ async function scrapeTab(tabId, requireUrl) {
   let start = Date.now();
   let foundUrl = await waitForStableTab(tabId)
   if (foundUrl !== requireUrl) {
-    console.log("Change", requireUrl, "to", foundUrl);
+    log.debug("Change", requireUrl, "to", foundUrl);
     throw new Error("URL changed from what was expected");
   }
   await browser.tabs.executeScript(tabId, {
