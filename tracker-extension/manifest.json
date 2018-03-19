@@ -26,7 +26,7 @@
       "util.js",
       "browserId.js",
       "communication.js",
-      "scraper/scrape-tab.js",
+      "scraper/scrapeTab.js",
       "historySaver.js",
       "activityTracker.js",
       "autofetch/autofetchListener.js"
