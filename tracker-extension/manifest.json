@@ -28,7 +28,7 @@
       "communication.js",
       "scraper/scrape-tab.js",
       "historySaver.js",
-      "history-tracker.js",
+      "activityTracker.js",
       "autofetch/autofetchListener.js"
     ]
   },
