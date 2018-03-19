@@ -17,6 +17,7 @@ const { By, until, Key } = webdriver;
 // Uncomment the next line and others with `ServiceBuilder` to enable trace logs from Firefox and Geckodriver
 // const { ServiceBuilder } = firefox;
 const path = require("path");
+const fs = require("fs");
 
 const SERVER = "http://localhost:11180";
 const SERVER_STATIC = `${SERVER}/test-static`;
@@ -66,6 +67,11 @@ function promiseTimeout(time) {
   return new Promise((resolve) => {
     setTimeout(resolve, time);
   });
+}
+
+function filenameForUrl(url) {
+  // FIXME: this won't work for long pages
+  return path.join(__dirname, 'test-data', 'pages', encodeURIComponent(url) + "-page.json");
 }
 
 async function closeBrowser(driver) {
@@ -219,8 +225,9 @@ describe("Test history collection", function() {
 
   it("Will detect 404s", async function() {
     this.timeout(10000);
-    await driver.get(`${SERVER_STATIC}/does-not-exist.html`);
-    await promiseTimeout(1000);
+    let url = `${SERVER_STATIC}/does-not-exist.html`;
+    await driver.get(url);
+    await promiseTimeout(5000);
     console.log("now at here");
     let result = await collectInformation(driver);
     console.log("done collection");
@@ -229,6 +236,9 @@ describe("Test history collection", function() {
     console.log("page is:", page);
     assert.equal(page.statusCode, 404, `Status code not 404: ${page.statusCode}`);
     assert(page.contentType.startsWith("text/html"), `contentType: ${page.contentType}`);
+    let filename = filenameForUrl(url);
+    let pageData = JSON.parse(fs.readFileSync(filename, {encoding: "UTF-8"}));
+    assert.equal(pageData.statusCode, 404);
     return true;
   });
 

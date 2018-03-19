@@ -81,6 +81,12 @@ class Page {
     this.closed = true;
     this.closedReason = reason;
   }
+
+  addToScrapedData(scraped) {
+    for (let prop of ["loadTime", "transitionType", "client_redirect", "server_redirect", "forward_back", "from_address_bar", "method", "statusCode", "contentType", "hasSetCookie"]) {
+      scraped[prop] = this[prop];
+    }
+  }
 };
 
 
@@ -114,7 +120,7 @@ function closePage(tabId, reason) {
     throw new Error("closePage with no tabId");
   }
   let page = currentPages.get(tabId);
-  console.log("closing", tabId, reason, page && page.url);
+  log.debug("closing", tabId, reason, page && page.url);
   page.close(reason);
   currentPages.delete(tabId);
   pendingPages.push(page);
@@ -149,12 +155,12 @@ function setActiveTabId(tabId) {
     if (current) {
       current.setInactive();
     } else {
-      console.warn("Trying to change activeTabId from", activeTabId, "to", tabId, "but the original tab isn't being tracked");
+      log.warn("Trying to change activeTabId from", activeTabId, "to", tabId, "but the original tab isn't being tracked");
     }
   }
   let current = currentPages.get(tabId);
   if (!current) {
-    console.warn("Unexpectedly unable to get page from tab", tabId);
+    log.warn("Unexpectedly unable to get page from tab", tabId);
   } else {
     current.setActive();
   }
@@ -167,7 +173,7 @@ browser.webNavigation.onCommitted.addListener((event) => {
   }
   let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
   if (!url) {
-    console.warn("Got onCommitted with no URL", tabId);
+    log.warn("Got onCommitted with no URL", tabId);
     return;
   }
   addPageToSerialize(tabId, url);
@@ -182,7 +188,7 @@ browser.webNavigation.onCreatedNavigationTarget.addListener((event) => {
   }
   let {sourceTabId, tabId, timeStamp, url} = event;
   if (!url) {
-    console.warn("Got onCreatedNavigationTarget with no URL", tabId);
+    log.warn("Got onCreatedNavigationTarget with no URL", tabId);
     return;
   }
   addPageToSerialize(tabId, url);
@@ -197,7 +203,7 @@ browser.webNavigation.onHistoryStateUpdated.addListener((event) => {
   }
   let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
   if (!url) {
-    console.warn("Got onHistoryStateUpdated with no URL", tabId);
+    log.warn("Got onHistoryStateUpdated with no URL", tabId);
     return;
   }
   addPageToSerialize(tabId, url);
@@ -212,7 +218,7 @@ browser.webNavigation.onReferenceFragmentUpdated.addListener((event) => {
   }
   let {tabId, url, timeStamp, transitionType, transitionQualifiers} = event;
   if (!url) {
-    console.warn("Got onReferenceFragmentUpdated with no URL", tabId);
+    log.warn("Got onReferenceFragmentUpdated with no URL", tabId);
     return;
   }
   addPageToSerialize(tabId, url);
@@ -229,7 +235,7 @@ browser.webRequest.onHeadersReceived.addListener((event) => {
   let contentType;
   let hasSetCookie;
   if (!responseHeaders) {
-    console.error("no response headers", method, originUrl, url, tabId, statusCode);
+    log.error("no response headers", method, originUrl, url, tabId, statusCode);
   }
   if (responseHeaders) {
     hasSetCookie = false;
@@ -248,7 +254,7 @@ browser.webRequest.onHeadersReceived.addListener((event) => {
 
 browser.tabs.onActivated.addListener((event) => {
   let current = currentPages.get(event.tabId);
-  console.log("Set active:", event.tabId, current ? current.url : "unknown");
+  log.debug("Set active:", event.tabId, current ? current.url : "unknown");
   setActiveTabId(event.tabId);
 });
 
@@ -302,34 +308,43 @@ async function checkIfUrlNeeded(url) {
 }
 
 async function addPageToSerialize(tabId, url) {
-  console.log("ready to load:", tabId, url);
+  log.debug("ready to load:", tabId, url);
   // Any old page is now invalid:
   pagesToSerialize.delete(tabId);
   let needed = await checkIfUrlNeeded(url);
-  console.log("attempting to serialize", tabId, url, "needed:", needed);
+  log.debug("attempting to serialize", tabId, url, "needed:", needed);
   if (needed) {
-    console.log("loading was not necessary:", tabId, url);
     pagesToSerialize.set(tabId, url);
     startQueue(tabId, url);
+  } else {
+    log.debug("loading was not necessary:", tabId, url);
   }
 }
 
 async function startQueue(tabId, url) {
+  let page = currentPages.get(tabId);
+  if (page.url !== url) {
+    log.warn(`Page in tab ${tabId} (url=${page.url}) doesn't match expected scraping URL ${url}`);
+    page = null;
+  }
   await setTimeoutPromise(buildSettings.historyPauseBeforeCollection);
   let scraped;
   try {
     scraped = await scrapeTab(tabId, url);
   } catch (e) {
-    console.warn("Failed to fetch", JSON.stringify(url), "Error:", String(e), e);
+    log.warn("Failed to fetch", JSON.stringify(url), "Error:", String(e), e.stack, e);
   }
   if (!scraped) {
-    console.info("Could not scrape", url, "from", tabId);
+    log.info("Could not scrape", url, "from", tabId);
     if (pagesToSerialize.get(tabId) == url) {
       pagesToSerialize.delete(tabId);
     }
     return;
   }
-  console.log("Successfully sending", url, "from", tabId);
+  if (page) {
+    page.addToScrapedData(scraped);
+  }
+  log.debug("Successfully sending", url, "from", tabId);
   await communication.add_fetched_page(url, scraped);
 }
 
@@ -337,7 +352,7 @@ async function flush() {
   let pages = Array.from(currentPages.values());
   pages = pages.concat(pendingPages);
   await communication.add_activity_list(pages);
-  console.info("Sent", pages.length, "pages of activity");
+  log.info("Sent", pages.length, "pages of activity");
   pendingPages = [];
 }
 

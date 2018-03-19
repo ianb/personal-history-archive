@@ -39,6 +39,8 @@ This consists of several parts:
 
 ## Installation
 
+**Note:** this information is somewhat out of date due to a recent (March 2018) refactoring and expansion of the extension.
+
 You must check out this repository to use the package.
 
 Run `npm install` to install the necessary packages for the server.
@@ -86,6 +88,16 @@ $ pip install -r requirements.txt
 It is a Python 3 library, and you should probably use [Virtualenv](https://virtualenv.pypa.io/en/stable/) before installing it. There's some [information here](https://docs.python.org/3/library/venv.html).
 
 This adds a package called `pha`. There is some information [in the subdirectory](python/), and the notebooks (`*.ipynb`) show many examples.
+
+## Testing
+
+The tests are in [`test/`](./test/). To run the tests:
+
+```sh
+$ npm test
+```
+
+You can use `NO_CLOSE=1` to leave the browser open after the test completes (this can be helpful to understand failures). Use `TEST_ARGS="..."` to add [Mocha command-line arguments](https://mochajs.org/#usage) such as `TEST_ARGS='-g 404s' npm test` to run tests with "404s" in the test description.
 
 ## Collaborating
 

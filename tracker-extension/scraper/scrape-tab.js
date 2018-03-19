@@ -6,6 +6,12 @@ async function scrapeTab(tabId, requireUrl) {
     throw new Error("URL changed from what was expected");
   }
   await browser.tabs.executeScript(tabId, {
+    file: "build/buildSettings.js"
+  });
+  await browser.tabs.executeScript(tabId, {
+    file: "log.js"
+  });
+  await browser.tabs.executeScript(tabId, {
     file: "scraper/make-static-html.js"
   });
   await browser.tabs.executeScript(tabId, {
