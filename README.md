@@ -99,6 +99,8 @@ $ npm test
 
 You can use `NO_CLOSE=1` to leave the browser open after the test completes (this can be helpful to understand failures). Use `TEST_ARGS="..."` to add [Mocha command-line arguments](https://mochajs.org/#usage) such as `TEST_ARGS='-g 404s' npm test` to run tests with "404s" in the test description.
 
+The temporary data will be in `test/test-data/` and you may find `test/test-data/addon.log` particularly interesting, as the Browser Console isn't very accessible from the test environment.
+
 ## Collaborating
 
 If you have a question, probably the best thing is to [open a ticket](https://github.com/ianb/personal-history-archive/issues/new). If you are interested in implementing something, it would also be great to open a ticket so we can discuss.
