@@ -264,7 +264,6 @@ this.activityTracker = (function() {
   }));
 
   browser.tabs.onRemoved.addListener(catcher.watchFunction((event) => {
-    throw new Error("Test error");
     closePage(event.tabId, "tabClose");
   }));
 
