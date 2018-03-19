@@ -15,16 +15,40 @@ NO_CLOSE = if not empty then when the test is finished, the browser will not be 
 const assert = require("assert");
 const firefox = require("selenium-webdriver/firefox");
 const webdriver = require("selenium-webdriver");
+const express = require("express");
+const http = require("http");
 const { By, until, Key } = webdriver;
 // Uncomment the next line and others with `ServiceBuilder` to enable trace logs from Firefox and Geckodriver
 // const { ServiceBuilder } = firefox;
 const path = require("path");
 const fs = require("fs");
 
-const SERVER = "http://localhost:11180";
+const PORT = 11180;
+const SERVER = `http://localhost:${PORT}`;
 const SERVER_STATIC = `${SERVER}/test-static`;
 const COMMAND_MOD = process.platform == "darwin" ? Key.COMMAND : Key.CONTROL;
 const addonFileLocation = path.join(process.cwd(), "build", "tracker-extension.zip");
+
+let server;
+
+function startServer() {
+  if (server) {
+    server.close();
+  }
+  const app = express();
+  app.use("/test-static", express.static(path.join(__dirname, "static"), {
+    index: ["index.html"],
+    maxAge: null
+  }));
+  server = http.createServer(app);
+  server.listen(PORT);
+}
+
+function stopServer() {
+  server.close();
+  server = null;
+}
+
 
 function getDriver() {
   const channel = process.env.FIREFOX_CHANNEL || "NIGHTLY";
@@ -89,12 +113,14 @@ describe("Test history collection", function() {
   let driver;
 
   before(async function() {
+    startServer();
     driver = await getDriver();
     // Give the add-on a moment to load:
     await promiseTimeout(1000);
   });
 
   after(async function() {
+    stopServer();
     if (!process.env.NO_CLOSE) {
       closeBrowser(driver);
       return null;
