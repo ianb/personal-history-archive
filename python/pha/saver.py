@@ -170,10 +170,10 @@ def status(archive, browserId):
     return dict(row)
 
 @addon
-def log(archive, *args):
+def log(archive, *args, level='log'):
     filename = os.path.join(archive.path, "addon.log")
     with open(filename, "a") as fp:
-        print("Log", int(time.time() * 1000), file=fp)
+        print("Log/{: <5} {}".format(level, int(time.time() * 1000)), file=fp)
         if len(str(args)) < 70:
             args = (args,)
         for arg in args:

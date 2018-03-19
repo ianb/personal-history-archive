@@ -1,4 +1,4 @@
-/* globals log, communication, buildSettings, scrapeTab, util */
+/* globals log, communication, buildSettings, scrapeTab, util, catcher */
 
 this.activityTracker = (function() {
   let exports = {};
@@ -172,7 +172,7 @@ this.activityTracker = (function() {
     activeTabId = tabId;
   }
 
-  browser.webNavigation.onCommitted.addListener((event) => {
+  browser.webNavigation.onCommitted.addListener(catcher.watchFunction((event) => {
     if (event.frameId) {
       return;
     }
@@ -185,9 +185,9 @@ this.activityTracker = (function() {
     addNewPage({
       tabId, url, timeStamp, transitionType, transitionQualifiers
     });
-  });
+  }));
 
-  browser.webNavigation.onCreatedNavigationTarget.addListener((event) => {
+  browser.webNavigation.onCreatedNavigationTarget.addListener(catcher.watchFunction((event) => {
     if (event.frameId) {
       return;
     }
@@ -200,9 +200,9 @@ this.activityTracker = (function() {
     addNewPage({
       tabId, url, timeStamp, sourceTabId, newTab: true
     });
-  });
+  }));
 
-  browser.webNavigation.onHistoryStateUpdated.addListener((event) => {
+  browser.webNavigation.onHistoryStateUpdated.addListener(catcher.watchFunction((event) => {
     if (event.frameId) {
       return;
     }
@@ -215,9 +215,9 @@ this.activityTracker = (function() {
     addNewPage({
       tabId, url, timeStamp, transitionType, transitionQualifiers
     });
-  });
+  }));
 
-  browser.webNavigation.onReferenceFragmentUpdated.addListener((event) => {
+  browser.webNavigation.onReferenceFragmentUpdated.addListener(catcher.watchFunction((event) => {
     if (event.frameId) {
       return;
     }
@@ -230,9 +230,9 @@ this.activityTracker = (function() {
     addNewFragment({
       tabId, url, timeStamp, transitionType, transitionQualifiers
     });
-  });
+  }));
 
-  browser.webRequest.onHeadersReceived.addListener((event) => {
+  browser.webRequest.onHeadersReceived.addListener(catcher.watchFunction((event) => {
     if (event.frameId) {
       return;
     }
@@ -255,19 +255,20 @@ this.activityTracker = (function() {
     annotatePage({
       tabId, url, originUrl, method, statusCode, contentType, hasSetCookie
     });
-  }, standardRequestFilter, ["responseHeaders"]);
+  }), standardRequestFilter, ["responseHeaders"]);
 
-  browser.tabs.onActivated.addListener((event) => {
+  browser.tabs.onActivated.addListener(catcher.watchFunction((event) => {
     let current = currentPages.get(event.tabId);
     log.debug("Set active:", event.tabId, current ? current.url : "unknown");
     setActiveTabId(event.tabId);
-  });
+  }));
 
-  browser.tabs.onRemoved.addListener((event) => {
+  browser.tabs.onRemoved.addListener(catcher.watchFunction((event) => {
+    throw new Error("Test error");
     closePage(event.tabId, "tabClose");
-  });
+  }));
 
-  browser.tabs.query({}).then((tabs) => {
+  catcher.watchPromise(browser.tabs.query({}).then((tabs) => {
     for (let tab of tabs) {
       if (tab.active) {
         activeTabId = tab.id;
@@ -284,9 +285,7 @@ this.activityTracker = (function() {
         transitionQualifiers: []
       });
     }
-  }).catch((error) => {
-    log.error("Error in tabs.query:", error);
-  });
+  }));
 
   function pagePossiblyAllowed(url) {
     let u = new URL(url);
@@ -371,7 +370,7 @@ this.activityTracker = (function() {
     };
   };
 
-  setInterval(flush, buildSettings.updateSearchPeriod / 4 + 1000);
+  setInterval(catcher.watchFunction(flush), buildSettings.updateSearchPeriod / 4 + 1000);
 
   return exports;
 })();

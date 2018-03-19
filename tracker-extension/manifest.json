@@ -22,10 +22,11 @@
     "scripts": [
       "browser-polyfill.js",
       "build/buildSettings.js",
+      "backgroundOnMessage.js",
       "log.js",
+      "catcher.js",
       "util.js",
       "browserId.js",
-      "backgroundOnMessage.js",
       "communication.js",
       "scraper/scrapeTab.js",
       "historySaver.js",
@@ -40,6 +41,7 @@
         "browser-polyfill.js",
         "build/buildSettings.js",
         "log.js",
+        "catcher.js",
         "util.js",
         "autofetch/sitescript.js"
       ]
@@ -50,6 +52,7 @@
         "browser-polyfill.js",
         "build/buildSettings.js",
         "log.js",
+        "catcher.js",
         "util.js",
         "debug-scripts/debug-show.js"
       ]
@@ -64,6 +67,7 @@
     "tabs",
     "webNavigation",
     "webRequest",
-    "nativeMessaging"
+    "nativeMessaging",
+    "notifications"
   ]
 }

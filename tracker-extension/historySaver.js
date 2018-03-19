@@ -1,4 +1,4 @@
-/* globals browser, log, communication, buildSettings, backgroundOnMessage, activityTracker */
+/* globals browser, log, communication, buildSettings, backgroundOnMessage, activityTracker, catcher */
 
 this.historySaver = (function() {
   let exports = {};
@@ -9,30 +9,30 @@ this.historySaver = (function() {
   let lastUpdated;
   const VERY_BIG_MAX_RESULTS = 1e9;
 
-  backgroundOnMessage.register("requestStatus", (message) => {
+  backgroundOnMessage.register("requestStatus", catcher.watchFunction((message) => {
     return Object.assign({
       browserId,
       currentServerTimestamp,
       lastUpdated,
       lastError: lastError ? String(lastError) : null,
     }, activityTracker.status());
-  });
+  }));
 
-  backgroundOnMessage.register("sendNow", (message) => {
+  backgroundOnMessage.register("sendNow", catcher.watchFunction((message) => {
     return sendNewHistory(message.force).catch((error) => {
       log.error("Error in sendNow:", error);
       throw error;
     });
-  });
+  }));
 
-  backgroundOnMessage.register("flushNow", (message) => {
+  backgroundOnMessage.register("flushNow", catcher.watchFunction((message) => {
     return activityTracker.flush().catch((error) => {
       log.error("Error in flushNow:", String(error), error);
       throw error;
     });
-  });
+  }));
 
-  setInterval(sendNewHistory, buildSettings.updateSearchPeriod);
+  setInterval(catcher.watchFunction(sendNewHistory), buildSettings.updateSearchPeriod);
 
   async function sendNewHistory(force) {
       try {

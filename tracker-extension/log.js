@@ -1,4 +1,4 @@
-/* globals buildSettings, communication */
+/* globals buildSettings, communication, backgroundOnMessage */
 /* eslint-disable no-console */
 
 "use strict";
@@ -40,15 +40,37 @@ this.log = (function() {
 
   function logWithLevel(level, args) {
     if (shouldLog[level]) {
-      console[level](...args);
+      let newArgs = [];
+      for (let arg of args) {
+        newArgs.push(arg);
+        if (arg instanceof Error) {
+          newArgs.push(String(arg));
+        }
+      }
+      console[level](...newArgs);
     }
     if (shouldLogServer[level]) {
+      let newArgs = [];
+      for (let arg of args) {
+        if (arg instanceof Error) {
+          newArgs.push(String(arg));
+          newArgs.push(arg.stack);
+        } else {
+          newArgs.push(arg);
+        }
+      }
       if (typeof communication !== "undefined") {
-        communication.log(...args);
+        communication.log(level, ...newArgs);
       } else {
-        console.info("Cannot send log to server from this context");
+        browser.runtime.sendMessage({type: "log", level, args: newArgs});
       }
     }
+  }
+
+  if (typeof backgroundOnMessage !== "undefined") {
+    backgroundOnMessage.register("log", (message) => {
+      logWithLevel(message.level, message.args);
+    });
   }
 
   exports.debug = logger("debug");

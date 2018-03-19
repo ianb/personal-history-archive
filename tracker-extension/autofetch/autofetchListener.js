@@ -1,4 +1,4 @@
-/* globals browser, buildSettings, scrapeTab, log, communication, backgroundOnMessage */
+/* globals browser, buildSettings, scrapeTab, log, communication, backgroundOnMessage, catcher */
 
 this.autofetchListener = (function() {
   let exports = {};
@@ -12,7 +12,7 @@ this.autofetchListener = (function() {
     return fetchPage(message.url);
   });
 
-  backgroundOnMessage.register("escapeKey", async (message) => {
+  backgroundOnMessage.register("escapeKey", catcher.watchFunction(async (message) => {
     let tabs = await getServerPage();
     if (!tabs) {
       return;
@@ -26,16 +26,16 @@ this.autofetchListener = (function() {
         log.error("Error sending message to tab:", error);
       }
     }
-  });
+  }));
 
-  backgroundOnMessage.register("focusMainTab", async (message) => {
+  backgroundOnMessage.register("focusMainTab", catcher.watchFunction(async (message) => {
     let tabs = await getServerPage();
     return browser.tabs.update(tabs[0].id, {active: true});
-  });
+  }));
 
-  backgroundOnMessage.register("setBadgeText", (message) => {
+  backgroundOnMessage.register("setBadgeText", catcher.watchFunction((message) => {
     browser.browserAction.setBadgeText({text: message.text});
-  });
+  }));
 
   backgroundOnMessage.register("add_fetched_page", (message) => {
     return communication.add_fetched_page(message.url, message.page);
