@@ -24,7 +24,6 @@
       "build/buildSettings.js",
       "log.js",
       "util.js",
-      "makeUuid.js",
       "browserId.js",
       "communication.js",
       "scraper/scrape-tab.js",

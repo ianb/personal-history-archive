@@ -16,7 +16,7 @@ let urlsAlreadySerialized = new Set();
 
 class Page {
   constructor(options) {
-    this.id = makeUuid();
+    this.id = util.makeUuid();
     this.url = options.url;
     this.loadTime = options.timeStamp;
     this.unloadTime = null;

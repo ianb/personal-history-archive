@@ -54,7 +54,7 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
       pathBase: loc.protocol + "//" + loc.host + loc.pathname.substr(0, loc.pathname.lastIndexOf("/") + 1)
     };
     let article;
-    let id = makeUuid();
+    let id = util.makeUuid();
     let index = 1;
     for (let el of document.getElementsByTagName("*")) {
       el.setAttribute("data-tmp-id", `${id}-${index}`);
