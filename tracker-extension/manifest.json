@@ -16,7 +16,7 @@
     },
     "default_title": "Personal history",
     "browser_style": true,
-    "default_popup": "popup.html"
+    "default_popup": "debug-scripts/popup.html"
   },
   "background": {
     "scripts": [
@@ -48,7 +48,7 @@
         "browser-polyfill.js",
         "build/buildSettings.js",
         "log.js",
-        "page-scripts/debug-show.js"
+        "debug-scripts/debug-show.js"
       ]
     }
   ],
