@@ -1,3 +1,5 @@
+/* globals describe, it, before, after */
+
 /* Environmental variables that help control this test:
 
 FIREFOX_CHANNEL = empty (default NIGHTLY)
@@ -44,23 +46,6 @@ function getDriver() {
   driver.installAddon(addonFileLocation);
 
   return driver;
-}
-
-function getChromeElement(driver, selector) {
-  return driver.setContext(firefox.Context.CHROME)
-    .then(() => driver.wait(until.elementLocated(selector)));
-}
-
-/** Calls finallyCallback() after the promise completes, successfully or not,
-    returning the resolved or rejected promise as normal */
-function promiseFinally(promise, finallyCallback) {
-  return promise.then((result) => {
-    finallyCallback();
-    return result;
-  }, (error) => {
-    finallyCallback();
-    throw error;
-  });
 }
 
 function promiseTimeout(time) {
@@ -140,14 +125,14 @@ describe("Test history collection", function() {
     // We want to be sure the Cmd+click opens a tab before we do the next step:
     await promiseTimeout(1000);
 
-    /***********************
+    /** *********************
      *  fetch the results  */
     let result = await collectInformation(driver);
 
-    /************************
+    /** **********************
      *  analyze the results */
     let pages = result.currentPages.concat(result.pendingPages);
-    pages.sort((a, b) => a.loadTime > b.loadTime ? 1 : -1)
+    pages.sort((a, b) => a.loadTime > b.loadTime ? 1 : -1);
     if (pages[0].url == "about:blank") {
       // Sometimes about:blank shows up in the history, and sometimes it doesn't (presumably related
       // to load time), so we remove it if it is the first

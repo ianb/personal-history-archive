@@ -1,4 +1,4 @@
-this.util = (function () {
+this.util = (function() {
   let exports = {};
 
   exports.sleep = function(time) {

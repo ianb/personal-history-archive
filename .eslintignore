@@ -1,9 +1,5 @@
-static/homepage/js
-static/vendor
-/scratch
+/tracker-extension/scraper/Readability.js
+/test/test-data
+/tracker-extension/browser-polyfill.js
+/StickyProfile
 /Profile
-/build
-/addon/webextension/build
-/firefox
-/webextension/Readability.js
-/webextension/browser-polyfill.js

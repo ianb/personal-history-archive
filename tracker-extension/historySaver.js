@@ -1,4 +1,4 @@
-/* globals browser, log, communication, buildSettings */
+/* globals browser, log, communication, buildSettings, backgroundOnMessage, activityTracker */
 
 this.historySaver = (function() {
   let exports = {};
@@ -10,14 +10,12 @@ this.historySaver = (function() {
   const VERY_BIG_MAX_RESULTS = 1e9;
 
   backgroundOnMessage.register("requestStatus", (message) => {
-    return {
+    return Object.assign({
       browserId,
       currentServerTimestamp,
       lastUpdated,
       lastError: lastError ? String(lastError) : null,
-      currentPages: Array.from(currentPages.values()),
-      pendingPages
-    };
+    }, activityTracker.status());
   });
 
   backgroundOnMessage.register("sendNow", (message) => {
@@ -28,7 +26,7 @@ this.historySaver = (function() {
   });
 
   backgroundOnMessage.register("flushNow", (message) => {
-    return flush().catch((error) => {
+    return activityTracker.flush().catch((error) => {
       log.error("Error in flushNow:", String(error), error);
       throw error;
     });

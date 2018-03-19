@@ -109,7 +109,6 @@ app.post("/add-history-list", async function(req, res) {
 
 app.post("/add-activity-list", async function(req, res) {
   try {
-    let browserId = req.body.browserId;
     let activityItems = req.body.activityItems;
     let promise = Promise.resolve();
     Object.keys(activityItems).forEach((activityId) => {
@@ -171,7 +170,7 @@ app.post("/register", async function(req, res) {
     }
   } catch (error) {
     sendError(error, res);
-  };
+  }
 });
 
 app.get("/get-history", async function(req, res) {
@@ -296,7 +295,7 @@ app.use(function(err, req, res, next) {
 });
 
 if (process.env.SAVE_PID) {
-  console.log("Wrote PID to", process.env.SAVE_PID);
+  console.info("Wrote PID to", process.env.SAVE_PID);
   require("fs").writeFileSync(process.env.SAVE_PID, String(process.pid), {encoding: "UTF-8"});
 }
 

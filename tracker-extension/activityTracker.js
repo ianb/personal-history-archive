@@ -362,6 +362,15 @@ this.activityTracker = (function() {
     pendingPages = [];
   }
 
+  exports.flush = flush;
+
+  exports.status = function() {
+    return {
+      currentPages: Array.from(currentPages.values()),
+      pendingPages,
+    };
+  };
+
   setInterval(flush, buildSettings.updateSearchPeriod / 4 + 1000);
 
   return exports;

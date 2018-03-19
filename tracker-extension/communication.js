@@ -1,5 +1,7 @@
+/* globals buildSettings, log, browserId */
+
 /** Routines to communicate with the backend via native connection */
-this.communication = (function () {
+this.communication = (function() {
   let exports = {};
   let port = browser.runtime.connectNative(buildSettings.nativeScriptName);
   let responderId = 1;
@@ -9,8 +11,6 @@ this.communication = (function () {
     args = args || [];
     kwargs = kwargs || {};
     let id = responderId++;
-    let length = JSON.stringify({name, args, kwargs, id}).length;
-    console.log("Sending", name, "length", length);
     port.postMessage({name, args, kwargs, id});
     return new Promise((resolve, reject) => {
       responders.set(id, {resolve, reject});

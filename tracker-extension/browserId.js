@@ -1,5 +1,7 @@
+/* globals util, log, communication */
+
 this.browserId = null;
-(function () {
+(function() {
   browser.storage.local.get(["browserId"]).then((result) => {
     if (!result.browserId) {
       browserId = util.makeUuid();

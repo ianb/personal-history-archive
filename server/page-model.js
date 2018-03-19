@@ -1,7 +1,7 @@
 const { dbAll, dbRun } = require("./db");
 const { pageExists, deletePage, deleteAnnotation } = require("./json-files");
 
-exports.getAllPageData = function() {
+exports.getAllPageData = async function() {
   let rows = await dbAll(`
     SELECT
       page.url,
@@ -27,7 +27,7 @@ exports.getAllPageData = function() {
   let pageResult = [];
   let promise = Promise.resolve();
   for (let row of rows) {
-    promise = promise.then(() => {
+    promise = promise.then(async () => {
       if (await pageExists(row.url)) {
         pageResult.push(row);
       }
@@ -70,7 +70,7 @@ exports.getAllPageData = function() {
     visit.transition = row.transition;
   }
   return result;
-}
+};
 
 exports.removePageFromDatabase = async function(url) {
   await deletePage(url);

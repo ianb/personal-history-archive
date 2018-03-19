@@ -188,7 +188,7 @@ app.post("/remove-page", async function(req, res) {
       `, url);
       res.redirect('/viewer/');
     } else {
-      let rows = await dbGet(`
+      let row = await dbGet(`
         SELECT
           (SELECT COUNT(*) FROM history WHERE history.url LIKE ?) AS history_count,
           (SELECT COUNT(*) FROM page WHERE page.url LIKE ?) AS page_count

@@ -1,3 +1,5 @@
+/* globals log */
+
 this.backgroundOnMessage = (function() {
   let exports = {};
 
@@ -22,7 +24,7 @@ this.backgroundOnMessage = (function() {
       throw new Error(`Attempt to reregister message type ${type}`);
     }
     handlers[type] = handler;
-  }
+  };
 
   return exports;
 })();

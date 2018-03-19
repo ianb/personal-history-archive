@@ -1,4 +1,4 @@
-/* globals buildSettings */
+/* globals buildSettings, communication */
 /* eslint-disable no-console */
 
 "use strict";

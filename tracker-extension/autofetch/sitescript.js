@@ -1,14 +1,7 @@
-/* globals content, browser */
+/* globals content, browser, log */
 
 const DEFAULT_PAGE_LIMIT = 3;
 const DEFAULT_PAGE_TOTAL = 100;
-
-let Content_fetch;
-if (typeof content === "undefined") {
-  Content_fetch = fetch;
-} else {
-  Content_fetch = content.fetch;
-}
 
 let model = {
   fetching: new Map(),
@@ -177,7 +170,6 @@ function startWorker() {
 
 async function fetchPage(url) {
   try {
-    let start = Date.now();
     let result = await browser.runtime.sendMessage({
       type: "fetchPage",
       url

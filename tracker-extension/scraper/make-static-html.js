@@ -1,4 +1,4 @@
-/* globals setTimeout, btoa, console, document, window */
+/* globals setTimeout, btoa, console, document, window, util */
 
 /** This file is used to turn the document into static HTML with no scripts
 
@@ -466,7 +466,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     TRACK: "inline",
     UL: "block",
     VIDEO: "inline"
-  }
+  };
 
   /** true if this element should be skipped/removed because it's not sensible to include in the frozen document
 
@@ -1007,7 +1007,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     }
     if (CONFIG.screenshotFullPage) {
       result.screenshots = result.screenshots || {};
-      result.screenshots.fullPage = screenshotFullPage(CONFIG.screenshotFullPageWidth)
+      result.screenshots.fullPage = screenshotFullPage(CONFIG.screenshotFullPageWidth);
     }
     result.passwordFields = getPasswordFieldNames();
     if (!result.passwordFields.length) {
@@ -1043,7 +1043,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   function getPasswordFieldNames() {
     let names = [];
     for (let el of document.querySelectorAll("input[type=password]")) {
-      let hasValue = !! el.value;
+      let hasValue = !!el.value;
       names.push({name: el.name, id: el.id, hasValue, isHidden: isElementHidden(el)});
     }
     return names;
@@ -1118,7 +1118,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       originalDimensions: area,
       size,
       image
-    }
+    };
   }
 
   function getDocumentWidth() {
@@ -1162,7 +1162,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       originalDimensions: area,
       size,
       image
-    }
+    };
   }
 
   function screenshot(area, size) {

@@ -1,4 +1,4 @@
-/* globals browser, buildSettings, scrapeTab, log, communication */
+/* globals browser, buildSettings, scrapeTab, log, communication, backgroundOnMessage */
 
 this.autofetchListener = (function() {
   let exports = {};

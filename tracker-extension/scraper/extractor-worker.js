@@ -1,6 +1,4 @@
-/* exported FILENAME, extractorWorker */
-
-/* globals Readability, document, console, location, makeStaticHtml */
+/* globals Readability, document, console, location, makeStaticHtml, log, util */
 
 /** extractor-worker is a content worker that is attached to a page when
     making a shot
@@ -65,7 +63,7 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
       article = new Readability(uri, documentClone).parse();
       if (article) {
         let newDiv = document.createElement("div");
-        newDiv.innerHTML = article.content;
+        newDiv.innerHTML = article.content; // eslint-disable-line no-unsanitized/property
         for (let el of newDiv.querySelectorAll("*[data-tmp-id]")) {
           let id = el.getAttribute("data-tmp-id");
           let origEl = document.querySelector(`*[data-tmp-id='${id}']`);
@@ -175,22 +173,11 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
     return null;
   }
 
-  exports.documentStaticJson = function() {
-    let jsonPromise = Promise.resolve();
+  exports.documentStaticJson = async function() {
     let json = {};
-    return jsonPromise.then(() => {
-      Object.assign(json, exports.extractData());
-      return json;
-    }).then(() => {
-      return makeStaticHtml.documentStaticData();
-      return json;
-    }).then((staticJson) => {
-      Object.assign(json, staticJson);
-      return json;
-    }).catch((e) => {
-      log.error("Error in documentStaticJson:", e, e.stack);
-      throw e;
-    });
+    Object.assign(json, exports.extractData());
+    Object.assign(json, await makeStaticHtml.documentStaticData());
+    return json;
   };
 
   return exports;
