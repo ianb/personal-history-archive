@@ -48,7 +48,7 @@
         "browser-polyfill.js",
         "build/buildSettings.js",
         "log.js",
-        "debug-show.js"
+        "page-scripts/debug-show.js"
       ]
     }
   ],
