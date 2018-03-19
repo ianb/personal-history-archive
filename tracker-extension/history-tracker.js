@@ -327,7 +327,7 @@ async function startQueue(tabId, url) {
     log.warn(`Page in tab ${tabId} (url=${page.url}) doesn't match expected scraping URL ${url}`);
     page = null;
   }
-  await setTimeoutPromise(buildSettings.historyPauseBeforeCollection);
+  await util.sleep(buildSettings.historyPauseBeforeCollection);
   let scraped;
   try {
     scraped = await scrapeTab(tabId, url);

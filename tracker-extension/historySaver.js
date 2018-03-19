@@ -30,7 +30,7 @@ this.historySaver = (function() {
         throw error;
       });
     }
-    autofetchOnMessage(message);
+    autofetchListener.autofetchOnMessage(message);
     log.error("Bad message:", message);
   });
 

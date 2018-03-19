@@ -5,7 +5,7 @@ This implements the extension that fetches and serializes pages.
 This is only tested in Firefox. The usual way to start it is through `./bin/launch-fetcher`. You shouldn't run it in a normal profile, as it does lots of work that will muck with the very history you are trying to interpret!
 
 * [`sitescript.js`](./sitescript.js) implements most of the actual functionality on `http://localhost:11180` for fetching pages. It contacts the server, gets lists of pages that need to be fetched, saves the result back to the server, and generally manages the queue.
-* [`background.js`](./background.js) is the persistent hidden page in the extension. It actually opens tabs and manages the serialization, though sitescript.js manages the work queue and background.js just does what it asks.
+* [`autofetchListener.js`](./autofetchListener.js) is the persistent hidden page in the extension. It actually opens tabs and manages the serialization, though sitescript.js manages the work queue and autofetchListener.js just does what it asks.
 * [`make-static-html.js`](./make-static-html.js) does most of the DOM serialization.
 * [`extractor-worker.js`](./extractor-worker.js) does a little more page serialization. The two are separate for no good reason.
   * `Readability.js` is just a library copied from [mozilla/readability](https://github.com/mozilla/readability), and is used in serialization.

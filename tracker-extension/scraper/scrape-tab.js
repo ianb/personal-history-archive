@@ -35,7 +35,7 @@ async function waitForStableTab(tabId, attempts = 3) {
   if (!attempts) {
     return tab.url;
   }
-  await setTimeoutPromise(buildSettings.idleWaitTime);
+  await util.sleep(buildSettings.idleWaitTime);
   tab = await browser.tabs.get(tabId);
   if (tab.url != originalUrl) {
     return await waitForStableTab(tabId, attempts - 1);
