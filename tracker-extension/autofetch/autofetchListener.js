@@ -5,44 +5,49 @@ this.autofetchListener = (function() {
 
   const FETCH_TIMEOUT = 45000;
 
-  async function autofetchOnMessage(message) {
-    if (message.type == "fetchPage") {
-      if (message.url.startsWith("https://addons.mozilla.org")) {
-        throw new Error("Cannot load special URL");
-      }
-      return fetchPage(message.url);
-    } else if (message.type == "escapeKey") {
-      let tabs = await getServerPage();
-      if (!tabs) {
-        return;
-      }
-      for (let tab of tabs) {
-        try {
-          await browser.tabs.sendMessage(tab.id, {
-            type: "escapeKey"
-          });
-        } catch (error) {
-          log.error("Error sending message to tab:", error);
-        }
-      }
-    } else if (message.type == "focusMainTab") {
-      let tabs = await getServerPage();
-      return browser.tabs.update(tabs[0].id, {active: true});
-    } else if (message.type == "setBadgeText") {
-      browser.browserAction.setBadgeText({text: message.text});
-      return;
-    } else if (message.type == "add_fetched_page") {
-      return communication.add_fetched_page(message.url, message.page);
-    } else if (message.type == "get_needed_pages") {
-      return communication.get_needed_pages(message.limit);
-    } else if (message.type == "add_fetch_failure") {
-      return communication.add_fetch_failure(message.url, message.error_message);
-    } else {
-      throw new Error("Bad message: " + JSON.stringify(message));
+  backgroundOnMessage.register("fetchPage", (message) => {
+    if (message.url.startsWith("https://addons.mozilla.org")) {
+      throw new Error("Cannot load special URL");
     }
-  }
+    return fetchPage(message.url);
+  });
 
-  exports.autofetchOnMessage = autofetchOnMessage;
+  backgroundOnMessage.register("escapeKey", async (message) => {
+    let tabs = await getServerPage();
+    if (!tabs) {
+      return;
+    }
+    for (let tab of tabs) {
+      try {
+        await browser.tabs.sendMessage(tab.id, {
+          type: "escapeKey"
+        });
+      } catch (error) {
+        log.error("Error sending message to tab:", error);
+      }
+    }
+  });
+
+  backgroundOnMessage.register("focusMainTab", async (message) => {
+    let tabs = await getServerPage();
+    return browser.tabs.update(tabs[0].id, {active: true});
+  });
+
+  backgroundOnMessage.register("setBadgeText", (message) => {
+    browser.browserAction.setBadgeText({text: message.text});
+  });
+
+  backgroundOnMessage.register("add_fetched_page", (message) => {
+    return communication.add_fetched_page(message.url, message.page);
+  });
+
+  backgroundOnMessage.register("get_needed_pages", (message) => {
+    return communication.get_needed_pages(message.limit);
+  });
+
+  backgroundOnMessage.register("add_fetch_failure", (message) => {
+    return communication.add_fetch_failure(message.url, message.error_message);
+  });
 
   async function getServerPage() {
     let tabs = await browser.tabs.query({

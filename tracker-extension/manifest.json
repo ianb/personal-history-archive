@@ -25,6 +25,7 @@
       "log.js",
       "util.js",
       "browserId.js",
+      "backgroundOnMessage.js",
       "communication.js",
       "scraper/scrapeTab.js",
       "historySaver.js",

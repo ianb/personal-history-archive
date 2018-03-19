@@ -9,29 +9,29 @@ this.historySaver = (function() {
   let lastUpdated;
   const VERY_BIG_MAX_RESULTS = 1e9;
 
-  browser.runtime.onMessage.addListener((message) => {
-    if (message.type == "requestStatus") {
-      return Promise.resolve({
-        browserId,
-        currentServerTimestamp,
-        lastUpdated,
-        lastError: lastError ? String(lastError) : null,
-        currentPages: Array.from(currentPages.values()),
-        pendingPages
-      });
-    } else if (message.type == "sendNow") {
-      return sendNewHistory(message.force).catch((error) => {
-        log.error("Error in sendNow:", error);
-        throw error;
-      });
-    } else if (message.type == "flushNow") {
-      return flush().catch((error) => {
-        log.error("Error in flushNow:", String(error), error);
-        throw error;
-      });
-    }
-    autofetchListener.autofetchOnMessage(message);
-    log.error("Bad message:", message);
+  backgroundOnMessage.register("requestStatus", (message) => {
+    return {
+      browserId,
+      currentServerTimestamp,
+      lastUpdated,
+      lastError: lastError ? String(lastError) : null,
+      currentPages: Array.from(currentPages.values()),
+      pendingPages
+    };
+  });
+
+  backgroundOnMessage.register("sendNow", (message) => {
+    return sendNewHistory(message.force).catch((error) => {
+      log.error("Error in sendNow:", error);
+      throw error;
+    });
+  });
+
+  backgroundOnMessage.register("flushNow", (message) => {
+    return flush().catch((error) => {
+      log.error("Error in flushNow:", String(error), error);
+      throw error;
+    });
   });
 
   setInterval(sendNewHistory, buildSettings.updateSearchPeriod);
