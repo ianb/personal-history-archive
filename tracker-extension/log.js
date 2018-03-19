@@ -58,4 +58,3 @@ this.log = (function() {
 
   return exports;
 })();
-null;
