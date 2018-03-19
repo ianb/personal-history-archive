@@ -41,6 +41,7 @@
   },
   "scripts": {
     "server": "nodemon --watch server/ -e js,ejs server/server.js",
+    "start": "npm run build && web-ext run -f nightly -s tracker-extension/ --browser-console",
     "resync": "node server/resync-pages.js",
     "lint:js": "eslint .",
     "firefox-profile": "firefox-profile",

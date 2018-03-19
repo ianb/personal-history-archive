@@ -4,4 +4,7 @@ this.buildSettings = {
   historyPauseBeforeCollection: parseInt(process.env.HISTORY_PAUSE || 1000, 10),
   logLevel: process.env.LOG_LEVEL || "info",
   serverLogLevel: process.env.SERVER_LOG_LEVEL || "warn",
+  server: "http://localhost:11180",
+  serverBase: "http://localhost",
+  updateSearchPeriod: 60 * 60 * 1000, // 1 hour
 };

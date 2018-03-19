@@ -42,11 +42,11 @@ async function autofetchOnMessage(message) {
 async function getServerPage() {
   let tabs = await browser.tabs.query({
     currentWindow: true,
-    url: [SERVER + "/fetcher.html", SERVER_BASE + "/fetcher.html"]
+    url: [buildSettings.server + "/fetcher.html", buildSettings.serverBase + "/fetcher.html"]
   });
   let filtered = [];
   for (let tab of tabs) {
-    if (tab.url.startsWith(SERVER)) {
+    if (tab.url.startsWith(buildSettings.server)) {
       filtered.push(tab);
     }
   }

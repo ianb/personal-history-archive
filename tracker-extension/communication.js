@@ -9,6 +9,8 @@ this.communication = (function () {
     args = args || [];
     kwargs = kwargs || {};
     let id = responderId++;
+    let length = JSON.stringify({name, args, kwargs, id}).length;
+    console.log("Sending", name, "length", length);
     port.postMessage({name, args, kwargs, id});
     return new Promise((resolve, reject) => {
       responders.set(id, {resolve, reject});

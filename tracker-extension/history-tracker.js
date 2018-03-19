@@ -356,4 +356,4 @@ async function flush() {
   pendingPages = [];
 }
 
-setInterval(flush, UPDATE_SEARCH_PERIOD / 4 + 1000);
+setInterval(flush, buildSettings.updateSearchPeriod / 4 + 1000);

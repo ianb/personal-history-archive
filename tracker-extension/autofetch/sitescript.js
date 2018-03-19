@@ -2,7 +2,6 @@
 
 const DEFAULT_PAGE_LIMIT = 3;
 const DEFAULT_PAGE_TOTAL = 100;
-const SERVER = "http://localhost:11180";
 
 let Content_fetch;
 if (typeof content === "undefined") {
