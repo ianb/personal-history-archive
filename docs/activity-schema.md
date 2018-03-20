@@ -106,6 +106,10 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `hasCookie`: the request contained a `Cookie` header. (TODO)
 
+`scrolled`: true if the user has scrolled, false if not, null if we couldn't detect. (TODO)
+
+`formInteraction`: true if the user interacted with any form elements, false otherwise, null if we couldn't detect. (TODO)
+
 #### Derived:
 
 This information can be calculated from the above information... (All TODO)
