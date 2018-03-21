@@ -13,7 +13,7 @@ this.communication = (function() {
     let id = responderId++;
     port.postMessage({name, args, kwargs, id});
     return new Promise((resolve, reject) => {
-      responders.set(id, {resolve, reject});
+      responders.set(id, {resolve, reject, name});
     });
   }
 
@@ -23,7 +23,9 @@ this.communication = (function() {
     if ('result' in message) {
       responder.resolve(message.result);
     } else if (message.error) {
-      responder.reject(new Error(message.error));
+      // Using console.error so we don't ever send this back to the server:
+      console.error("Error calling", responder.name, ":", message.error, message.traceback);
+      responder.reject(new Error(`Backend error: ${message.error}`));
     } else {
       log.warn("Response without result/error:", message);
     }

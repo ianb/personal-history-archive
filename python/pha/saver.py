@@ -9,6 +9,7 @@ import sys
 import struct
 import time
 import pprint
+import traceback
 from . import Page
 
 message_handlers = {}
@@ -51,7 +52,7 @@ def add_history_list(archive, *, browserId, historyItems):
                       FROM history WHERE browser_id = ?),
             oldest = (SELECT MIN(lastvisitTime)
                       FROM history WHERE browser_id = ?)
-    """)
+    """, (browserId, browserId))
     archive.conn.commit()
 
 @addon
@@ -214,19 +215,25 @@ def run_saver(storage_directory=None):
     else:
         archive = Archive(storage_directory)
     while True:
-        message = get_message()
-        m_name = "%(name)s(%(args)%(kwargs))" % dict(
-            name=message["name"],
-            args=", ".join(json.dumps(s) for s in message.get("args", [])),
-            kwargs=", ".join("%s=%s" % (name, json.dumps(value)) for name, value in message.get("kwargs", {}).items()),
-        )
-        print("Message:", m_name)
-        handler = message_handlers.get(message["name"])
-        if not handler:
-            sys.stderr.write("Error: got unexpected message name: %r" % message["name"])
-            continue
-        result = handler(archive, *message.get("args", ()), **message.get("kwargs", {}))
-        send_message({"id": message["id"], "result": result})
+        m_name = "(unknown)"
+        try:
+            message = get_message()
+            m_name = "%(name)s(%(args)%(kwargs))" % dict(
+                name=message["name"],
+                args=", ".join(json.dumps(s) for s in message.get("args", [])),
+                kwargs=", ".join("%s=%s" % (name, json.dumps(value)) for name, value in message.get("kwargs", {}).items()),
+            )
+            print("Message:", m_name, file=sys.stderr)
+            handler = message_handlers.get(message["name"])
+            if not handler:
+                print("Error: got unexpected message name: %r" % message["name"], file=sys.stderr)
+                continue
+            result = handler(archive, *message.get("args", ()), **message.get("kwargs", {}))
+            send_message({"id": message["id"], "result": result})
+        except Exception as e:
+            tb = traceback.format_exc()
+            log(archive, "Error processing message %s(): %s" % (m_name, e), tb, level='error')
+            send_message({"id": message["id"], "error": str(e), "traceback": tb})
 
 def get_message():
     length = sys.stdin.buffer.read(4)
