@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS fetch_error (
 CREATE TABLE IF NOT EXISTS activity (
   id TEXT PRIMARY KEY,
   browser_id TEXT REFERENCES browser (id) ON DELETE CASCADE,
+  sessionId TEXT REFERENCES browser_session (id) ON DELETE CASCADE,
   url TEXT NOT NULL,
   loadTime INT,
   unloadTime INT,

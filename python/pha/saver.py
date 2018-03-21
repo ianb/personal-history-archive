@@ -62,6 +62,7 @@ def add_activity_list(archive, *, browserId, activityItems):
         columns = """
             id
             browser_id
+            sessionId
             url
             loadTime
             unloadTime

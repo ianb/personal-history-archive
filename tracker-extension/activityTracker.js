@@ -43,6 +43,7 @@ this.activityTracker = (function() {
       this.statusCode = null;
       this.contentType = null;
       this.hasSetCookie = null;
+      this.sessionId = sessionId;
     }
 
     toJSON() {

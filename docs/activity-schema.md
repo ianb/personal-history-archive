@@ -54,7 +54,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `browserId`: the browser this is associated with
 
-`sessionId`: the browser session (changed each time the browser is restarted) (TODO)
+`sessionId`: the browser session (changed each time the browser is restarted)
 
 `url`: this is the full URL, including the hash.
 
