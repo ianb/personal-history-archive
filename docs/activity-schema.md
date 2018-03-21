@@ -28,13 +28,13 @@ Because people use multiple browsers and profiles, we typically map activity to 
 
 #### Session
 
-Browsers also have sessions: (TODO)
+Browsers also have sessions:
 
-`id`: a UUID for this session (changes each time the browser is restarted) (TODO)
+`id`: a UUID for this session (changes each time the browser is restarted)
 
-`startTime`: timestamp when it was started (TODO)
+`startTime`: timestamp when it was started
 
-`stopTime`: timestamp when it was closed (often null, because we can't always catch this; may be derived from last saved visit once a new session starts). (TODO)
+`endTime`: timestamp when it was closed (often null, because we can't always catch this; may be derived from last saved visit once a new session starts). (TODO: nothing sets this)
 
 #### Derived:
 

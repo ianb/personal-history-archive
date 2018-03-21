@@ -8,6 +8,13 @@ CREATE TABLE IF NOT EXISTS browser (
   autofetch BOOLEAN
 );
 
+CREATE TABLE IF NOT EXISTS browser_session (
+  id TEXT PRIMARY KEY,
+  browserId TEXT REFERENCES browser (id) ON DELETE CASCADE,
+  startTime INT,
+  endTime
+);
+
 CREATE TABLE IF NOT EXISTS history (
   id TEXT UNIQUE PRIMARY KEY,
   browser_id TEXT REFERENCES browser (id) ON DELETE CASCADE,

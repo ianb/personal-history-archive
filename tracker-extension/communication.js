@@ -49,6 +49,10 @@ this.communication = (function() {
     });
   };
 
+  exports.register_session = function(sessionId) {
+    return portCall("register_session", [sessionId, browserId]);
+  };
+
   exports.get_needed_pages = function(limit = 100) {
     return portCall("get_needed_pages", [limit]);
   };

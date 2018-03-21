@@ -109,6 +109,15 @@ def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=
     archive.conn.commit()
 
 @addon
+def register_session(archive, sessionId, browserId):
+    c = archive.conn.cursor()
+    c.execute("""
+        INSERT OR REPLACE INTO browser_session (id, browserId, startTime)
+        VALUES (?, ?, CURRENT_TIMESTAMP)
+    """, (sessionId, browserId))
+    archive.conn.commit()
+
+@addon
 def get_needed_pages(archive, limit=100):
     c = archive.conn.cursor()
     rows = c.execute("""

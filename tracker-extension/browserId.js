@@ -1,6 +1,7 @@
 /* globals util, log, communication, catcher */
 
 this.browserId = null;
+this.sessionId = null;
 (function() {
   catcher.watchPromise(browser.storage.local.get(["browserId"]).then(async (result) => {
     if (!result.browserId) {
@@ -12,5 +13,7 @@ this.browserId = null;
       browserId = result.browserId;
     }
     await communication.register_browser();
+    sessionId = util.makeUuid();
+    await communication.register_session(sessionId);
   }));
 })();
