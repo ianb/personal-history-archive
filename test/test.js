@@ -202,7 +202,7 @@ describe("Test history collection", function() {
       'link', // driver.get looks like link?
       'link', // I don't understand this entry at all
     ], "transitionType");
-    assert.deepEqual(pages.map(p => idToIndex(p.previousId)), [
+    assert.deepEqual(pages.map(p => idToIndex(p.sourceId)), [
       -1, // Didn't come from anywhere, about:blank
       0, // search page
       1, // search result

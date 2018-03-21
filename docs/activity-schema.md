@@ -58,7 +58,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `url`: this is the full URL, including the hash.
 
-`title`: the title of the page, null if unknown, `""` if there is no title.
+`title`: the title of the page, null if unknown, `""` if there is no title. (TODO: make sure it's "")
 
 `loadTime`: when the page was loaded
 
@@ -68,7 +68,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `browserVisitId`: the ID of the associated [VisitItem](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/VisitItem). This will probably be unique, if it is set. (TODO)
 
-`sourceId`: the id of the visit that lead to this visit. This may come from the VisitItem.referringVisitId (but won't match that ID, as we don't use the browserVisitId as our primary key). (TODO: rename)
+`sourceId`: the id of the visit that lead to this visit. This may come from the VisitItem.referringVisitId (but won't match that ID, as we don't use the browserVisitId as our primary key).
 
 `sourceLinkUrl`: the URL the user clicked on that lead to this page, as from `a.href`. Null if unknown or no link appeared to be the source. (TODO)
 

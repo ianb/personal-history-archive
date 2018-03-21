@@ -29,7 +29,7 @@ this.activityTracker = (function() {
       for (let name of ["client_redirect", "server_redirect", "forward_back", "from_address_bar"]) {
         this[name] = (!!options.transitionQualifiers) && options.transitionQualifiers.includes(name);
       }
-      this.previousId = options.previous && options.previous.id;
+      this.sourceId = options.previous && options.previous.id;
       this.newTab = !!options.newTab;
       this.isHashChange = !!options.isHashChange;
       this.initialLoadId = options.initialLoadId || null;

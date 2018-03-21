@@ -71,7 +71,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             server_redirect
             forward_back
             from_address_bar
-            previousId
+            sourceId
             initialLoadId
             newTab
             activeCount
@@ -81,7 +81,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             contentType
             hasSetCookie
         """.strip().split()
-        for null_default in "previousId transitionType".split():
+        for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)
         marks = ["?"] * len(columns)
         values = [activity[column] for column in columns]

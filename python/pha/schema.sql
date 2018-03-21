@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS activity (
   server_redirect BOOLEAN DEFAULT FALSE,
   forward_back BOOLEAN DEFAULT FALSE,
   from_address_bar BOOLEAN DEFAULT FALSE,
-  previousId TEXT REFERENCES activity (id) ON DELETE SET NULL,
+  sourceId TEXT REFERENCES activity (id) ON DELETE SET NULL,
   initialLoadId TEXT REFERENCES activity (id) ON DELETE SET NULL,
   newTab BOOLEAN DEFAULT FALSE,
   activeCount INT,
