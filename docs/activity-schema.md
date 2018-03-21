@@ -192,11 +192,11 @@ These are full dumps of a page's DOM. They may be associated with a visit, or lo
 
 `head`: a string of everything *inside* `<head>`.
 
-`bodyAttrs`: the attributes in the body tab, like `{"class": "htmlClass", ...}` (TODO: is currently a list)
+`bodyAttrs`: the attributes in the body tab, like `[["class", "htmlClass"], ...]`
 
-`headAttrs`: same for head. (TODO)
+`headAttrs`: same for head.
 
-`htmlAttrs`: same for `<html>`. (TODO)
+`htmlAttrs`: same for `<html>`.
 
 `resources`: links to embedded resources in the page are replaced with UUIDs. `resources` is `{id: description}` for all of these resources.
 
@@ -236,6 +236,6 @@ The DOM is annotated with some attributes to help understand the DOM without ren
 
 `url`: the URL that was attempted to be fetched (we don't store historical failures, so the URL is the primary key).
 
-`time`: a timestamp when the error occurred. (TODO: rename)
+`attempted`: a timestamp when the error occurred.
 
 `errorMessage`: the error message.
