@@ -136,7 +136,7 @@ These are full dumps of a page's DOM. They may be associated with a visit, or lo
 
 `autofetched`: true if this was created by an autofetch, as opposed to collected while browsing (TODO)
 
-`activityId`: if this was fetched during browsing, and associated with specific activity, then the ID of that activity. (TODO)
+`activityId`: if this was fetched during browsing, and associated with specific activity, then the ID of that activity.
 
 `redirectUrl`: if fetching the URL redirected to some other URL, then what URL? This is the URL that is actually displayed in the URL bar when we serialized the page. Will be null if this matches `url`.
 

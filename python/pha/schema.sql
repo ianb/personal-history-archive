@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS page (
   id TEXT PRIMARY KEY,
   url TEXT NOT NULL,
   fetched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  activityId TEXT REFERENCES activity (id) ON DELETE SET NULL,
   -- NULL means we don't know:
   not_logged_in BOOLEAN DEFAULT NULL,
   timeToFetch INT,

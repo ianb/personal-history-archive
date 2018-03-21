@@ -349,6 +349,7 @@ this.activityTracker = (function() {
     }
     if (page) {
       page.addToScrapedData(scraped);
+      scraped.activityId = page.id;
     }
     log.debug("Successfully sending", url, "from", tabId);
     await communication.add_fetched_page(id, url, scraped);

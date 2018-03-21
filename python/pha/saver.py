@@ -155,9 +155,9 @@ def add_fetched_page(archive, id, url, page):
       redirectUrl = redirectUrl.replace("&start=86400", "")
     c = archive.conn.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO page (id, url, fetched, redirectUrl, timeToFetch)
-        VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)
-    """, (id, url, redirectUrl, page["timeToFetch"]))
+        INSERT OR REPLACE INTO page (id, url, activityId, fetched, redirectUrl, timeToFetch)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+    """, (id, url, page.get("activityId"), redirectUrl, page["timeToFetch"]))
     c.execute("""
         DELETE FROM fetch_error
         WHERE url = ?
