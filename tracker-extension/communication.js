@@ -62,8 +62,8 @@ this.communication = (function() {
   };
 
   // FIXME: should be (url, pageData) but needs updating in saver.py
-  exports.add_fetched_page = function(url, page) {
-    return portCall("add_fetched_page", [url, page]);
+  exports.add_fetched_page = function(id, url, page) {
+    return portCall("add_fetched_page", [id, url, page]);
   };
 
   exports.add_fetch_failure = function(url, error_message) {

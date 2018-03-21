@@ -38,7 +38,7 @@ this.autofetchListener = (function() {
   }));
 
   backgroundOnMessage.register("add_fetched_page", (message) => {
-    return communication.add_fetched_page(message.url, message.page);
+    return communication.add_fetched_page(message.id, message.url, message.page);
   });
 
   backgroundOnMessage.register("get_needed_pages", (message) => {

@@ -169,6 +169,7 @@ function startWorker() {
 }
 
 async function fetchPage(url) {
+  let id = util.makeUuid();
   try {
     let result = await browser.runtime.sendMessage({
       type: "fetchPage",
@@ -178,7 +179,7 @@ async function fetchPage(url) {
       log.error("Error fetching url:", url);
       return;
     }
-    let sendPromise = browser.runtime.sendMessage({type: "add_fetched_page", url, page: result});
+    let sendPromise = browser.runtime.sendMessage({type: "add_fetched_page", id, url, page: result});
     model.fetching.delete(url);
     startWorker();
     return await sendPromise;

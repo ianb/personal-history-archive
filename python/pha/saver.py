@@ -142,7 +142,7 @@ def check_page_needed(archive, url):
     return not c.fetchone()[0]
 
 @addon
-def add_fetched_page(archive, url, page):
+def add_fetched_page(archive, id, url, page):
     redirectUrl = page["url"].split("#")[0]
     origUrl = url.split("#")[0]
     page["originalUrl"] = url
@@ -155,9 +155,9 @@ def add_fetched_page(archive, url, page):
       redirectUrl = redirectUrl.replace("&start=86400", "")
     c = archive.conn.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO page (url, fetched, redirectUrl, timeToFetch)
-        VALUES (?, CURRENT_TIMESTAMP, ?, ?)
-    """, (url, redirectUrl, page["timeToFetch"]))
+        INSERT OR REPLACE INTO page (id, url, fetched, redirectUrl, timeToFetch)
+        VALUES (?, ?, CURRENT_TIMESTAMP, ?, ?)
+    """, (id, url, redirectUrl, page["timeToFetch"]))
     c.execute("""
         DELETE FROM fetch_error
         WHERE url = ?

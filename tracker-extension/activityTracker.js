@@ -327,6 +327,7 @@ this.activityTracker = (function() {
   }
 
   async function startQueue(tabId, url) {
+    let id = util.makeUuid();
     let page = currentPages.get(tabId);
     if (page.url !== url) {
       log.warn(`Page in tab ${tabId} (url=${page.url}) doesn't match expected scraping URL ${url}`);
@@ -350,7 +351,7 @@ this.activityTracker = (function() {
       page.addToScrapedData(scraped);
     }
     log.debug("Successfully sending", url, "from", tabId);
-    await communication.add_fetched_page(url, scraped);
+    await communication.add_fetched_page(id, url, scraped);
   }
 
   async function flush() {
