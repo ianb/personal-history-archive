@@ -8,4 +8,6 @@ this.buildSettings = {
   serverBase: "http://localhost",
   updateSearchPeriod: 60 * 60 * 1000, // 1 hour
   notifyError: true,
+  testingBrowser: process.env.TESTING_BROWSER || false,
+  autofetchBrowser: process.env.AUTOFETCH || false,
 };

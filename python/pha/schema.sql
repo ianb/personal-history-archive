@@ -1,9 +1,11 @@
 CREATE TABLE IF NOT EXISTS browser (
   id TEXT PRIMARY KEY,
   created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  latest INT,
-  oldest INT,
-  user_agent TEXT
+  oldestHistory INT,
+  newestHistory INT,
+  userAgent TEXT,
+  testing BOOLEAN,
+  autofetch BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS history (

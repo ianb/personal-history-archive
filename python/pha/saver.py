@@ -92,12 +92,20 @@ def add_activity_list(archive, *, browserId, activityItems):
     archive.conn.commit()
 
 @addon
-def register_browser(archive, *, browserId, userAgent):
+def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=False):
     c = archive.conn.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO browser (id, user_agent)
-        VALUES (?, ?)
-    """, (browserId, userAgent))
+        INSERT OR REPLACE INTO browser (id, userAgent, testing, autofetch)
+        VALUES (?, ?, ?, ?)
+    """, (browserId, userAgent, testing, autofetch))
+    c.execute("""
+        UPDATE browser
+          SET
+            newestHistory = (SELECT MAX(lastvisitTime)
+                             FROM history WHERE browser_id = ?),
+            oldestHistory = (SELECT MIN(lastvisitTime)
+                             FROM history WHERE browser_id = ?)
+    """, (browserId, browserId))
     archive.conn.commit()
 
 @addon

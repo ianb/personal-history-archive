@@ -22,9 +22,9 @@ Because people use multiple browsers and profiles, we typically map activity to 
 
 `created`: when we first saw this browser
 
-`testing`: if true, then this browser profile was created specifically for testing. Hopefully these browsers shouldn't show up in your normal data! (TODO)
+`testing`: if true, then this browser profile was created specifically for testing. Hopefully these browsers shouldn't show up in your normal data!
 
-`autofetch`: if true, then this browser profile was created or cloned specifically to autofetch pages. It probably has valid cookies/etc, but its behavior isn't "real". Typically we keep these browsers from producing activity, but they *do* create pages (on purpose!) (TODO)
+`autofetch`: if true, then this browser profile was created or cloned specifically to autofetch pages. It probably has valid cookies/etc, but its behavior isn't "real". Typically we keep these browsers from producing activity, but they *do* create pages (on purpose!) (TODO: need to set `$AUTOFETCH` while building for autofetch)
 
 #### Session
 

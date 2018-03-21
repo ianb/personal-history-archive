@@ -50,7 +50,7 @@
     "build": "mkdir -p tracker-extension/build && python python/pha/sub-env-vars.py < tracker-extension/buildSettings.js.tmpl > tracker-extension/build/buildSettings.js",
     "test": "npm run test:build-data && npm run test:build-ext && npm run test:selenium",
     "test:build-data": "rm -rf test/test-data/ && mkdir -p test/test-data/",
-    "test:build-ext": "NATIVE_SCRIPT=pha.saver.test IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug npm run build && npm run build:zip && python -m pha.saver --script-location test/test-data/pha-saver-script.py --native-name pha.saver.test test/test-data/",
+    "test:build-ext": "NATIVE_SCRIPT=pha.saver.test IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 npm run build && npm run build:zip && python -m pha.saver --script-location test/test-data/pha-saver-script.py --native-name pha.saver.test test/test-data/",
     "test:start-server": "mkdir -p test/test-data/ && SAVE_PID=test/test-data/server.pid node server/server.js &",
     "test:stop-server": "test -e test/test-data/server.pid && kill $(cat test/test-data/server.pid) && rm test/test-data/server.pid",
     "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS"

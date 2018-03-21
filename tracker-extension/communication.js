@@ -41,7 +41,12 @@ this.communication = (function() {
   };
 
   exports.register_browser = function() {
-    return portCall("register_browser", [], {browserId, userAgent: navigator.userAgent});
+    return portCall("register_browser", [], {
+      browserId,
+      userAgent: navigator.userAgent,
+      testing: buildSettings.testingBrowser,
+      autofetch: buildSettings.autofetchBrowser,
+    });
   };
 
   exports.get_needed_pages = function(limit = 100) {
