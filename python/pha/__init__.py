@@ -64,7 +64,7 @@ class Archive:
         self.update_status()
 
     def __repr__(self):
-        return '<Archive at %r %i/%i fetched, %i errored>' % (self.path, self.fetched_count, self.history_count, self.error_count)
+        return '<Archive at %r %i/%i fetched, %i errored>' % (self.path, self.fetched_count, self.activity_count, self.error_count)
 
     @classmethod
     def default_location(cls):
@@ -92,11 +92,11 @@ class Archive:
         c = self.conn.cursor()
         c.execute("""
             SELECT
-                (SELECT COUNT(*) FROM activity) AS history_count,
+                (SELECT COUNT(*) FROM activity) AS activity_count,
                 (SELECT COUNT(*) page) AS fetched_count,
                 (SELECT COUNT(*) fetch_error) AS error_count
         """)
-        (self.history_count, self.fetched_count, self.error_count) = c.fetchone()
+        (self.activity_count, self.fetched_count, self.error_count) = c.fetchone()
 
     def histories(self, *, extra_query=None, extra_args=(), order_by=None):
         order_by = order_by or 'visit.visitTime DESC'
