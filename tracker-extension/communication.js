@@ -68,8 +68,8 @@ this.communication = (function() {
     return portCall("add_fetched_page", [id, url, page]);
   };
 
-  exports.add_fetch_failure = function(url, error_message) {
-    return portCall("add_fetch_failure", [url, error_message]);
+  exports.add_fetch_failure = function(url, errorMessage) {
+    return portCall("add_fetch_failure", [url, errorMessage]);
   };
 
   exports.log = function(level, ...args) {

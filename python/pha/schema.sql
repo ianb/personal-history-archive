@@ -20,8 +20,6 @@ CREATE TABLE IF NOT EXISTS page (
   url TEXT NOT NULL,
   fetched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   activityId TEXT REFERENCES activity (id) ON DELETE SET NULL,
-  -- NULL means we don't know:
-  not_logged_in BOOLEAN DEFAULT NULL,
   timeToFetch INT,
   redirectUrl TEXT,
   redirectOk BOOLEAN DEFAULT FALSE
@@ -30,12 +28,12 @@ CREATE TABLE IF NOT EXISTS page (
 CREATE TABLE IF NOT EXISTS fetch_error (
   url TEXT PRIMARY KEY,
   attempted TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  error_message TEXT
+  errorMessage TEXT
 );
 
 CREATE TABLE IF NOT EXISTS activity (
   id TEXT PRIMARY KEY,
-  browser_id TEXT REFERENCES browser (id) ON DELETE CASCADE,
+  browserId TEXT REFERENCES browser (id) ON DELETE CASCADE,
   sessionId TEXT REFERENCES browser_session (id) ON DELETE CASCADE,
   url TEXT NOT NULL,
   browserHistoryId TEXT,

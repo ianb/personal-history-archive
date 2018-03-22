@@ -46,7 +46,7 @@ this.autofetchListener = (function() {
   });
 
   backgroundOnMessage.register("add_fetch_failure", (message) => {
-    return communication.add_fetch_failure(message.url, message.error_message);
+    return communication.add_fetch_failure(message.url, message.errorMessage);
   });
 
   async function getServerPage() {

@@ -44,7 +44,7 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
             c.execute("""
                 INSERT INTO activity (
                     id,
-                    browser_id,
+                    browserId,
                     sessionId,
                     url,
                     browserHistoryId,
@@ -69,9 +69,9 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
         UPDATE browser
           SET
             newestHistory = (SELECT MAX(loadTime)
-                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL),
+                             FROM activity WHERE browserId = ? AND browserHistoryId IS NOT NULL),
             oldestHistory = (SELECT MIN(loadTime)
-                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL)
+                             FROM activity WHERE browserId = ? AND browserHistoryId IS NOT NULL)
     """, (browserId, browserId))
     archive.conn.commit()
 
@@ -79,10 +79,9 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
 def add_activity_list(archive, *, browserId, activityItems):
     for activity in activityItems:
         c = archive.conn.cursor()
-        activity["browser_id"] = browserId
         columns = """
             id
-            browser_id
+            browserId
             sessionId
             url
             loadTime
@@ -105,6 +104,7 @@ def add_activity_list(archive, *, browserId, activityItems):
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)
         marks = ["?"] * len(columns)
+        activity["browserId"] = browserId
         values = [activity[column] for column in columns]
         c.execute("""
             INSERT OR REPLACE INTO activity (
@@ -124,9 +124,9 @@ def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=
         UPDATE browser
           SET
             newestHistory = (SELECT MAX(loadTime)
-                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL),
+                             FROM activity WHERE browserId = ? AND browserHistoryId IS NOT NULL),
             oldestHistory = (SELECT MIN(loadTime)
-                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL)
+                             FROM activity WHERE browserId = ? AND browserHistoryId IS NOT NULL)
     """, (browserId, browserId))
     archive.conn.commit()
 
@@ -143,7 +143,7 @@ def register_session(archive, sessionId, browserId):
 def get_needed_pages(archive, limit=100):
     c = archive.conn.cursor()
     rows = c.execute("""
-        SELECT history.url, fetch_error.error_message FROM history
+        SELECT history.url, fetch_error.errorMessage FROM history
         LEFT JOIN page
             ON page.url = history.url
         LEFT JOIN fetch_error
@@ -152,7 +152,7 @@ def get_needed_pages(archive, limit=100):
         ORDER BY fetch_error.url IS NULL DESC, lastVisitTime DESC
         LIMIT ?
     """, (limit,))
-    return [{"url": row["url"], "lastError": row["error_message"]} for row in rows]
+    return [{"url": row["url"], "lastError": row["errorMessage"]} for row in rows]
 
 @addon
 def check_page_needed(archive, url):
@@ -187,12 +187,12 @@ def add_fetched_page(archive, id, url, page):
     write_page(archive, url, page)
 
 @addon
-def add_fetch_failure(archive, url, error_message):
+def add_fetch_failure(archive, url, errorMessage):
     c = archive.conn.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO fetch_error (url, error_message)
+        INSERT OR REPLACE INTO fetch_error (url, errorMessage)
         VALUES (?, ?)
-    """, (url, error_message))
+    """, (url, errorMessage))
     archive.conn.commit()
 
 @addon
@@ -216,12 +216,18 @@ def log(archive, *args, level='log'):
         if len(str(args)) < 70:
             args = (args,)
         for arg in args:
-            s = pprint.pformat(arg, compact=True)
+            if isinstance(arg, str):
+                s = arg
+            else:
+                s = pprint.pformat(arg, compact=True)
+                if isinstance(arg, tuple):
+                    s = s[1:-1]
             s = s.splitlines()
             for line in s:
                 print("   ", line, file=fp)
         if not args:
             print("    (no arguments)", file=fp)
+        print(file=fp)
 
 def write_page(archive, url, data):
     filename = Page.json_filename(archive, url)
@@ -254,7 +260,7 @@ def run_saver(storage_directory=None):
             send_message({"id": message["id"], "result": result})
         except Exception as e:
             tb = traceback.format_exc()
-            log(archive, "Error processing message %s(): %s" % (m_name, e), tb, level='error')
+            log(archive, "Error processing message %s(): %s" % (m_name, e), tb, level='s_err')
             send_message({"id": message["id"], "error": str(e), "traceback": tb})
 
 def get_message():

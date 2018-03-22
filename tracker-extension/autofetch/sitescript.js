@@ -186,7 +186,7 @@ async function fetchPage(url) {
   } catch (error) {
     model.fetching.delete(url);
     model.failed.set(url, error);
-    browser.runtime.sendMessage({type: "add_fetch_failure", url, error_message: String(error)});
+    browser.runtime.sendMessage({type: "add_fetch_failure", url, errorMessage: String(error)});
     render();
     startWorker();
   }
