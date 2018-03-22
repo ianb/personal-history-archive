@@ -71,21 +71,33 @@ class Archive:
         location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../"))
         return cls(location)
 
-    base_history_sql = """
+    base_activity_sql = """
         SELECT
-            history.url,
-            history.id AS history_id,
-            history.browser_id,
-            browser.user_agent,
-            history.title,
-            history.lastVisitTime,
-            history.visitCount,
-            visit.id AS visit_id,
-            visit.visitTime,
-            visit.referringVisitId,
-            visit.transition,
+            browser.userAgent,
+            activity.id AS activity_id,
+            activity.browserId,
+            activity.sessionId,
+            activity.url,
+            activity.browserHistoryId,
+            activity.browserVisitId,
+            activity.loadTime,
+            activity.unloadTime,
+            activity.transitionType,
+            activity.client_redirect,
+            activity.server_redirect,
+            activity.forward_back,
+            activity.from_address_bar,
+            activity.sourceId,
+            activity.initialLoadId,
+            activity.newTab,
+            activity.activeCount,
+            activity.closedReason,
+            activity.method,
+            activity.statusCode,
+            activity.contentType,
+            activity.hasSetCookie,
             page.fetched IS NOT NULL AS page_fetched
-        FROM history, visit, browser
+        FROM activity, browser
     """
 
     def update_status(self):
@@ -98,128 +110,84 @@ class Archive:
         """)
         (self.activity_count, self.fetched_count, self.error_count) = c.fetchone()
 
-    def histories(self, *, extra_query=None, extra_args=(), order_by=None):
-        order_by = order_by or 'visit.visitTime DESC'
+    def activity(self, *, extra_query=None, extra_args=(), order_by=None):
+        order_by = order_by or 'activity.loadTime DESC'
         c = self.conn.cursor()
         rows = c.execute("""
             %s
-            LEFT JOIN page ON page.url = history.url
-            WHERE history.id = visit.history_id
-              AND browser.id = history.browser_id
+            LEFT JOIN page ON page.url = activity.url
+            WHERE browser.id = activity.browserId
               %s
             ORDER BY %s
-        """ % (self.base_history_sql, extra_query or "", order_by), extra_args)
-        result = []
-        histories = {}
-        for row in rows:
-            url = row[0]
-            if url in histories:
-                visit = histories[url].visits[row[8]] = Visit(histories[url])
-                visit.visitTime = row[9]
-                visit.referringVisitId = row[10]
-                visit.transition = row[11]
-                continue
-            from_row = row[1:]
-            history = histories[url] = History(self, url, from_row=from_row)
-            result.append(history)
-        return result
+        """ % (self.base_activity_sql, extra_query or "", order_by), extra_args)
+        return [Activity(self, row) for row in rows]
 
-    def get_histories_by_url(self, *, like, order_by=None):
-        return self.histories(extra_query="AND history.url LIKE ?", extra_args=(like,), order_by=order_by)
+    def get_activity_by_url(self, *, like, order_by=None):
+        return self.activity(extra_query="AND activity.url LIKE ?", extra_args=(like,), order_by=order_by)
 
-    def histories_with_page(self):
+    def activity_with_page(self):
         c = self.conn.cursor()
         rows = c.execute("""
             %s, page
-            WHERE history.url = page.url
-              AND history.id = visit.history_id
-              AND browser.id = history.browser_id
-            ORDER BY visit.visitTime DESC
-        """ % self.base_history_sql)
-        result = []
-        histories = {}
-        rows = rows.fetchall()
-        for row in rows:
-            url = row[0]
-            if url not in histories:
-                from_row = row[1:]
-                history = histories[url] = History(self, url, from_row=from_row)
-                if history.has_page:
-                    result.append(history)
-            visit = histories[url].visits[row[8]] = Visit(histories[url])
-            visit.visitTime = row[9]
-            visit.referringVisitId = row[10]
-            visit.transition = row[11]
-        return result
+            WHERE activity.url = page.url
+              AND browser.id = activity.browserId
+            ORDER BY activity.loadTime DESC
+        """ % self.base_activity_sql)
+        return [Activity(self, row) for row in rows]
 
-    def get_history(self, url):
+    def get_activity(self, url):
         c = self.conn.cursor()
         rows = c.execute("""
             %s
-            LEFT JOIN page ON page.url = history.url
-            WHERE history.id = visit.history_id
-              AND browser.id = history.browser_id
-              AND history.url = ?
-        """ % self.base_history_sql, (url,))
-        history = None
-        for row in rows:
-            url = row[0]
-            if history is None:
-                from_row = row[1:]
-                history = History(self, url, from_row=from_row)
-            visit = history.visits[row[8]] = Visit(history)
-            visit.visitTime = row[9]
-            visit.referringVisitId = row[10]
-            visit.transition = row[11]
-        return history
+            LEFT JOIN page ON page.url = activity.url
+            WHERE browser.id = activity.browserId
+              AND activity.url = ?
+        """ % self.base_activity_sql, (url,))
+        return Activity(self, rows.fetchone())
 
-    def sample_histories_with_page(self, number, unique_url=True, unique_domain=False):
+    def sample_activity_with_page(self, number, unique_url=True, unique_domain=False):
         c = self.conn.cursor()
         rows = c.execute("""
             %s, page
-            WHERE history.url = page.url
-              AND history.id = visit.history_id
-              AND browser.id = history.browser_id
+            WHERE activity.url = page.url
+              AND browser.id = activity.browserId
             ORDER BY RANDOM()
-        """ % self.base_history_sql)
+        """ % self.base_activity_sql)
         result = []
-        histories = {}
+        activities = {}
         seen_domains = set()
         seen_url_patterns = set()
         rows = rows.fetchall()
         for row in rows:
-            url = row[0]
-            if url not in histories:
-                if len(result) >= number:
-                    return result
-                from_row = row[1:]
-                history = histories[url] = History(self, url, from_row=from_row)
-                history_url_pattern = strip_url_to_pattern(url)
-                history_domain = history.domain
-                if not history.has_page:
-                    continue
-                if unique_url and history_url_pattern in seen_url_patterns:
-                    continue
-                if unique_domain and history_domain in seen_domains:
-                    continue
-                seen_url_patterns.add(history_url_pattern)
-                seen_domains.add(history_domain)
-                result.append(history)
-            visit = histories[url].visits[row[8]] = Visit(histories[url])
-            visit.visitTime = row[9]
-            visit.referringVisitId = row[10]
-            visit.transition = row[11]
+            if len(result) >= number:
+                return result
+            activity = Activity(self, row)
+            activity_url_pattern = strip_url_to_pattern(row.url)
+            activity_domain = activity.domain
+            if not activity.has_page:
+                # Catches a missing JSON file or other reason the page isn't really here
+                continue
+            if unique_url and activity_url_pattern in seen_url_patterns:
+                continue
+            if unique_domain and activity_domain in seen_domains:
+                continue
+            seen_url_patterns.add(activity_url_pattern)
+            seen_domains.add(activity_domain)
+            result.append(activity)
         return result
 
+    def get_activity_by_source(self, sourceId):
+        return self.activity(extra_query="AND activity.sourceId = ?", extra_args=(sourceId,))
 
-class History:
-    def __init__(self, archive, url, from_row=None):
+
+class Activity:
+    def __init__(self, archive, from_row):
         self.archive = archive
         self.url = url
-        self.fetch(from_row)
+        self._update_from_row(from_row)
 
     def __repr__(self):
-        return '<History %s #visits=%i>' % (self.url, len(self.visits))
+        return '<Activity %s #visits=%i>' % (self.url, len(self.visits))
 
     @property
     def domain(self):
@@ -229,44 +197,31 @@ class History:
     def query(self):
         return query(self.url)
 
-    def fetch(self, from_row=None):
-        self.visits = {}
-        if not from_row:
-            c = self.archive.conn.cursor()
-            rows = c.execute("""
-                SELECT
-                  history.id AS history_id,
-                  history.browser_id,
-                  browser.user_agent,
-                  history.title,
-                  history.lastVisitTime,
-                  history.visitCount,
-                  visit.id AS visit_id,
-                  visit.visitTime,
-                  visit.referringVisitId,
-                  visit.transition,
-                  page.fetched AS page_fetched
-                FROM history, visit, browser
-                LEFT JOIN page ON page.url = history.url
-                WHERE history.url = ?
-                  AND history.id = visit.history_id
-                  AND browser.id = history.browser_id
-            """, (self.url,))
-        else:
-            rows = [from_row]
-        for (history_id, browser_id, user_agent, title, lastVisitTime, visitCount, visit_id, visitTime, referringVisitId, transition, page_fetched) in rows:
-            self.id = id
-            self.browser_id = browser_id
-            self.title = title
-            self.lastVisitTime = lastVisitTime
-            self.visitCount = visitCount
-            visit = self.visits.get(visit_id)
-            if not visit:
-                visit = self.visits[visit_id] = Visit(self)
-            visit.visitTime = visitTime
-            visit.referringVisitId = referringVisitId
-            visit.transition = transition
-            self.has_page = page_fetched and os.path.exists(Page.json_filename(self.archive, self.url))
+    def _update_from_row(self, row):
+        self.userAgent = row.userAgent
+        self.id = row.activity_id
+        self.browserId = row.browserId
+        self.sessionId = row.sessionId
+        self.url = row.url
+        self.browserHistoryId = row.browserHistoryId
+        self.browserActivityId = row.browserActivityId
+        self.loadTime = row.loadTime
+        self.unloadTime = row.unloadTime
+        self.transitionType = row.transitionType
+        self.client_redirect = row.client_redirect
+        self.server_redirect = row.server_redirect
+        self.forward_back = row.forward_back
+        self.from_address_bar = row.from_address_bar
+        self.sourceId = row.sourceId
+        self.initialLoadId = row.initialLoadId
+        self.newTab = row.newTab
+        self.activeCount = row.activeCount
+        self.closedReason = row.closedReason
+        self.method = row.method
+        self.statusCode = row.statusCode
+        self.contentType = row.contentType
+        self.hasSetCookie = row.hasSetCookie
+        self.has_page = row.page_fetched and os.path.exists(Page.json_filename(self.archive, self.url))
 
     @property
     def page(self):
@@ -274,29 +229,15 @@ class History:
             return self._page
         if not os.path.exists(Page.json_filename(self.archive, self.url)):
             return None
-        self._page = Page(self.archive, self.url, self)
+        self._page = Page(self.archive, self.url)
         return self._page
 
-    def next_histories(self):
-        visit_ids = tuple(self.visits.keys())
-        print("Attempt with ids:", visit_ids)
-        marks = ", ".join(["?"] * len(visit_ids))
-        c = self.archive.conn.cursor()
-        # FIXME: this isn't very efficient
-        rows = c.execute("""
-        SELECT DISTINCT history.url
-        FROM history, visit
-        WHERE history.id = visit.history_id
-              AND visit.referringVisitId IN (%s)
-        """ % marks, visit_ids)
-        histories = []
-        for row in rows:
-            histories.append(self.archive.get_history(row[0]))
-        return histories
+    def next_activity(self):
+        return self.archive.get_activity_by_source(self.id)
 
 
 class Page:
-    def __init__(self, archive, url, history=None):
+    def __init__(self, archive, url):
         self.archive = archive
         self.url = url
         self.fetch()
@@ -465,8 +406,3 @@ def strip_url_to_pattern(url):
         else:
             s += '/C'
     return s
-
-
-class Visit:
-    def __init__(self, history):
-        self.history = history
