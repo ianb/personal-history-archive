@@ -1,4 +1,4 @@
-/* globals content, browser, log */
+/* globals content, browser, log, util */
 
 const DEFAULT_PAGE_LIMIT = 3;
 const DEFAULT_PAGE_TOTAL = 100;

@@ -1,4 +1,4 @@
-/* globals log, communication, buildSettings, scrapeTab, util, catcher */
+/* globals log, communication, buildSettings, scrapeTab, util, catcher, sessionId */
 
 this.activityTracker = (function() {
   let exports = {};

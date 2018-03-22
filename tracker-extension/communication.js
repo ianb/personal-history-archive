@@ -1,4 +1,4 @@
-/* globals buildSettings, log, browserId */
+/* globals buildSettings, log, browserId, sessionId */
 
 /** Routines to communicate with the backend via native connection */
 this.communication = (function() {
@@ -35,7 +35,7 @@ this.communication = (function() {
   /* Each of these exported functions is a function in pha.saver: */
 
   exports.add_history_list = function(historyItems) {
-    return portCall("add_history_list", [], {browserId, historyItems});
+    return portCall("add_history_list", [], {browserId, sessionId, historyItems});
   };
 
   exports.add_activity_list = function(activityItems) {

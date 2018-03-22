@@ -19,10 +19,8 @@ this.historySaver = (function() {
   }));
 
   backgroundOnMessage.register("sendNow", catcher.watchFunction((message) => {
-    return sendNewHistory(message.force).catch((error) => {
-      log.error("Error in sendNow:", error);
-      throw error;
-    });
+    let force = 'force' in message ? message.force : false;
+    return sendNewHistory(force);
   }));
 
   backgroundOnMessage.register("flushNow", catcher.watchFunction((message) => {
@@ -63,7 +61,7 @@ this.historySaver = (function() {
   }
 
   async function serverSendHistory(annotatedHistory) {
-    log.info("Sending history", annotatedHistory.length);
+    log.info("Sending history", Object.keys(annotatedHistory).length);
     await communication.add_history_list(annotatedHistory);
   }
 

@@ -15,24 +15,6 @@ CREATE TABLE IF NOT EXISTS browser_session (
   endTime
 );
 
-CREATE TABLE IF NOT EXISTS history (
-  id TEXT UNIQUE PRIMARY KEY,
-  browser_id TEXT REFERENCES browser (id) ON DELETE CASCADE,
-  url TEXT,
-  title TEXT,
-  lastVisitTime TIMESTAMP,
-  visitCount INT NOT NULL DEFAULT 0,
-  typedCount INT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS visit (
-  id TEXT UNIQUE PRIMARY KEY,
-  history_id TEXT REFERENCES history (id) ON DELETE CASCADE,
-  visitTime TIMESTAMP,
-  referringVisitId TEXT REFERENCES visit (id),
-  transition TEXT
-);
-
 CREATE TABLE IF NOT EXISTS page (
   id TEXT PRIMARY KEY,
   url TEXT NOT NULL,
@@ -56,6 +38,8 @@ CREATE TABLE IF NOT EXISTS activity (
   browser_id TEXT REFERENCES browser (id) ON DELETE CASCADE,
   sessionId TEXT REFERENCES browser_session (id) ON DELETE CASCADE,
   url TEXT NOT NULL,
+  browserHistoryId TEXT,
+  browserVisitId TEXT,
   loadTime INT,
   unloadTime INT,
   transitionType TEXT,
@@ -65,7 +49,7 @@ CREATE TABLE IF NOT EXISTS activity (
   from_address_bar BOOLEAN DEFAULT FALSE,
   sourceId TEXT REFERENCES activity (id) ON DELETE SET NULL,
   initialLoadId TEXT REFERENCES activity (id) ON DELETE SET NULL,
-  newTab BOOLEAN DEFAULT FALSE,
+  newTab BOOLEAN,
   activeCount INT,
   closedReason TEXT,
   method TEXT,

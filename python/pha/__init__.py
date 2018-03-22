@@ -92,9 +92,9 @@ class Archive:
         c = self.conn.cursor()
         c.execute("""
             SELECT
-                (SELECT COUNT(*) FROM history) AS history_count,
-                (SELECT COUNT(*) FROM history, page WHERE history.url = page.url) AS fetched_count,
-                (SELECT COUNT(*) FROM history, fetch_error WHERE history.url = fetch_error.url) AS error_count
+                (SELECT COUNT(*) FROM activity) AS history_count,
+                (SELECT COUNT(*) page) AS fetched_count,
+                (SELECT COUNT(*) fetch_error) AS error_count
         """)
         (self.history_count, self.fetched_count, self.error_count) = c.fetchone()
 

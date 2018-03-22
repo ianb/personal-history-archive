@@ -10,6 +10,7 @@ import struct
 import time
 import pprint
 import traceback
+import uuid
 from . import Page
 
 message_handlers = {}
@@ -19,39 +20,58 @@ def addon(func):
     return func
 
 @addon
-def add_history_list(archive, *, browserId, historyItems):
-    for historyId, item in historyItems.items():
+def add_history_list(archive, *, browserId, sessionId, historyItems):
+    visits_to_ids = {}
+    for history in historyItems.values():
+        for visitId, visit in history["visits"].items():
+            visits_to_ids[visitId] = visit["activity_id"] = str(uuid.uuid1())
+    for historyId, history in historyItems.items():
         c = archive.conn.cursor()
-        c.execute("""
-            INSERT OR REPLACE INTO history (
-              id,
-              browser_id,
-              url,
-              title,
-              lastVisitTime,
-              visitCount,
-              typedCount
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (historyId, browserId, item["url"], item["title"], item["lastVisitTime"], item["visitCount"], item["typedCount"]))
-        for visitId, visit in item["visits"].items():
+        for visitId, visit in history["visits"].items():
             c.execute("""
-                INSERT OR REPLACE INTO visit (
-                id,
-                history_id,
-                visitTime,
-                referringVisitId,
-                transition
-                ) VALUES (?, ?, ?, ?, ?)
-            """, (visitId, historyId, visit["visitTime"], visit["referringVisitId"], visit["transition"]))
+                DELETE FROM activity WHERE browserVisitId = ?
+            """, (visitId,))
+            sourceId = None
+            if visit.get("referringVisitId"):
+                sourceId = visits_to_ids.get(visit["referringVisitId"])
+                if not sourceId:
+                    c.execute("""
+                        SELECT id FROM activity WHERE browserVisitId = ?
+                    """, (visit["referringVisitId"],))
+                    row = c.fetchone()
+                    if row:
+                        sourceId = row.id
+            c.execute("""
+                INSERT INTO activity (
+                    id,
+                    browser_id,
+                    sessionId,
+                    url,
+                    browserHistoryId,
+                    browserVisitId,
+                    loadTime,
+                    transitionType,
+                    sourceId
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                visit["activity_id"],
+                browserId,
+                sessionId,
+                history["url"],
+                historyId,
+                visitId,
+                visit["visitTime"],
+                visit["transition"],
+                sourceId))
         archive.conn.commit()
     c = archive.conn.cursor()
     c.execute("""
         UPDATE browser
           SET
-            latest = (SELECT MAX(lastvisitTime)
-                      FROM history WHERE browser_id = ?),
-            oldest = (SELECT MIN(lastvisitTime)
-                      FROM history WHERE browser_id = ?)
+            newestHistory = (SELECT MAX(loadTime)
+                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL),
+            oldestHistory = (SELECT MIN(loadTime)
+                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL)
     """, (browserId, browserId))
     archive.conn.commit()
 
@@ -103,10 +123,10 @@ def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=
     c.execute("""
         UPDATE browser
           SET
-            newestHistory = (SELECT MAX(lastvisitTime)
-                             FROM history WHERE browser_id = ?),
-            oldestHistory = (SELECT MIN(lastvisitTime)
-                             FROM history WHERE browser_id = ?)
+            newestHistory = (SELECT MAX(loadTime)
+                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL),
+            oldestHistory = (SELECT MIN(loadTime)
+                             FROM activity WHERE browser_id = ? AND browserHistoryId IS NOT NULL)
     """, (browserId, browserId))
     archive.conn.commit()
 
@@ -180,10 +200,10 @@ def status(archive, browserId):
     c = archive.conn.cursor()
     c.execute("""
         SELECT
-            (SELECT COUNT(*) FROM history) AS history_count,
-            (SELECT latest FROM browser WHERE id = ?) AS latest,
-            (SELECT oldest FROM browser WHERE id = ?) AS oldest,
-            (SELECT COUNT(*) FROM history, page WHERE history.url = page.url) AS fetched_count
+            (SELECT COUNT(*) FROM activity) AS activity_count,
+            (SELECT newestHistory FROM browser WHERE id = ?) AS latest,
+            (SELECT oldestHistory FROM browser WHERE id = ?) AS oldest,
+            (SELECT COUNT(*) FROM page) AS fetched_count
     """, (browserId, browserId))
     row = c.fetchone()
     return dict(row)
@@ -218,11 +238,13 @@ def run_saver(storage_directory=None):
         m_name = "(unknown)"
         try:
             message = get_message()
-            m_name = "%(name)s(%(args)%(kwargs))" % dict(
+            m_name = "%(name)s(%(args)s%(kwargs)s)" % dict(
                 name=message["name"],
                 args=", ".join(json.dumps(s) for s in message.get("args", [])),
                 kwargs=", ".join("%s=%s" % (name, json.dumps(value)) for name, value in message.get("kwargs", {}).items()),
             )
+            if len(m_name) > 100:
+                m_name = m_name[:60] + " ... " + m_name[-10:]
             print("Message:", m_name, file=sys.stderr)
             handler = message_handlers.get(message["name"])
             if not handler:
