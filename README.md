@@ -32,7 +32,7 @@ Using this tool you can:
 
 This consists of several parts:
 
-* A [browser extension](./tracker-extension#readme) (for Firefox and Chrome) to send your history to a local server
+* A [browser extension](./extension#readme) (for Firefox and Chrome) to send your history to a local server
 * A [server](./server#readme) to store that history in a local SQLite database and JSON files
 * A [second extension](./fetcher-extension#readme) to fetch and serialize full copies of those pages
 * A [python library](./python#readme) to use and analyze the history
@@ -51,9 +51,9 @@ For the Python library, create a virtualenv and use `pip install -e python/` and
 
 ### Installing history tracker
 
-Install the extension `tracker-extension/` to upload your browser history. You can do this is `about:debugging` in Firefox or **Window > Extensions > Load unpacked extension...**. This extension will periodically update the server with your history. It uploads your entire history the first time, which typically causes the browser to freeze for a few seconds; later updates won't be noticeable. On Firefox it must be reinstalled everytime you start the browser.
+Install the extension `extension/` to upload your browser history. You can do this is `about:debugging` in Firefox or **Window > Extensions > Load unpacked extension...**. This extension will periodically update the server with your history. It uploads your entire history the first time, which typically causes the browser to freeze for a few seconds; later updates won't be noticeable. On Firefox it must be reinstalled everytime you start the browser.
 
-You'll see a button in your browser toolbar: ![button](./tracker-extension/icon.png) – you can use this button to see the status of the extension, and to force uploading.
+You'll see a button in your browser toolbar: ![button](./extension/icon.png) – you can use this button to see the status of the extension, and to force uploading.
 
 
 ## Fetching history

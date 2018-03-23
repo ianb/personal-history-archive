@@ -296,7 +296,7 @@ def install_json_command():
 
 def install_json_file(storage_directory, script_location, native_name):
     # FIXME: support Windows
-    manifest_path = os.path.abspath(os.path.join(__file__, "../../../tracker-extension/manifest.json"))
+    manifest_path = os.path.abspath(os.path.join(__file__, "../../../extension/manifest.json"))
     script_location = os.path.abspath(script_location)
     with open(manifest_path) as fp:
         manifest = json.load(fp)

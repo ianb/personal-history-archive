@@ -27,7 +27,7 @@ const PORT = 11180;
 const SERVER = `http://localhost:${PORT}`;
 const SERVER_STATIC = `${SERVER}/test-static`;
 const COMMAND_MOD = process.platform == "darwin" ? Key.COMMAND : Key.CONTROL;
-const addonFileLocation = path.join(process.cwd(), "build", "tracker-extension.zip");
+const addonFileLocation = path.join(process.cwd(), "build", "extension.zip");
 
 let server;
 
