@@ -154,7 +154,6 @@ class Archive:
             ORDER BY RANDOM()
         """ % self.base_activity_sql)
         result = []
-        activities = {}
         seen_domains = set()
         seen_url_patterns = set()
         rows = rows.fetchall()
