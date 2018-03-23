@@ -24,7 +24,7 @@ Because people use multiple browsers and profiles, we typically map activity to 
 
 `testing`: if true, then this browser profile was created specifically for testing. Hopefully these browsers shouldn't show up in your normal data!
 
-`autofetch`: if true, then this browser profile was created or cloned specifically to autofetch pages. It probably has valid cookies/etc, but its behavior isn't "real". Typically we keep these browsers from producing activity, but they *do* create pages (on purpose!) (TODO: need to set `$AUTOFETCH` while building for autofetch)
+`autofetch`: if true, then this browser profile was created or cloned specifically to autofetch pages. It probably has valid cookies/etc, but its behavior isn't "real". Typically we keep these browsers from producing activity, but they *do* create pages (on purpose!) (TODO: need to set `$AUTOFETCH` while building for autofetch; also need to fix autofetch)
 
 #### Session
 
@@ -64,9 +64,9 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `unloadTime`: when the page was unloaded. This will be null when unknown (browser history does not keep good track of this).
 
-`browserHistoryId`: the ID of the associated [HistoryItem](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/HistoryItem). This won't be unique at all, as many visits are associated with the same HistoryItem. (TODO)
+`browserHistoryId`: the ID of the associated [HistoryItem](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/HistoryItem). This won't be unique at all, as many visits are associated with the same HistoryItem.
 
-`browserVisitId`: the ID of the associated [VisitItem](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/VisitItem). This will probably be unique, if it is set. (TODO)
+`browserVisitId`: the ID of the associated [VisitItem](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/VisitItem). This will probably be unique, if it is set.
 
 `sourceId`: the id of the visit that lead to this visit. This may come from the VisitItem.referringVisitId (but won't match that ID, as we don't use the browserVisitId as our primary key).
 
@@ -88,7 +88,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `newTab`: if this page was opened in a new tab. Typically `sourceId` should be set in this case. It will be null if unknown (for instance VisitItem doesn't record this).
 
-`activeCount`: the number of times this page was made active, for more than a second. If you open a tab in the background, then close it without ever looking at it, then this should be 0. If you interact normally and don't change tabs it would be 1. Higher numbers mean it was revisited several times.
+`activeCount`: the number of times this page was made active, for more than a second. If you open a tab in the background, then close it without ever looking at it, then this should be 0. If you interact normally and don't change tabs it would be 1. Higher numbers mean it was revisited several times. (TODO: need to put in the 1 second delay)
 
 `activeTime`: time in milliseconds that the page was active. Note that if a window goes into the background we keep counting, so this might not always be correct. Like with `activeCount`, we ignore when a tab is active for less than a second, assuming that it means the tab was passed over on the way to another tab. (TODO: this is calculated, but not saved!)
 
@@ -96,11 +96,11 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `containsHash`: if the URL has a hash (e.g., `page.html#section1`), then does some element with `id="section1"` exist? True or false if we calculate it, null if it is not discovered. (TODO)
 
-`method`: the HTTP method that loaded the page (usually GET, of course). We do not track the POST destination if it results in an immediate redirect.
+`method`: the HTTP method that loaded the page (usually GET, of course). We do not track the POST destination if it results in an immediate redirect. (TODO: confirm POST behavior)
 
 `statusCode`: the integer status code of the response. E.g., 200, 404.
 
-`contentType`: the Content-Type of the response. Note most URLs are *displayed* as a DOM page of some sort, but the underlying resource might not be text/html. In a case like `text/html; charset="UTF-8"` we remove the charset (and anything after `;`).
+`contentType`: the Content-Type of the response. Note most URLs are *displayed* as a DOM page of some sort, but the underlying resource might not be text/html. In a case like `text/html; charset="UTF-8"` we remove the charset (and anything after `;`). (TODO: remove charset/etc)
 
 `hasSetCookie`: the response contained a `Set-Cookie` header.
 
@@ -108,7 +108,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `scrolled`: true if the user has scrolled, false if not, null if we couldn't detect. (TODO)
 
-`formInteraction`: true if the user interacted with any form elements, false otherwise, null if we couldn't detect. (TODO)
+`formInteraction`: true if the user interacted with any form elements, false otherwise, null if we couldn't detect. (TODO. Should we distinguish between typing and clicking?)
 
 #### Derived:
 
@@ -126,7 +126,7 @@ This information can be calculated from the above information... (All TODO)
 
 These are full dumps of a page's DOM. They may be associated with a visit, or loaded retroactively to fill in past history. Typically the system does not pull in repeated dumps of pages when they are re-visited (though we may try to do that in the future based on some heuristics).
 
-`id`: a UUID for this *fetch* of a page (TODO: we're using url as primary key)
+`id`: a UUID for this *fetch* of a page
 
 `url`: the URL fetched
 
@@ -188,11 +188,13 @@ These are full dumps of a page's DOM. They may be associated with a visit, or lo
 
 #### DOM
 
+These page records give the actual frozen page part of the fetched pages:
+
 `body`: a string of everything *inside* `<body>`.
 
 `head`: a string of everything *inside* `<head>`.
 
-`bodyAttrs`: the attributes in the body tab, like `[["class", "htmlClass"], ...]`
+`bodyAttrs`: the attributes in the body tab, like `[["class", "foobar"], ...]`
 
 `headAttrs`: same for head.
 
