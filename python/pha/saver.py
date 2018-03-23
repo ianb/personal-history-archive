@@ -3,6 +3,7 @@ Implements saving information into the database/files
 """
 
 import os
+import re
 import stat
 import json
 import sys
@@ -209,10 +210,15 @@ def status(archive, browserId):
     return dict(row)
 
 @addon
-def log(archive, *args, level='log'):
+def log(archive, *args, level='log', stack=None):
     filename = os.path.join(archive.path, "addon.log")
     with open(filename, "a") as fp:
-        print("Log/{: <5} {}".format(level, int(time.time() * 1000)), file=fp)
+        if stack:
+            log_location = stack.splitlines()[0]
+            log_location = re.sub(r'moz-extension://[a-f0-9-]+/', '/', log_location)
+        else:
+            log_location = ""
+        print("Log/{: <5} {} {}".format(level, int(time.time() * 1000), log_location), file=fp)
         if len(str(args)) < 70:
             args = (args,)
         for arg in args:

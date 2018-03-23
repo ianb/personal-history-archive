@@ -72,8 +72,8 @@ this.communication = (function() {
     return portCall("add_fetch_failure", [url, errorMessage]);
   };
 
-  exports.log = function(level, ...args) {
-    return portCall("log", args, {level});
+  exports.log = function({level, args, stack}) {
+    return portCall("log", args, {level, stack});
   };
 
   exports.status = function() {

@@ -51,6 +51,11 @@ this.log = (function() {
     }
     if (shouldLogServer[level]) {
       let newArgs = [];
+      let stackLines = (new Error()).stack.split("\n");
+      while (stackLines[0] && /\/log.js:/.test(stackLines[0])) {
+        stackLines.shift();
+      }
+      let stack = stackLines.join("\n");
       for (let arg of args) {
         if (arg instanceof Error) {
           newArgs.push(String(arg));
@@ -60,9 +65,9 @@ this.log = (function() {
         }
       }
       if (typeof communication !== "undefined") {
-        communication.log(level, ...newArgs);
+        communication.log({level, args: newArgs, stack});
       } else {
-        browser.runtime.sendMessage({type: "log", level, args: newArgs});
+        browser.runtime.sendMessage({type: "log", level, args: newArgs, stack});
       }
     }
   }
