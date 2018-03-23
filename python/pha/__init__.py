@@ -183,11 +183,10 @@ class Archive:
 class Activity:
     def __init__(self, archive, from_row):
         self.archive = archive
-        self.url = url
         self._update_from_row(from_row)
 
     def __repr__(self):
-        return '<Activity %s #visits=%i>' % (self.url, len(self.visits))
+        return '<Activity %s %s>' % (self.id, self.url)
 
     @property
     def domain(self):
