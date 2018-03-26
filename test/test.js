@@ -213,6 +213,16 @@ describe("Test history collection", function() {
     assert.deepEqual(property("newTab"), [
       false, false, false, false, false, false, true, false,
     ], "newTab");
+    assert.deepEqual(property("sourceClickText"), [
+      null,
+      null,
+      "A pretend destination",
+      "first place",
+      null,
+      null,
+      null,
+      "A pretend destination",
+    ], "sourceClickText");
     assert.deepEqual(pages.map(p => !!p.unloadTime), [
       true, true, true, true, true, true,
       false, false, // only the last two pages are still loaded

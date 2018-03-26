@@ -56,6 +56,17 @@
         "util.js",
         "debug-scripts/debug-show.js"
       ]
+    },
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": [
+        "browser-polyfill.js",
+        "build/buildSettings.js",
+        "log.js",
+        "catcher.js",
+        "util.js",
+        "contentWatcher.js"
+      ]
     }
   ],
   "permissions": [

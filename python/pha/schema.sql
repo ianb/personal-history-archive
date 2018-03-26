@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS activity (
   loadTime INT,
   unloadTime INT,
   transitionType TEXT,
+  sourceClickText TEXT,
+  sourceClickHref TEXT,
   client_redirect BOOLEAN DEFAULT FALSE,
   server_redirect BOOLEAN DEFAULT FALSE,
   forward_back BOOLEAN DEFAULT FALSE,

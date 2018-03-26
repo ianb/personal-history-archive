@@ -5,8 +5,11 @@ this.backgroundOnMessage = (function() {
 
   const handlers = {};
 
-  browser.runtime.onMessage.addListener((message) => {
+  browser.runtime.onMessage.addListener((message, sender) => {
     let type = message.type;
+    message.senderTabId = sender.tab.id;
+    message.senderUrl = sender.url;
+    message.senderFrameId = sender.frameId;
     if (!handlers[type]) {
       log.error("Got unexpected message type:", type, "from", message);
       return Promise.reject(new Error(`Unexpected message type: ${type}`));

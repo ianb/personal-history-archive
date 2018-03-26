@@ -12,6 +12,7 @@ this.activityTracker = (function() {
   // FIXME: track pinned tabs
   let currentPages = new Map();
   let pendingAnnotations = new Map();
+  let lastClickInformation = new Map();
   let activeTabId;
   let pendingPages = [];
   // This represents pages we'd like to serialize, but haven't yet, as a mapping of tabId
@@ -33,6 +34,8 @@ this.activityTracker = (function() {
       this.newTab = !!options.newTab;
       this.isHashChange = !!options.isHashChange;
       this.initialLoadId = options.initialLoadId || null;
+      this.sourceClickText = options.sourceClickText === undefined ? null : options.sourceClickText;
+      this.sourceClickHref = options.sourceClickHref === undefined ? null : options.sourceClickHref;
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -110,7 +113,9 @@ this.activityTracker = (function() {
         closePage(tabId, "navigation");
       }
     }
-    let page = new Page({url, timeStamp, transitionType, transitionQualifiers, previous, newTab, isHashChange});
+    let sourceClick = lastClickInformation.get(tabId) || {};
+    lastClickInformation.delete(tabId);
+    let page = new Page({url, timeStamp, transitionType, transitionQualifiers, previous, newTab, isHashChange, sourceClickText: sourceClick.text, sourceClickHref: sourceClick.href});
     if (isHashChange && previous) {
       page.initialLoadId = previous.initialLoadId || previous.id;
     }
@@ -289,6 +294,10 @@ this.activityTracker = (function() {
         transitionQualifiers: []
       });
     }
+  }));
+
+  backgroundOnMessage.register("anchorClick", catcher.watchFunction((message) => {
+    lastClickInformation.set(message.senderTabId, {text: message.text, href: message.href});
   }));
 
   function pagePossiblyAllowed(url) {

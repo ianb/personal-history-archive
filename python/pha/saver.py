@@ -88,6 +88,8 @@ def add_activity_list(archive, *, browserId, activityItems):
             loadTime
             unloadTime
             transitionType
+            sourceClickText
+            sourceClickHref
             client_redirect
             server_redirect
             forward_back
