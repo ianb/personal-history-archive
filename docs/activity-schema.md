@@ -210,7 +210,9 @@ These page records give the actual frozen page part of the fetched pages:
 
 `resources[id].tag`: if the URL is embedded in a tag, the name of the tag, like `"LINK"`.
 
-`resources[id].selector`: a selector pointing to the element. ([TODO](https://github.com/ianb/personal-history-archive/issues/86): is currently just an ID)
+`resources[id].elId`: the the containing element has an id attribute, then it's here
+
+`resources[id].selector`: a selector pointing to the element.
 
 `resources[id].attr`: the attribute name where the URL was found
 

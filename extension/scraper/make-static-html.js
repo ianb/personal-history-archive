@@ -118,12 +118,14 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     if (match) {
       repl += "." + match[1];
     }
+    let selector = elementToSelector(el);
     // Note this object is checked in shot.js:
     resources[repl] = {
       url,
       hash,
       tag: typeof el == "string" ? el : el.tagName,
       elId: el.id,
+      selector,
       attr,
       rel: (el.getAttribute && el.getAttribute("rel")) || undefined
     };
@@ -1194,6 +1196,26 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       }
     }
     return twitterCard;
+  }
+
+  function elementToSelector(el) {
+    let singletons = {BODY: true, HEAD: true};
+    let parts = [];
+    while (true) {
+      if (singletons[el.tagName]) {
+        parts.unshift(el.tagName.toLowerCase());
+        break;
+      }
+      if (el.id) {
+        parts.unshift(`#${el.id}`);
+        break;
+      }
+      let parent = el.parentNode;
+      let position = Array.from(parent.childNodes).indexOf(el);
+      parts.unshift(`*:nth-child(${position + 1})`);
+      el = parent;
+    }
+    return parts.join(" > ");
   }
 
   exports.documentStaticData = documentStaticData;
