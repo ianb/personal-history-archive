@@ -46,6 +46,7 @@ this.activityTracker = (function() {
       this.statusCode = null;
       this.contentType = null;
       this.hasSetCookie = null;
+      this.hasCookie = null;
       this.sessionId = sessionId;
     }
 
@@ -145,22 +146,23 @@ this.activityTracker = (function() {
     addNewPage({tabId, url, timeStamp, transitionType, transitionQualifiers, isHashChange: true});
   }
 
-  function annotatePage({tabId, url, originUrl, method, statusCode, contentType, hasSetCookie}) {
-    // FIXME: I think we don't need originUrl
+  function annotatePage(options) {
+    let {tabId, url} = options;
+    delete options.tabId;
+    delete options.url;
     let page = currentPages.get(tabId);
     if (!page) {
       log.warn("Cannot annotate tab", tabId, "url:", url);
       return;
     }
-    if (page.url == url) {
-      page.method = method;
-      page.statusCode = statusCode;
-      page.contentType = contentType;
-      page.hasSetCookie = hasSetCookie;
+    if (page.url === url) {
+      Object.assign(page, options);
     } else {
-      pendingAnnotations.set(tabId, {
-        tabId, url, method, statusCode, contentType, hasSetCookie
-      });
+      let existing = pendingAnnotations.get(tabId);
+      if (existing && existing.url === url) {
+        options = Object.assign(existing, options);
+      }
+      pendingAnnotations.set(tabId, Object.assign({tabId, url}, options));
     }
   }
 
@@ -263,9 +265,31 @@ this.activityTracker = (function() {
       }
     }
     annotatePage({
-      tabId, url, originUrl, method, statusCode, contentType, hasSetCookie
+      tabId, url, method, statusCode, contentType, hasSetCookie
     });
   }), standardRequestFilter, ["responseHeaders"]);
+
+  browser.webRequest.onSendHeaders.addListener(catcher.watchFunction((event) => {
+    if (event.frameId) {
+      return;
+    }
+    let {tabId, requestHeaders, url} = event;
+    if (!requestHeaders) {
+      log.error("no request headers", url);
+    }
+    if (requestHeaders) {
+      hasCookie = false;
+      for (let header of requestHeaders) {
+        if (header.name.toLowerCase() === "cookie") {
+          hasCookie = true;
+          break;
+        }
+      }
+      annotatePage({
+        tabId, url, hasCookie
+      });
+    }
+  }), standardRequestFilter, ["requestHeaders"]);
 
   browser.tabs.onActivated.addListener(catcher.watchFunction((event) => {
     let current = currentPages.get(event.tabId);

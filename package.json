@@ -32,7 +32,9 @@
     "webextension-polyfill": "^0.2.1",
     "yargs": "^10.1.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "cookie-parser": "^1.4.3"
+  },
   "homepage": "https://github.com/ianb/personal-history-archive",
   "license": "MPL-2.0",
   "repository": {

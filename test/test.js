@@ -16,6 +16,7 @@ const assert = require("assert");
 const firefox = require("selenium-webdriver/firefox");
 const webdriver = require("selenium-webdriver");
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const http = require("http");
 const { By, until, Key } = webdriver;
 // Uncomment the next line and others with `ServiceBuilder` to enable trace logs from Firefox and Geckodriver
@@ -36,6 +37,15 @@ function startServer() {
     server.close();
   }
   const app = express();
+  app.use(cookieParser());
+  app.get("/cookie", (req, res) => {
+    if (req.query.remove) {
+      res.cookie("testCookie", "", {maxAge: 0});
+    } else {
+      res.cookie("testCookie", "test value", {maxAge: 3600000});
+    }
+    res.send("OK");
+  });
   app.use("/test-static", express.static(path.join(__dirname, "static"), {
     index: ["index.html"],
     maxAge: null
@@ -245,18 +255,32 @@ describe("Test history collection", function() {
     let url = `${SERVER_STATIC}/does-not-exist.html`;
     await driver.get(url);
     await promiseTimeout(5000);
-    console.log("now at here");
     let result = await collectInformation(driver);
-    console.log("done collection");
     let page = result.pendingPages.filter(p => p.url.endsWith("does-not-exist.html"))[0];
-    console.log("all pages are", result.pendingPages.filter(p => p.url.endsWith("does-not-exist.html")));
-    console.log("page is:", page);
     assert.equal(page.statusCode, 404, `Status code not 404: ${page.statusCode}`);
     assert(page.contentType.startsWith("text/html"), `contentType: ${page.contentType}`);
     let filename = filenameForUrl(url);
     let pageData = JSON.parse(fs.readFileSync(filename, {encoding: "UTF-8"}));
     assert.equal(pageData.statusCode, 404);
     return true;
+  });
+
+  it("Will detect cookies", async function() {
+    this.timeout(10000);
+    let url = `${SERVER}/cookie`;
+    await driver.get(url);
+    await promiseTimeout(500);
+    await driver.get(url + "?remove=1");
+    await promiseTimeout(500);
+    let result = await collectInformation(driver);
+    let pages = result.currentPages.concat(result.pendingPages);
+    pages.sort((a, b) => a.loadTime > b.loadTime ? 1 : -1);
+    assert.deepEqual(pages.map(p => [p.hasCookie, p.hasSetCookie]), [
+      [null, null], // Don't know about the first page
+      [false, true], // has no cookie, but did set one
+      [true, true], // has no cookie, but did set the deleting cookie
+      [false, false], // the debug page, sets no cookie, and cookie has been deleted
+    ]);
   });
 
 });

@@ -108,7 +108,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `hasSetCookie`: the response contained a `Set-Cookie` header.
 
-`hasCookie`: the request contained a `Cookie` header. ([TODO](https://github.com/ianb/personal-history-archive/issues/84))
+`hasCookie`: the request contained a `Cookie` header.
 
 `scrolled`: true if the user has scrolled, false if not, null if we couldn't detect. (TODO: [#85](https://github.com/ianb/personal-history-archive/issues/85) and [#61](https://github.com/ianb/personal-history-archive/issues/61))
 

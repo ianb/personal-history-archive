@@ -57,5 +57,6 @@ CREATE TABLE IF NOT EXISTS activity (
   method TEXT,
   statusCode INT,
   contentType TEXT,
-  hasSetCookie BOOLEAN
+  hasSetCookie BOOLEAN,
+  hasCookie BOOLEAN
 );

@@ -105,6 +105,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             statusCode
             contentType
             hasSetCookie
+            hasCookie
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)
