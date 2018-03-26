@@ -36,6 +36,8 @@ Browsers also have sessions:
 
 `endTime`: timestamp when it was closed (often null, because we can't always catch this; may be derived from last saved visit once a new session starts). (TODO: nothing sets this)
 
+`timezoneOffset`: the value of `(new Date()).getTimezoneOffset()`, which is minutes-from-UTC. ([TODO](https://github.com/ianb/personal-history-archive/issues/89))
+
 #### Derived:
 
 Coming from history:
@@ -70,9 +72,9 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `sourceId`: the id of the visit that lead to this visit. This may come from the VisitItem.referringVisitId (but won't match that ID, as we don't use the browserVisitId as our primary key).
 
-`sourceLinkUrl`: the URL the user clicked on that lead to this page, as from `a.href`. Null if unknown or no link appeared to be the source. (TODO)
+`sourceLinkUrl`: the URL the user clicked on that lead to this page, as from `a.href`. Null if unknown or no link appeared to be the source. ([TODO](https://github.com/ianb/personal-history-archive/issues/60))
 
-`sourceLinkText`: if a click led to this page, the `a.textContent` of that link. Null if unknown or no link appeared to be the source. May be `""`. (TODO)
+`sourceLinkText`: if a click led to this page, the `a.textContent` of that link. Null if unknown or no link appeared to be the source. May be `""`. ([TODO](https://github.com/ianb/personal-history-archive/issues/60))
 
 `transition`: a string from [TransitionType](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/TransitionType): `link`, `typed`, `auto_bookmark`, `auto_subframe` (unlikely, as we don't track frames), `manual_subframe` (also unlikely), `generated`, `auto_toplevel`, `form_submit`, `reload`, `keyword`, `keyword_generated`.
 
@@ -88,27 +90,29 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `newTab`: if this page was opened in a new tab. Typically `sourceId` should be set in this case. It will be null if unknown (for instance VisitItem doesn't record this).
 
-`activeCount`: the number of times this page was made active, for more than a second. If you open a tab in the background, then close it without ever looking at it, then this should be 0. If you interact normally and don't change tabs it would be 1. Higher numbers mean it was revisited several times. (TODO: need to put in the 1 second delay)
+`activeCount`: the number of times this page was made active, for more than a second. If you open a tab in the background, then close it without ever looking at it, then this should be 0. If you interact normally and don't change tabs it would be 1. Higher numbers mean it was revisited several times. ([TODO](https://github.com/ianb/personal-history-archive/issues/79): need to put in the 1 second delay)
 
-`activeTime`: time in milliseconds that the page was active. Note that if a window goes into the background we keep counting, so this might not always be correct. Like with `activeCount`, we ignore when a tab is active for less than a second, assuming that it means the tab was passed over on the way to another tab. (TODO: this is calculated, but not saved!)
+`activeTime`: time in milliseconds that the page was active. Note that if a window goes into the background we keep counting, so this might not always be correct. Like with `activeCount`, we ignore when a tab is active for less than a second, assuming that it means the tab was passed over on the way to another tab. ([TODO](https://github.com/ianb/personal-history-archive/issues/80): this is calculated, but not saved!)
 
 `unloadReason`: a string indicating why the page was unloaded: `tabClose`, `navigation`. Null if unknown.
 
-`containsHash`: if the URL has a hash (e.g., `page.html#section1`), then does some element with `id="section1"` exist? True or false if we calculate it, null if it is not discovered. (TODO)
+`containsHash`: if the URL has a hash (e.g., `page.html#section1`), then does some element with `id="section1"` exist? True or false if we calculate it, null if it is not discovered. (TODO: see [#81](https://github.com/ianb/personal-history-archive/issues/81) and [#82](https://github.com/ianb/personal-history-archive/issues/82))
 
 `method`: the HTTP method that loaded the page (usually GET, of course). We do not track the POST destination if it results in an immediate redirect. (TODO: confirm POST behavior)
 
 `statusCode`: the integer status code of the response. E.g., 200, 404.
 
-`contentType`: the Content-Type of the response. Note most URLs are *displayed* as a DOM page of some sort, but the underlying resource might not be text/html. In a case like `text/html; charset="UTF-8"` we remove the charset (and anything after `;`). (TODO: remove charset/etc)
+`contentType`: the Content-Type of the response. Note most URLs are *displayed* as a DOM page of some sort, but the underlying resource might not be text/html. In a case like `text/html; charset="UTF-8"` we remove the charset (and anything after `;`). ([TODO](https://github.com/ianb/personal-history-archive/issues/83): remove charset/etc)
 
 `hasSetCookie`: the response contained a `Set-Cookie` header.
 
-`hasCookie`: the request contained a `Cookie` header. (TODO)
+`hasCookie`: the request contained a `Cookie` header. ([TODO](https://github.com/ianb/personal-history-archive/issues/84))
 
-`scrolled`: true if the user has scrolled, false if not, null if we couldn't detect. (TODO)
+`scrolled`: true if the user has scrolled, false if not, null if we couldn't detect. (TODO: [#85](https://github.com/ianb/personal-history-archive/issues/85) and [#61](https://github.com/ianb/personal-history-archive/issues/61))
 
-`formInteraction`: true if the user interacted with any form elements, false otherwise, null if we couldn't detect. (TODO. Should we distinguish between typing and clicking?)
+`formInteraction`: true if the user interacted with any form elements, false otherwise, null if we couldn't detect. ([TODO](https://github.com/ianb/personal-history-archive/issues/62). Should we distinguish between typing and clicking?)
+
+`clipboardCopies`: an array of `[{timestamp, text, html}]` of any clipboard copies that happen in this activity/page (or, more specifically, any copies that happen while this activity is the highlighted tab). ([TODO](https://github.com/ianb/personal-history-archive/issues/78))
 
 #### Derived:
 
@@ -132,7 +136,7 @@ These are full dumps of a page's DOM. They may be associated with a visit, or lo
 
 `loadTime`: the timestamp when we serialized this page (TODO: rename)
 
-`serializeVersion`: a version indicating the serializer. This gets bumped sometimes, so old pages can be re-fetched or updated in place. (TODO)
+`serializeVersion`: a version indicating the serializer. This gets bumped sometimes, so old pages can be re-fetched or updated in place. ([TODO](https://github.com/ianb/personal-history-archive/issues/5))
 
 `autofetched`: true if this was created by an autofetch, as opposed to collected while browsing (TODO)
 
@@ -206,7 +210,7 @@ These page records give the actual frozen page part of the fetched pages:
 
 `resources[id].tag`: if the URL is embedded in a tag, the name of the tag, like `"LINK"`.
 
-`resources[id].selector`: a selector pointing to the element. (TODO: is currently just an ID)
+`resources[id].selector`: a selector pointing to the element. ([TODO](https://github.com/ianb/personal-history-archive/issues/86): is currently just an ID)
 
 `resources[id].attr`: the attribute name where the URL was found
 
