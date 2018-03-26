@@ -132,12 +132,12 @@ def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=
     archive.conn.commit()
 
 @addon
-def register_session(archive, sessionId, browserId):
+def register_session(archive, sessionId, browserId, timezoneOffset):
     c = archive.conn.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO browser_session (id, browserId, startTime)
-        VALUES (?, ?, CURRENT_TIMESTAMP)
-    """, (sessionId, browserId))
+        INSERT OR REPLACE INTO browser_session (id, browserId, startTime, timezoneOffset)
+        VALUES (?, ?, CURRENT_TIMESTAMP, ?)
+    """, (sessionId, browserId, timezoneOffset))
     archive.conn.commit()
 
 @addon

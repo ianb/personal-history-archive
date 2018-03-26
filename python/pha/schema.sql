@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS browser_session (
   id TEXT PRIMARY KEY,
   browserId TEXT REFERENCES browser (id) ON DELETE CASCADE,
   startTime INT,
-  endTime
+  endTime INT,
+  timezoneOffset INT
 );
 
 CREATE TABLE IF NOT EXISTS page (

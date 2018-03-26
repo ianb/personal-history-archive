@@ -36,7 +36,7 @@ Browsers also have sessions:
 
 `endTime`: timestamp when it was closed (often null, because we can't always catch this; may be derived from last saved visit once a new session starts). (TODO: nothing sets this)
 
-`timezoneOffset`: the value of `(new Date()).getTimezoneOffset()`, which is minutes-from-UTC. ([TODO](https://github.com/ianb/personal-history-archive/issues/89))
+`timezoneOffset`: the value of `(new Date()).getTimezoneOffset()`, which is minutes-from-UTC.
 
 #### Derived:
 

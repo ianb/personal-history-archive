@@ -52,7 +52,7 @@ this.communication = (function() {
   };
 
   exports.register_session = function(sessionId) {
-    return portCall("register_session", [sessionId, browserId]);
+    return portCall("register_session", [sessionId, browserId, (new Date()).getTimezoneOffset()]);
   };
 
   exports.get_needed_pages = function(limit = 100) {
