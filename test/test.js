@@ -179,17 +179,16 @@ describe("Test history collection", function() {
       `${SERVER_STATIC}/search-destination.html`,
       `${SERVER_STATIC}/search-results.html?q=test+query`,
       `${SERVER_STATIC}/search-destination.html`,
-      `${SERVER_STATIC}/search-destination.html`, // This item should not be here
       `${SERVER}/test-static/debug.html`,
     ];
     assert.deepEqual(urls, expectedUrls);
     // Apparently driver.get() doesn't act like from_address_bar
     assert.deepEqual(property("from_address_bar"), [
-      false, false, false, false, false, false, false, false, false
+      false, false, false, false, false, false, false, false
     ], "from_address_bar");
     // We went "back" to the 4th item (the google search)
     assert.deepEqual(property("forward_back"), [
-      false, false, false, false, true, true, false, false, false
+      false, false, false, false, true, true, false, false
     ], "forward_back");
     assert.deepEqual(property("transitionType"), [
       'link',
@@ -200,7 +199,6 @@ describe("Test history collection", function() {
       'link', // clicked on back again
       undefined, // apparently open in new window is misunderstood
       'link', // driver.get looks like link?
-      'link', // I don't understand this entry at all
     ], "transitionType");
     assert.deepEqual(pages.map(p => idToIndex(p.sourceId)), [
       -1, // Didn't come from anywhere, about:blank
@@ -210,18 +208,16 @@ describe("Test history collection", function() {
       3, // went "back" to this page... FIXME: is this right?
       4, // came from previous search result,
       5, // something else...
-      6, // back again
       5, // mysterious extra copy of a page
     ]);
     assert.deepEqual(property("newTab"), [
-      false, false, false, false, false, false, true, false, false,
+      false, false, false, false, false, false, true, false,
     ], "newTab");
     assert.deepEqual(pages.map(p => !!p.unloadTime), [
-      true, true, true, true, true, true, true,
+      true, true, true, true, true, true,
       false, false, // only the last two pages are still loaded
     ], "is unloaded");
     assert.deepEqual(property("closedReason"), [
-      'navigation',
       'navigation',
       'navigation',
       'navigation',

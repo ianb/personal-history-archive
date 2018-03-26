@@ -219,7 +219,7 @@ def log(archive, *args, level='log', stack=None):
         else:
             log_location = ""
         print("Log/{: <5} {} {}".format(level, int(time.time() * 1000), log_location), file=fp)
-        if len(str(args)) < 70:
+        if len(str(args)) < 70 and len(args) > 1:
             args = (args,)
         for arg in args:
             if isinstance(arg, str):

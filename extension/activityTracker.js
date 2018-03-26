@@ -102,6 +102,10 @@ this.activityTracker = (function() {
       previous = currentPages.get(sourceTabId);
     } else if (tabId) {
       previous = currentPages.get(tabId);
+      if (previous && previous.url === url && previous.newTab && !newTab) {
+        // Pages created as new tabs frequently appear twice due to events
+        return;
+      }
       if (previous) {
         closePage(tabId, "navigation");
       }
@@ -338,7 +342,7 @@ this.activityTracker = (function() {
     try {
       scraped = await scrapeTab(tabId, url);
     } catch (e) {
-      log.warn("Failed to fetch", JSON.stringify(url), "Error:", String(e), e.stack, e);
+      log.warn("Failed to fetch", url, "Error:", e);
     }
     if (!scraped) {
       log.info("Could not scrape", url, "from", tabId);

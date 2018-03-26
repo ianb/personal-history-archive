@@ -38,7 +38,7 @@ this.log = (function() {
     };
   }
 
-  function logWithLevel(level, args) {
+  function logWithLevel(level, args, stack) {
     if (shouldLog[level]) {
       let newArgs = [];
       for (let arg of args) {
@@ -51,11 +51,13 @@ this.log = (function() {
     }
     if (shouldLogServer[level]) {
       let newArgs = [];
-      let stackLines = (new Error()).stack.split("\n");
-      while (stackLines[0] && /\/log.js:/.test(stackLines[0])) {
-        stackLines.shift();
+      if (!stack) {
+        let stackLines = (new Error()).stack.split("\n");
+        while (stackLines[0] && /\/log.js:/.test(stackLines[0])) {
+          stackLines.shift();
+        }
+        stack = stackLines.join("\n");
       }
-      let stack = stackLines.join("\n");
       for (let arg of args) {
         if (arg instanceof Error) {
           newArgs.push(String(arg));
@@ -74,7 +76,7 @@ this.log = (function() {
 
   if (typeof backgroundOnMessage !== "undefined") {
     backgroundOnMessage.register("log", (message) => {
-      logWithLevel(message.level, message.args);
+      logWithLevel(message.level, message.args, message.stack);
     });
   }
 

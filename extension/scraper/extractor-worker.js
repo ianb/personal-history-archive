@@ -31,9 +31,9 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
       {element: document.head, isReadable: false},
       {element: readableDiv, isReadable: true},
       {element: document.body, isReadable: false}]);
-    log.info("Image time:", Date.now() - start, "ms");
+    log.info(`Image time: ${Date.now() - start}ms`);
     let siteName = findSiteName();
-    log.info("extractData time:", Date.now() - start, "ms");
+    log.info(`extractData time: ${Date.now() - start}ms`);
     return {
       readable,
       images,
@@ -82,8 +82,7 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
         }
       }
     } catch (e) {
-      log.warn("Exception getting readable version:", String(e));
-      log.warn("Traceback:", e.stack);
+      log.warn("Exception getting readable version:", e);
       article = {error: String(e), errorStack: e.stack};
     }
     for (let el of document.getElementsByTagName("*")) {
