@@ -72,9 +72,9 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `sourceId`: the id of the visit that lead to this visit. This may come from the VisitItem.referringVisitId (but won't match that ID, as we don't use the browserVisitId as our primary key).
 
-`sourceLinkUrl`: the URL the user clicked on that lead to this page, as from `a.href`. Null if unknown or no link appeared to be the source. ([TODO](https://github.com/ianb/personal-history-archive/issues/60))
+`sourceClickHref`: the URL the user clicked on that lead to this page, as from `a.href`. Null if unknown or no link appeared to be the source.
 
-`sourceLinkText`: if a click led to this page, the `a.textContent` of that link. Null if unknown or no link appeared to be the source. May be `""`. ([TODO](https://github.com/ianb/personal-history-archive/issues/60))
+`sourceClickText`: if a click led to this page, the `a.textContent` of that link. Null if unknown or no link appeared to be the source. May be `""`.
 
 `transition`: a string from [TransitionType](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/TransitionType): `link`, `typed`, `auto_bookmark`, `auto_subframe` (unlikely, as we don't track frames), `manual_subframe` (also unlikely), `generated`, `auto_toplevel`, `form_submit`, `reload`, `keyword`, `keyword_generated`.
 
@@ -102,7 +102,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `statusCode`: the integer status code of the response. E.g., 200, 404.
 
-`contentType`: the Content-Type of the response. Note most URLs are *displayed* as a DOM page of some sort, but the underlying resource might not be text/html. In a case like `text/html; charset="UTF-8"` we remove the charset (and anything after `;`). ([TODO](https://github.com/ianb/personal-history-archive/issues/83): remove charset/etc)
+`contentType`: the Content-Type of the response. Note most URLs are *displayed* as a DOM page of some sort, but the underlying resource might not be text/html. In a case like `text/html; charset="UTF-8"` we remove the charset (and anything after `;`).
 
 `hasSetCookie`: the response contained a `Set-Cookie` header.
 

@@ -256,7 +256,7 @@ this.activityTracker = (function() {
       hasSetCookie = false;
       for (let header of responseHeaders) {
         if (header.name.toLowerCase() === "content-type") {
-          contentType = header.value;
+          contentType = header.value && header.value.split(";")[0];
         } else if (header.name.toLowerCase() == "set-cookie") {
           hasSetCookie = true;
         }
