@@ -52,8 +52,9 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
                     browserVisitId,
                     loadTime,
                     transitionType,
+                    browserReferringVisitId,
                     sourceId
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 visit["activity_id"],
                 browserId,
@@ -63,6 +64,7 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
                 visitId,
                 visit["visitTime"],
                 visit["transition"],
+                visit["referringVisitId"],
                 sourceId))
         archive.conn.commit()
     c = archive.conn.cursor()

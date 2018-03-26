@@ -72,6 +72,8 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `sourceId`: the id of the visit that lead to this visit. This may come from the VisitItem.referringVisitId (but won't match that ID, as we don't use the browserVisitId as our primary key).
 
+`browserReferringVisitId`: from VisitItem.referringVisitId, this should point to another record's `browserVisitId`. Note we try to keep `sourceId` updated, and it's better, but this is kept just in case we need to fix things up later.
+
 `sourceClickHref`: the URL the user clicked on that lead to this page, as from `a.href`. Null if unknown or no link appeared to be the source.
 
 `sourceClickText`: if a click led to this page, the `a.textContent` of that link. Null if unknown or no link appeared to be the source. May be `""`.

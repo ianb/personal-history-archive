@@ -7,7 +7,7 @@ this.backgroundOnMessage = (function() {
 
   browser.runtime.onMessage.addListener((message, sender) => {
     let type = message.type;
-    message.senderTabId = sender.tab.id;
+    message.senderTabId = sender.tab && sender.tab.id;
     message.senderUrl = sender.url;
     message.senderFrameId = sender.frameId;
     if (!handlers[type]) {

@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS activity (
   forward_back BOOLEAN DEFAULT FALSE,
   from_address_bar BOOLEAN DEFAULT FALSE,
   sourceId TEXT REFERENCES activity (id) ON DELETE SET NULL,
+  browserReferringVisitId TEXT,
   initialLoadId TEXT REFERENCES activity (id) ON DELETE SET NULL,
   newTab BOOLEAN,
   activeCount INT,
