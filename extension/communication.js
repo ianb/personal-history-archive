@@ -12,12 +12,12 @@ this.communication = (function() {
     kwargs = kwargs || {};
     let id = responderId++;
     for (let i=0; i<args.length; i++) {
-      if (args[i] && 'toJSON' in args[i]) {
+      if (args[i] && typeof args[i] === "object" && 'toJSON' in args[i]) {
         args[i] = args[i].toJSON();
       }
     }
     for (let name in (kwargs || {})) {
-      if (kwargs[name] && 'toJSON' in kwargs[name]) {
+      if (kwargs[name] && typeof kwargs[name] === "object" && 'toJSON' in kwargs[name]) {
         kwargs[name] = kwargs[name].toJSON();
       }
     }
