@@ -52,7 +52,7 @@ this.contentWatcher = (function() {
   let maxScroll = 0;
   let sendScrollTimeout = null;
 
-  window.addEventListener('scroll', function(event) {
+  window.addEventListener("scroll", function(event) {
     let position = window.scrollY;
     if (position > maxScroll) {
       maxScroll = position;
