@@ -40,6 +40,6 @@
     "test:build-data": "rm -rf test/test-data/ && mkdir -p test/test-data/",
     "test:build-ext": "NATIVE_SCRIPT=pha.saver.test IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=test/build/ npm run build && DEST=test/build/ npm run build:zip && .venv/bin/python -m pha.saver --script-location test/test-data/pha-saver-script.py --native-name pha.saver.test test/test-data/",
     "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS",
-    "postinstall": "if [[ ! -e .venv ]] ; then python3 -m venv .venv ; .venv/bin/python -m ensurepip ; fi && .venv/bin/pip install --upgrade pip && .venv/bin/pip install flake8 -e python/"
+    "postinstall": "npm run build && if [[ ! -e .venv ]] ; then python3 -m venv .venv ; .venv/bin/python -m ensurepip ; fi && .venv/bin/pip install --upgrade pip && .venv/bin/pip install flake8 -e python/ && mkdir -p data && .venv/bin/python -m pha.saver data/"
   }
 }
