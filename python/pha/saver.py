@@ -115,6 +115,9 @@ def add_activity_list(archive, *, browserId, activityItems):
         marks = ["?"] * len(columns)
         activity["browserId"] = browserId
         values = [activity[column] for column in columns]
+        unused = set(activity).difference(columns)
+        if unused:
+            raise Exception("Unused keys in activity submission: {}".format(unused))
         c.execute("""
             INSERT OR REPLACE INTO activity (
               %s
