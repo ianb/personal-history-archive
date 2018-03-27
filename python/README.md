@@ -17,22 +17,22 @@ from pha import Archive
 archive = Archive.default_location()
 ```
 
-Or `Archive(path)`, but since we don't have configurable places to put `history.sqlite` and `pages/`, the default location always works.
+Or `Archive(path)`, but normal installation always puts the data into the `data/` directory.
 
-The key objects are all implemented in [`__init__.py`](./pha/__init__.py): `Archive`, `History`, `Visit`, and `Page`.
+The key objects are all implemented in [`__init__.py`](./pha/__init__.py): `Archive`, `Activity`, and `Page`.
 
-* `History` is one history URL item in one browser. If you connect multiple browsers and merge their history, there could be more than one item for a given URL (but the code doesn't account for that well). These are based on the browser [`HistoryItem`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/HistoryItem). A history item could represent multiple visits.
-* `Visit` is one visit. Each visit is attached as `history.visits`, which is a dictionary of visit IDs to `Visit` objects. The object is based on [`VisitItem`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/VisitItem).
-* `Page` is a fetched page. Pages are based on URLs, but are generally accessed via history, as `history.page`. A Page is both located in the database, and as a JSON file in `pages/` (the library tries to be resilient when the two sources don't match).
+* `Activity` is one visit in the browser. This includes any changes to the location hash. This represents both old activity fetched from browser history (from [`HistoryItem`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/HistoryItem) and [`VisitItem`](https://developer.mozilla.org/en-US/Add-ons/WebExtensions/API/history/VisitItem)), as well as new activity (with more complete information available).
+* `Page` is a fetched page. By default only one version a page will be created for a given URL (though the code/database allows for multiple pages fetched over time). A page is both stored in the database, as well as in a JSON file in `data/pages/` (the library tries to be resilient when the two sources don't match).
 
 Note that URLs *do* include the fragment/hash, so `http://example.com/` and `http://example.com/#header` are treated as different.
 
 Typically you'll call:
 
-* `archive.get_history(url)`: get one history item by URL
-* `archive.histories()`: get a list of ALL histories
-* `archive.histories_with_page()`: get a list of all histories that also have a fetched page
-* `archive.sample_histories_with_page(number, unique_url=True, unique_domain=False)`: fetch a random sample of pages. Because there tend to be *lots* of pages from some domains (e.g., gmail.com) this tries to get a sampling of "unique" pages. If you ask for `unique_url` then it will look at the entire URL, normalize segments of the URL, and treat number and non-number segments differently. So it would include a homepage and an article page, but probably not multiple article pages from the same site. `unique_domain` gets only one page per domain.
+* `archive.get_activity(url)`: get a list of activities for the URL
+* `archive.activity()`: get a list of ALL activities
+* `archive.activity_with_page()`: get a list of all activity that also have a fetched page
+* `archive.sample_activity_with_page(number, unique_url=True, unique_domain=False)`: fetch a random sample of pages. Because there tend to be *lots* of pages from some domains (e.g., gmail.com) this tries to get a sampling of "unique" pages. If you ask for `unique_url` then it will look at the entire URL, normalize segments of the URL, and treat number and non-number segments differently. So it would include a homepage and an article page, but probably not multiple article pages from the same site. `unique_domain` gets only one page per domain.
+* `archive.get_activity_by_source(activity.id)`: get every activity that came from the given activity (typically through navigation).
 
 ### Pages
 

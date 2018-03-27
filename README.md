@@ -4,6 +4,10 @@ Creating a dump of your personal browser history for analysis. This is a tool fo
 
 ## Motivation
 
+This is for creating a *browsing corpus* for later analysis. It's not a feasible end-user tool, and it collects information that can't normally be shared. But if you are interested in browsing behavior and web content analysis, then this is the package for you!
+
+The data collected here is specifically what you see and do via the browser. Unlike spidering or fetching documents via the command-line, you get fully rendered and personalized pages. This will help you include information in your corpus that specifically isn't available on the open web.
+
 ## Features
 
 Using this tool you can:
@@ -21,6 +25,11 @@ Using this tool you can:
   * Elements in the original document that form the readable view are marked as such
   * The natural/rendered sizes of images are included
   * A first-page screenshot is taken, and a full-length thumbnail
+* Track ongoing browsing; collecting additional information not in normal browsing history:
+  * Reliably track what page leads to the next page
+  * Track what link click lead to the next page
+  * Track how often and for how long the page was the active tab
+  * [And more!](./docs/activity-schema.md)
 * A [Python library](./python/#readme) is included to help interpret your results:
   * Load and query history items and pages
   * Parse pages (using [lxml](http://lxml.de/))
@@ -30,53 +39,41 @@ Using this tool you can:
 
 ## Overview
 
-This consists of several parts:
+This consists of two parts:
 
-* A [browser extension](./extension#readme) (for Firefox and Chrome) to send your history to a local server
-* A [server](./server#readme) to store that history in a local SQLite database and JSON files
-* A [second extension](./fetcher-extension#readme) to fetch and serialize full copies of those pages
+* A [browser extension](./extension#readme) (for Firefox and Chrome) to save your history and activity
 * A [python library](./python#readme) to use and analyze the history
 
 ## Installation
 
-**Note:** this information is somewhat out of date due to a recent (March 2018) refactoring and expansion of the extension.
-
 You must check out this repository to use the package.
 
-Run `npm install` to install the necessary packages for the server.
+Run `npm install` to install the necessary packages, and to setup the Python **3** environment. (A virtualenv environment is created in `.venv/`)
 
-Run `npm run server` to start the local server. A database `history.sqlite` will be created, and a directory `./pages/` that contains JSON files with the extracted pages. The server runs in the foreground, and you have to start it manually and leave your terminal open.
+After installation you must restart your Firefox browser (Chrome support is iffy right now), go to `about:debugging` and manually install the extension from `build/extension/`
 
-For the Python library, create a virtualenv and use `pip install -e python/` and probably `pip install -r python/requirements.txt` for optional dependencies (many of which are used in Jupyter Notebooks contained in `python/`).
-
-### Installing history tracker
-
-Install the extension `extension/` to upload your browser history. You can do this is `about:debugging` in Firefox or **Window > Extensions > Load unpacked extension...**. This extension will periodically update the server with your history. It uploads your entire history the first time, which typically causes the browser to freeze for a few seconds; later updates won't be noticeable. On Firefox it must be reinstalled everytime you start the browser.
-
-You'll see a button in your browser toolbar: ![button](./extension/icon.png) – you can use this button to see the status of the extension, and to force uploading.
+Data will begin to be collected in `data/`
 
 
 ## Fetching history
 
 ![image](./docs/screencast-fetcher.gif)
 
-Once you have history uploaded, you may want to fetch static versions of that history. Use `./bin/launch-fetcher` to launch a Firefox instance dedicated to that fetching. Probably use `./bin/launch-fetcher --use-profile "Profile Name"` to use a *copy* of an existing profile (after doing that once, the profile copy will be kept for later launches). You'll want to use a profile that is logged into your services, so that you can get personalized versions of your pages.
+Once you have history uploaded, you may want to fetch static versions of your old history (from before you installed the extension).
+
+**Note:** these instructions are incorrect, and need updating after [#57](https://github.com/ianb/personal-history-archive/issues/57) is fixed.
+
+Use `./bin/launch-fetcher` to launch a Firefox instance dedicated to that fetching. Probably use `./bin/launch-fetcher --use-profile "Profile Name"` to use a *copy* of an existing profile (after doing that once, the profile copy will be kept for later launches). You'll want to use a profile that is logged into your services, so that you can get personalized versions of your pages.
 
 The page `http://localhost:11180/` will be loaded automatically in the fetcher browser instance, and that lets you start fetching pages.
 
 You may want to review `http://localhost:11180/viewer/redirected` to see pages that get redirects. These are often pages that required missing authentication. You can login to the pages, then delete the fetched page so it can be re-fetched.
 
-### Viewing and managing your history
-
-The server runs on `http://localhost:11180`. You can:
-
-* [View your history](http://localhost:11180/viewer/) – note this has no pagination, and takes very long to load
-* [View pages that have redirected](http://localhost:11180/viewer/redirected) – this is often a sign of a page that requires authentication. In your fetching profile you can load this page, re-authenticate to necessary pages, and clear the fetched versions of those pages so they can be re-fetched later.
-* View a specific page at `http://localhost:11180/viewer/view?url=...`
-
 ## Python library
 
-There's a Python library in [the `python/` subdirectory](https://github.com/ianb/personal-history-archive/tree/master/python). You can install it like:
+There's a Python **3** library in [the `python/` subdirectory](https://github.com/ianb/personal-history-archive/tree/master/python). It gets automatically installed into the `.venv/` virtualenv, but you could install it elsewhere too.
+
+You can install it like:
 
 ```sh
 $ cd python
@@ -85,9 +82,7 @@ $ pip install -e .
 $ pip install -r requirements.txt
 ```
 
-It is a Python 3 library, and you should probably use [Virtualenv](https://virtualenv.pypa.io/en/stable/) before installing it. There's some [information here](https://docs.python.org/3/library/venv.html).
-
-This adds a package called `pha`. There is some information [in the subdirectory](python/), and the notebooks (`*.ipynb`) show many examples.
+This adds a package called `pha`. There is some information [in the subdirectory](python/), and the notebooks (`*.ipynb`) show many examples (though as of March 2018, they are out of date due to refactorings).
 
 ## Testing
 
@@ -100,6 +95,16 @@ $ npm test
 You can use `NO_CLOSE=1` to leave the browser open after the test completes (this can be helpful to understand failures). Use `TEST_ARGS="..."` to add [Mocha command-line arguments](https://mochajs.org/#usage) such as `TEST_ARGS='-g 404s' npm test` to run tests with "404s" in the test description.
 
 The temporary data will be in `test/test-data/` and you may find `test/test-data/addon.log` particularly interesting, as the Browser Console isn't very accessible from the test environment.
+
+## Development
+
+If you want to run it interactively in a fresh profile, use:
+
+```sh
+$ npm start
+```
+
+This will run a new browser profile, with data going into `dev-data/` (and logs in `dev-data/addon.log`). Changes are not automatically picked up, so you have to restart the browser after changes. There is no migration, so you may have to wipe out `dev-data/` after changes to the schema.
 
 ## Collaborating
 
