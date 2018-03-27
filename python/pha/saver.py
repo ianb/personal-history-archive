@@ -16,9 +16,11 @@ from . import Page
 
 message_handlers = {}
 
+
 def addon(func):
     message_handlers[func.__name__] = func
     return func
+
 
 @addon
 def add_history_list(archive, *, browserId, sessionId, historyItems):
@@ -78,6 +80,7 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
     """, (browserId, browserId))
     archive.conn.commit()
 
+
 @addon
 def add_activity_list(archive, *, browserId, activityItems):
     for activity in activityItems:
@@ -131,6 +134,7 @@ def add_activity_list(archive, *, browserId, activityItems):
         """ % (", ".join(columns), ", ".join(marks)), values)
     archive.conn.commit()
 
+
 @addon
 def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=False):
     c = archive.conn.cursor()
@@ -148,6 +152,7 @@ def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=
     """, (browserId, browserId))
     archive.conn.commit()
 
+
 @addon
 def register_session(archive, sessionId, browserId, timezoneOffset):
     c = archive.conn.cursor()
@@ -156,6 +161,7 @@ def register_session(archive, sessionId, browserId, timezoneOffset):
         VALUES (?, ?, CURRENT_TIMESTAMP, ?)
     """, (sessionId, browserId, timezoneOffset))
     archive.conn.commit()
+
 
 @addon
 def get_needed_pages(archive, limit=100):
@@ -172,6 +178,7 @@ def get_needed_pages(archive, limit=100):
     """, (limit,))
     return [{"url": row["url"], "lastError": row["errorMessage"]} for row in rows]
 
+
 @addon
 def check_page_needed(archive, url):
     c = archive.conn.cursor()
@@ -180,18 +187,19 @@ def check_page_needed(archive, url):
     """, (url,))
     return not c.fetchone()[0]
 
+
 @addon
 def add_fetched_page(archive, id, url, page):
     redirectUrl = page["url"].split("#")[0]
     origUrl = url.split("#")[0]
     page["originalUrl"] = url
     if redirectUrl == origUrl:
-      redirectUrl = None
+        redirectUrl = None
     else:
-      redirectUrl = page["url"]
+        redirectUrl = page["url"]
     if redirectUrl:
-      # Removes the YouTube start time we add
-      redirectUrl = redirectUrl.replace("&start=86400", "")
+        # Removes the YouTube start time we add
+        redirectUrl = redirectUrl.replace("&start=86400", "")
     c = archive.conn.cursor()
     c.execute("""
         INSERT OR REPLACE INTO page (id, url, activityId, fetched, redirectUrl, timeToFetch)
@@ -204,6 +212,7 @@ def add_fetched_page(archive, id, url, page):
     archive.conn.commit()
     write_page(archive, url, page)
 
+
 @addon
 def add_fetch_failure(archive, url, errorMessage):
     c = archive.conn.cursor()
@@ -212,6 +221,7 @@ def add_fetch_failure(archive, url, errorMessage):
         VALUES (?, ?)
     """, (url, errorMessage))
     archive.conn.commit()
+
 
 @addon
 def status(archive, browserId):
@@ -225,6 +235,7 @@ def status(archive, browserId):
     """, (browserId, browserId))
     row = c.fetchone()
     return dict(row)
+
 
 @addon
 def log(archive, *args, level='log', stack=None):
@@ -252,10 +263,12 @@ def log(archive, *args, level='log', stack=None):
             print("    (no arguments)", file=fp)
         print(file=fp)
 
+
 def write_page(archive, url, data):
     filename = Page.json_filename(archive, url)
     with open(filename, "wb") as fp:
         fp.write(json.dumps(data).encode("UTF-8"))
+
 
 def run_saver(storage_directory=None):
     from . import Archive
@@ -286,6 +299,7 @@ def run_saver(storage_directory=None):
             log(archive, "Error processing message %s(): %s" % (m_name, e), tb, level='s_err')
             send_message({"id": message["id"], "error": str(e), "traceback": tb})
 
+
 def get_message():
     length = sys.stdin.buffer.read(4)
     if len(length) == 0:
@@ -295,14 +309,17 @@ def get_message():
     message = json.loads(message)
     return message
 
+
 def encode_message(message):
     content = json.dumps(message).encode('utf-8')
     length = struct.pack('@I', len(content))
     return length + content
 
+
 def send_message(message):
     sys.stdout.buffer.write(encode_message(message))
     sys.stdout.buffer.flush()
+
 
 def install_json_command():
     import argparse
@@ -316,6 +333,7 @@ def install_json_command():
     print("Using the storage directory", args.storage_directory)
     print("Writing a connector script to", args.script_location)
     install_json_file(args.storage_directory, args.script_location, args.native_name)
+
 
 def install_json_file(storage_directory, script_location, native_name):
     # FIXME: support Windows
@@ -352,6 +370,7 @@ run_saver(storage_directory)
         os.makedirs(dir)
     with open(filename, "wb") as fp:
         fp.write(json.dumps(native_manifest, indent=2).encode("UTF-8"))
+
 
 if __name__ == "__main__":
     install_json_command()

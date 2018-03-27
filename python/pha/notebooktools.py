@@ -15,6 +15,7 @@ def make_data_url(content_type, content):
     encoded = base64.b64encode(content.encode('UTF-8')).decode('ASCII')
     return 'data:%s;base64,%s' % (content_type, encoded.replace('\n', ''))
 
+
 def display_html(html_page, header='', footer='', height="12em", title=None, link=None, link_title=None):
     """
     Display an HTML page inline in a Jupyter notebook.
@@ -29,10 +30,10 @@ def display_html(html_page, header='', footer='', height="12em", title=None, lin
     if title:
         if link and not link_title:
             title = '<strong><a href="%s" target=_blank>%s</a></strong>' % (
-              html_escape(title), html_escape(link))
+                html_escape(title), html_escape(link))
         elif link:
             title = '<strong>%s</strong> <a href="%s" target=_blank>%s</a>' % (
-              html_escape(title), html_escape(link), html_escape(link_title))
+                html_escape(title), html_escape(link), html_escape(link_title))
         else:
             title = '<strong>%s</strong>' % html_escape(title)
         header = title + "\n" + header
@@ -49,10 +50,13 @@ def display_html(html_page, header='', footer='', height="12em", title=None, lin
     ''' % (header, html_escape(height), literal_data, footer)
     display(HTML(html))
 
+
 chooser_id = int(time.time())
+
 
 def display_chooser(links, height="12em"):
     display(HTML(display_chooser_html(links, height=height)))
+
 
 def display_chooser_html(links, height="12em"):
     global chooser_id
@@ -99,7 +103,7 @@ def lazyget(url, filename):
         try:
             length = int(resp.getheader("Content-Length")) // 1000
             length = "%skb" % length
-        except:
+        except ValueError:
             length = "unknown size"
         print("Reading %s into %s..." % (length, filename), end="")
         with open(filename, "wb") as fp:

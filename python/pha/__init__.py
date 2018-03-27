@@ -3,11 +3,9 @@ import sqlite3
 import json
 import hashlib
 import re
-import base64
 from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
 from urllib.parse import urlparse, parse_qs
-from . import htmltools
 lxml = None
 
 www_regex = re.compile(r"^www[0-9]*\.")
@@ -38,6 +36,7 @@ window.addEventListener("load", function () {
 });
 </script>'''
 
+
 def domain(url):
     d = urlparse(url).hostname
     match = www_regex.search(d)
@@ -45,8 +44,10 @@ def domain(url):
         d = d[match.end():]
     return d.lower()
 
+
 def query(url):
     return parse_qs(urlparse(url).query)
+
 
 class Archive:
     def __init__(self, path):
@@ -383,7 +384,6 @@ class Page:
         )
         return html
 
-
     def display_page(self, *, readable=False):
         from .notebooktools import display_html
         html = None
@@ -411,7 +411,7 @@ def strip_url_to_pattern(url):
 
     E.g., https://www.foo.com/article/1 turns to foo.com/C/#
     """
-    ## FIXME: whitelist a couple query string parameters, like ?q (query) and ?p (in some articles)
+    # FIXME: whitelist a couple query string parameters, like ?q (query) and ?p (in some articles)
     d = domain(url)
     path = urlparse(url).path
     path = re.sub(r'/+', '/', path)

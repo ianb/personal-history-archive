@@ -5,6 +5,7 @@ import re
 
 text_teaser_instance = None
 
+
 def textteaser_summary(page, *, try_readable=True):
     """Uses TextTeaser (https://github.com/IndigoResearch/textteaser/tree/master/textteaser) to summarize
     the page into a list of sentences
@@ -16,12 +17,15 @@ def textteaser_summary(page, *, try_readable=True):
     text = (try_readable and page.readable_text) or page.full_text
     return text_teaser_instance.summarize(page.title, text)
 
+
 def normalize_sentences(sentences, sep="  "):
     sentences = [normalize_sentence(s) for s in sentences]
     return sep.join(sentences)
 
+
 def normalize_sentence(sentence):
     return re.sub(r'\s+', ' ', str(sentence).replace("\n", " "))
+
 
 def sumy_summary(page, sentence_count=5, *, language="english"):
     from sumy.parsers.html import HtmlParser
@@ -35,7 +39,9 @@ def sumy_summary(page, sentence_count=5, *, language="english"):
     summarizer.stop_words = get_stop_words(language)
     return summarizer(parser.document, sentence_count)
 
+
 _has_letter_re = re.compile(r"[a-zA-Z]")
+
 
 def is_good_entity(e):
     """
@@ -43,7 +49,9 @@ def is_good_entity(e):
     """
     return _has_letter_re.search(e)
 
+
 _whitespace_re = re.compile(r"\s\s+", re.S)
+
 
 def find_entities(page_element):
     """

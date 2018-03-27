@@ -13,6 +13,7 @@ mixed_regex = re.compile(r'([a-z])([A-Z])')
 non_char_regex = re.compile(r'[^a-z\-]', re.I)
 stemmer = PorterStemmer()
 
+
 def wordify_class(c):
     """Changes a class into a set of words"""
     c = mixed_regex.sub(r"\1-\2", c)
@@ -21,11 +22,14 @@ def wordify_class(c):
     c = c.strip("-")
     return "-".join(c.lower().split("-"))
 
+
 def stem_words(c):
     return "-".join([stemmer.stem(w) for w in c.split("-")])
 
+
 def sort_words(c):
     return "-".join(sorted(c.split("-")))
+
 
 def normalize_classes(c, shuffle=False):
     """Takes an HTML class attribute (or element) and returns a normalized form of the classes:
@@ -49,12 +53,15 @@ def normalize_classes(c, shuffle=False):
         random.shuffle(result)
     return result
 
+
 www_regex = re.compile(r'^www[0-9]*\.')
 number_regex = re.compile(r'^[0-9]+$')
 hex_only = re.compile(r'^[a-f0-9]+$', re.I)
 
+
 def _url_ignore_word(w):
     return w.strip() and number_regex.search(w) or (len(w) > 10 and hex_only.search(w))
+
 
 def url_words(url):
     """
@@ -82,6 +89,7 @@ def url_words(url):
         if not _url_ignore_word(value):
             result.extend([name, value])
     return result
+
 
 DEFAULT_DISPLAY = {
     "a": "inline",
@@ -165,6 +173,7 @@ DEFAULT_DISPLAY = {
 
 blockish_display_values = ["block", "table-cell", "table", "flex", "list-item"]
 
+
 def _make_blockish_selector():
     blockish_elements = set()
     for tagname, display_value in DEFAULT_DISPLAY.items():
@@ -176,10 +185,13 @@ def _make_blockish_selector():
         "*[data-display='%s']" % display for display in sorted(blockish_display_values))
     return "%s, %s" % (blockish_selectors, extra_selectors)
 
+
 blockish_selector = _make_blockish_selector()
+
 
 def iter_block_level_elements(el):
     return el.cssselect(blockish_selector)
+
 
 def iter_block_level_text(el):
     """
@@ -195,9 +207,11 @@ def iter_block_level_text(el):
         if text_chunks:
             yield (' '.join(text_chunks), child)
 
+
 def is_blockish(el):
     display = el.get("data-display") or DEFAULT_DISPLAY.get(el.tag, "block")
     return display in blockish_display_values
+
 
 def get_unblockish_text(el):
     chunks = [el.text]
@@ -206,6 +220,7 @@ def get_unblockish_text(el):
             chunks.extend(get_unblockish_text(child))
         chunks.append(child.tail)
     return chunks
+
 
 def element_to_css(el):
     """
@@ -226,5 +241,3 @@ def element_to_css(el):
         parts.insert(0, "*:nth-child(%s)" % (position + 1))
         context = parent
     return " > ".join(parts)
-
-

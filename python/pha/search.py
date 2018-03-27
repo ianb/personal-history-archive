@@ -15,6 +15,7 @@ from collections.abc import Sequence
 import time
 import random
 
+
 def create_index(archive, purge=True):
     """
     Creates an index of all pages, in a SQLite table.
@@ -59,7 +60,7 @@ def create_index(archive, purge=True):
         r = page.data.get("readable") or {}
         readable_byline = r.get("byline")
         readable_excerpt = r.get("excerpt")
-        meta_description = "" # FIXME: do this
+        meta_description = ""  # FIXME: do this
         c.execute("""
             INSERT INTO search_index
               (url, url_words, title, readable, readable_byline, readable_excerpt, meta_description, full_text)
@@ -69,6 +70,7 @@ def create_index(archive, purge=True):
     c.close()
     archive.conn.commit()
     return count
+
 
 def search(archive, query):
     """
@@ -81,22 +83,28 @@ def search(archive, query):
     urls = [row[0] for row in rows]
     return SearchResult(archive, query, urls)
 
+
 class SearchResult(Sequence):
+
     def __init__(self, archive, query, urls):
         self.archive = archive
         self.query = query
         self.urls = urls
         self.fetched_histories = {}
+
     def __repr__(self):
         return '<SearchResult[] %r: %i results>' % (self.query, len(self.urls))
+
     def __getitem__(self, i):
         url = self.urls[i]
         history = self.fetched_histories.get(url)
         if history is None:
             history = self.fetched_histories[url] = self.archive.get_history(url)
         return history
+
     def __len__(self):
         return len(self.urls)
+
 
 def create_entity_index(archive, purge=True, verbose=False):
     from .summarytools import find_entities
@@ -162,6 +170,7 @@ def create_entity_index(archive, purge=True, verbose=False):
         print("Inserted a total of", count, "pages")
     return count + 1
 
+
 def format_time(seconds):
     if seconds < 60:
         return '%is' % seconds
@@ -170,6 +179,7 @@ def format_time(seconds):
         return '%im' % minutes
     hours, minutes = minutes // 60, minutes % 60
     return '%ih%im' % (hours, minutes)
+
 
 def summarize_entities(archive, most_common=0):
     c = archive.conn.cursor()
@@ -210,6 +220,7 @@ def summarize_entities(archive, most_common=0):
             m.append((row[0], row[1]))
     return result
 
+
 def search_entities(archive, entity, entity_label=None, wildcard=False):
     c = archive.conn.cursor()
     entity_arg = (entity,)
@@ -228,6 +239,7 @@ def search_entities(archive, entity, entity_label=None, wildcard=False):
     rows = [(row[0], row[1], row[2], row[3]) for row in rows]
     return EntitySearchResult(archive, entity, rows, wildcard=wildcard)
 
+
 class EntitySearchResult(Sequence):
     def __init__(self, archive, entity, rows, wildcard=False):
         self.archive = archive
@@ -235,8 +247,10 @@ class EntitySearchResult(Sequence):
         self.wildcard = wildcard
         self.rows = rows
         self.fetched_results = {}
+
     def __repr__(self):
         return '<EntitySearchResult[] %s%r: %i results>' % ('like ' if self.wildcard else '', self.entity, len(self.rows))
+
     def __getitem__(self, i):
         if isinstance(i, slice):
             return self.__class__(self.archive, self.entity, self.rows[i], wildcard=self.wildcard)
@@ -245,8 +259,10 @@ class EntitySearchResult(Sequence):
         if result is None:
             result = self.fetched_results[row] = EntityResult(self.archive, *row)
         return result
+
     def __len__(self):
         return len(self.rows)
+
 
 class EntityResult:
     def __init__(self, archive, entity, entity_label, url, selector):

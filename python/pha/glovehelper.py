@@ -8,6 +8,7 @@ import subprocess
 
 default_glove_path = None
 
+
 def set_glove_path(value):
     """
     Sets the path where we can find GloVe installed, for all future calls to vectorize.
@@ -15,14 +16,15 @@ def set_glove_path(value):
     global default_glove_path
     default_glove_path = value
 
+
 def vectorize(
-    corpus,
-    vector_size=50,
-    *,
-    glove_path=None,
-    debug_print=False,
-    vocab_min_count=5,
-    window_size=15):
+        corpus,
+        vector_size=50,
+        *,
+        glove_path=None,
+        debug_print=False,
+        vocab_min_count=5,
+        window_size=15):
     """
     Takes a corpus (list of words, or one big string with spaces separating words) and creates a mapping from words to vectors.
 
@@ -84,6 +86,7 @@ def vectorize(
                 name = line[0]
                 result[name] = [float(n) for n in line[1:]]
         return result
+
 
 def _exec(command, input=None, debug_print=False):
     if isinstance(input, str):
