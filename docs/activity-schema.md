@@ -92,7 +92,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `newTab`: if this page was opened in a new tab. Typically `sourceId` should be set in this case. It will be null if unknown (for instance VisitItem doesn't record this).
 
-`activeCount`: the number of times this page was made active, for more than a second. If you open a tab in the background, then close it without ever looking at it, then this should be 0. If you interact normally and don't change tabs it would be 1. Higher numbers mean it was revisited several times. ([TODO](https://github.com/ianb/personal-history-archive/issues/79): need to put in the 1 second delay)
+`activeCount`: the number of times this page was made active, for more than a second. If you open a tab in the background, then close it without ever looking at it, then this should be 0. If you interact normally and don't change tabs it would be 1. Higher numbers mean it was revisited several times.
 
 `activeTime`: time in milliseconds that the page was active. Note that if a window goes into the background we keep counting, so this might not always be correct. Like with `activeCount`, we ignore when a tab is active for less than a second, assuming that it means the tab was passed over on the way to another tab.
 
