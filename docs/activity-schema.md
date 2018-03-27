@@ -98,7 +98,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `unloadReason`: a string indicating why the page was unloaded: `tabClose`, `navigation`. Null if unknown.
 
-`containsHash`: if the URL has a hash (e.g., `page.html#section1`), then does some element with `id="section1"` exist? True or false if we calculate it, null if it is not discovered. (TODO: see [#81](https://github.com/ianb/personal-history-archive/issues/81) and [#82](https://github.com/ianb/personal-history-archive/issues/82))
+`hashPointsToElement`: if the URL has a hash (e.g., `page.html#section1`), then does some element with `id="section1"` exist?
 
 `isHashChange`: if the new activity was an in-page change of the hash/fragment (no actual page loading), then this is true. Null if unknown.
 

@@ -113,6 +113,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             isHashChange
             maxScroll
             documentHeight
+            hashPointsToElement
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)

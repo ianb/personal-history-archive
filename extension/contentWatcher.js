@@ -74,4 +74,20 @@ this.contentWatcher = (function() {
     }
   });
 
+  window.addEventListener("hashchange", (event) => {
+    let newHash = (new URL(event.newURL)).hash;
+    if (!newHash || newHash === "#") {
+      return;
+    }
+    newHash = newHash.substr(1);
+    let element = document.getElementById(newHash);
+    if (element) {
+      browser.runtime.sendMessage({
+        type: "hashchange",
+        hash: newHash,
+        hasElement: !!element
+      });
+    }
+  });
+
 })();

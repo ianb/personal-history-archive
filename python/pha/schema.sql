@@ -65,5 +65,6 @@ CREATE TABLE IF NOT EXISTS activity (
   formTextInteraction INT,
   isHashChange BOOLEAN,
   maxScroll INT,
-  documentHeight INT
+  documentHeight INT,
+  hashPointsToElement BOOLEAN
 );

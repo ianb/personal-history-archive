@@ -41,6 +41,7 @@ this.activityTracker = (function() {
       this.formTextInteraction = 0;
       this.maxScroll = 0;
       this.documentHeight = null;
+      this.hashPointsToElement = null;
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -87,6 +88,14 @@ this.activityTracker = (function() {
         adjust = Date.now() - this._activeStartTime;
       }
       return this._activeCumulatedTime + adjust;
+    }
+
+    get hash() {
+      let hash = (new URL(this.url)).hash;
+      if (!hash || hash === "#") {
+        return "";
+      }
+      return hash.substr(1);
     }
 
     close(reason) {
@@ -359,6 +368,19 @@ this.activityTracker = (function() {
     }
     page.maxScroll = message.maxScroll;
     page.documentHeight = message.documentHeight;
+  }));
+
+  backgroundOnMessage.register("hashchange", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got hashchange event for a tab that isn't in our record:", message);
+      return;
+    }
+    if (page.hash !== message.hash) {
+      log.warn(`Got hashchange event for a tab with an unmatching hash (not ${page.hash})`, message);
+      return;
+    }
+    page.hashPointsToElement = message.hasElement;
   }));
 
   function pagePossiblyAllowed(url) {
