@@ -278,8 +278,15 @@ describe("Test history collection", function() {
     let result = await collectInformation(driver);
     let pages = result.currentPages.concat(result.pendingPages);
     pages.sort((a, b) => a.loadTime > b.loadTime ? 1 : -1);
+    // Depending on previous tests, there might be other pages before the one we care about
+    for (let i = 0; i < pages.length; i++) {
+      if (pages[i].url.endsWith("cookie")) {
+        // The page we want to start with
+        pages.splice(0, i);
+        break;
+      }
+    }
     assert.deepEqual(pages.map(p => [p.hasCookie, p.hasSetCookie]), [
-      [null, null], // Don't know about the first page
       [false, true], // has no cookie, but did set one
       [true, true], // has no cookie, but did set the deleting cookie
       [false, false], // the debug page, sets no cookie, and cookie has been deleted
