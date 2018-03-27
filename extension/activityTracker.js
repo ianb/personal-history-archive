@@ -404,8 +404,8 @@ this.activityTracker = (function() {
 
   exports.status = function() {
     return {
-      currentPages: Array.from(currentPages.values()),
-      pendingPages,
+      currentPages: Array.from(currentPages.values()).map(p => p.toJSON()),
+      pendingPages: pendingPages.map(p => p.toJSON()),
     };
   };
 

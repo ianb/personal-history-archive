@@ -11,6 +11,16 @@ this.communication = (function() {
     args = args || [];
     kwargs = kwargs || {};
     let id = responderId++;
+    for (let i=0; i<args.length; i++) {
+      if (args[i] && 'toJSON' in args[i]) {
+        args[i] = args[i].toJSON();
+      }
+    }
+    for (let name in (kwargs || {})) {
+      if (kwargs[name] && 'toJSON' in kwargs[name]) {
+        kwargs[name] = kwargs[name].toJSON();
+      }
+    }
     port.postMessage({name, args, kwargs, id});
     return new Promise((resolve, reject) => {
       responders.set(id, {resolve, reject, name});

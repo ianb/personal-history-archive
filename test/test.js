@@ -237,6 +237,9 @@ describe("Test history collection", function() {
       true, true, true, true, true, true,
       false, false, // only the last two pages are still loaded
     ], "is unloaded");
+    assert.deepEqual(pages.map(p => typeof p.activeTime), [
+      "number", "number", "number", "number", "number", "number", "number", "number",
+    ]);
     assert.deepEqual(property("closedReason"), [
       'navigation',
       'navigation',
