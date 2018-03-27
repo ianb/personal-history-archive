@@ -9,7 +9,7 @@ let model = {
 };
 
 browser.runtime.onMessage.addListener((message) => {
-  if (message.type == "escapeKey") {
+  if (message.type === "escapeKey") {
     abortWorkerNow();
   } else {
     log.warn("sitescript got unexpected message:", message);
@@ -25,7 +25,7 @@ function abortWorkerNow() {
 }
 
 document.addEventListener("keyup", (event) => {
-  if ((event.code || event.key) == "Escape") {
+  if ((event.code || event.key) === "Escape") {
     abortWorkerNow();
   }
 });
@@ -60,14 +60,14 @@ function render() {
   }
   if (model.history) {
     let table = document.querySelector("#history-items");
-    table.innerHTML = '<tr><th>Title</th><th>URL</th><th>Visit</th><th>Fetched</th></tr>';
+    table.innerHTML = "<tr><th>Title</th><th>URL</th><th>Visit</th><th>Fetched</th></tr>";
     for (let h of model.history) {
-      let tr = document.createElement('tr');
-      let title = document.createElement('td');
+      let tr = document.createElement("tr");
+      let title = document.createElement("td");
       title.textContent = h.title;
-      let url = document.createElement('td');
+      let url = document.createElement("td");
       url.textContent = h.url;
-      let visit = document.createElement('td');
+      let visit = document.createElement("td");
       visit.textContent = (new Date(h.lastVisitTime)).toLocaleDateString("en-US", {
         year: "2-digit",
         month: "2-digit",
@@ -75,7 +75,7 @@ function render() {
         hour: "2-digit",
         minute: "2-digit"
       });
-      let fetched = document.createElement('td');
+      let fetched = document.createElement("td");
       fetched.textContent = h.fetched;
       tr.appendChild(title);
       tr.appendChild(url);
@@ -85,7 +85,7 @@ function render() {
     }
   }
   let list = document.querySelector("#fetching");
-  list.innerHTML = '';
+  list.innerHTML = "";
   if (model.fetching) {
     let items = Array.from(model.fetching.entries());
     items.sort((a, b) => {
@@ -99,11 +99,11 @@ function render() {
       return 1;
     });
     for (let [url, fetching] of items) {
-      let li = document.createElement('li');
+      let li = document.createElement("li");
       if (fetching) {
-        li.className = 'fetching';
+        li.className = "fetching";
       } else {
-        li.className = 'queued';
+        li.className = "queued";
       }
       li.textContent = url;
       list.appendChild(li);
@@ -119,7 +119,7 @@ function render() {
     });
   }
   let failedList = document.querySelector("#failed");
-  failedList.innerHTML = '';
+  failedList.innerHTML = "";
   for (let [url, problem] of model.failed.entries()) {
     let li = document.createElement("li");
     li.textContent = `${url}: ${problem}`;
@@ -182,7 +182,8 @@ async function fetchPage(url) {
     let sendPromise = browser.runtime.sendMessage({type: "add_fetched_page", id, url, page: result});
     model.fetching.delete(url);
     startWorker();
-    return await sendPromise;
+    await sendPromise;
+    return;
   } catch (error) {
     model.fetching.delete(url);
     model.failed.set(url, error);

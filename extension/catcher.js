@@ -7,7 +7,7 @@ this.catcher = (function() {
     return function(...args) {
       try {
         let result = func(...args);
-        if (result && 'then' in result && result.then) {
+        if (result && "then" in result && result.then) {
           return exports.watchPromise(result);
         }
         return result;

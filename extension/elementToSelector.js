@@ -1,7 +1,7 @@
 this.elementToSelector = function elementToSelector(el) {
   let singletons = {BODY: true, HEAD: true};
   let parts = [];
-  while (true) {
+  for (;;) {
     if (singletons[el.tagName]) {
       parts.unshift(el.tagName.toLowerCase());
       break;

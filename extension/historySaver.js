@@ -19,7 +19,7 @@ this.historySaver = (function() {
   }));
 
   backgroundOnMessage.register("sendNow", catcher.watchFunction((message) => {
-    let force = 'force' in message ? message.force : false;
+    let force = "force" in message ? message.force : false;
     return sendNewHistory(force);
   }));
 

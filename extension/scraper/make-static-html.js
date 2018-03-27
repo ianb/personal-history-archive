@@ -68,10 +68,10 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     if (!s) {
       return s;
     }
-    if (s.search(/[&<"]/) == -1) {
+    if (s.search(/[&<"]/) === -1) {
       return s;
     }
-    s = s.replace(/&/g, "&amp;").replace(/</g, '&lt;');
+    s = s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
     if (!leaveQuote) {
       s = s.replace(/\042/g, "&quot;");
     }
@@ -81,7 +81,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   /** Encodes the given data as a data: URL */
   function encodeData(contentType, data) {
     // FIXME: utf8?
-    return 'data:' + contentType + ';base64,' + btoa(data);
+    return "data:" + contentType + ";base64," + btoa(data);
   }
 
   function checkLink(link) {
@@ -123,7 +123,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     resources[repl] = {
       url,
       hash,
-      tag: typeof el == "string" ? el : el.tagName,
+      tag: typeof el === "string" ? el : el.tagName,
       elId: el.id,
       selector,
       attr,
@@ -184,157 +184,157 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
 
   // From https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
   const ATTRIBUTES = {
-    accept: ['form', 'input'],
-    'accept-charset': ['form', 'input'],
-    accesskey: '*',
+    accept: ["form", "input"],
+    "accept-charset": ["form", "input"],
+    accesskey: "*",
     // action: ['form'],
-    align: '*',
-    alt: ['applet', 'area', 'img', 'input'],
+    align: "*",
+    alt: ["applet", "area", "img", "input"],
     // async: ['script'],
-    autocomplete: ['form', 'input'],
-    autofocus: ['button', 'input', 'select', 'textarea'],
-    autoplay: ['audio', 'video'],
-    autosave: ['input'],
-    bgcolor: ['body', 'col', 'colgroup', 'marquee', 'table', 'tbody', 'tfoot', 'td', 'th', 'tr', 'embed'],
-    border: ['img', 'object', 'table'],
-    buffered: ['audio', 'video'],
-    charset: ['meta', 'script', 'a', 'link'],
-    checked: ['input'],
-    cite: ['blockquote', 'del', 'ins', 'q'],
+    autocomplete: ["form", "input"],
+    autofocus: ["button", "input", "select", "textarea"],
+    autoplay: ["audio", "video"],
+    autosave: ["input"],
+    bgcolor: ["body", "col", "colgroup", "marquee", "table", "tbody", "tfoot", "td", "th", "tr", "embed"],
+    border: ["img", "object", "table"],
+    buffered: ["audio", "video"],
+    charset: ["meta", "script", "a", "link"],
+    checked: ["input"],
+    cite: ["blockquote", "del", "ins", "q"],
     "class": "*",
     // code: ['applet'],
     // codebase: ['applet'],
-    color: ['basefont', 'font', 'hr'],
-    cols: ['textarea', 'frameset'],
-    colspan: ['td', 'th'],
-    content: ['meta'],
+    color: ["basefont", "font", "hr"],
+    cols: ["textarea", "frameset"],
+    colspan: ["td", "th"],
+    content: ["meta"],
     // contenteditable: "*",
     // FIXME: should we skip contextmenu, since the menus can't do anything?
     contextmenu: "*",
-    controls: ['audio', 'video'],
-    coords: ['area'],
-    data: ['object'],
-    datetime: ['del', 'ins', 'time'],
-    "default": ['track'],
+    controls: ["audio", "video"],
+    coords: ["area"],
+    data: ["object"],
+    datetime: ["del", "ins", "time"],
+    "default": ["track"],
     // defer: ['script'],
     dir: "*",
-    dirname: ['input', 'textarea'],
-    disabled: ['button', 'fieldset', 'input', 'optgroup', 'option', 'select', 'textarea'],
-    download: ['a', 'area'],
+    dirname: ["input", "textarea"],
+    disabled: ["button", "fieldset", "input", "optgroup", "option", "select", "textarea"],
+    download: ["a", "area"],
     // draggable: "*",
     // dropzone: "*",
-    enctype: ['form'],
-    "for": ['label', 'output'],
-    form: ['button', 'fieldset', 'input', 'label', 'meter', 'object', 'output', 'progress', 'select', 'textarea'],
+    enctype: ["form"],
+    "for": ["label", "output"],
+    form: ["button", "fieldset", "input", "label", "meter", "object", "output", "progress", "select", "textarea"],
     // formaction: ['input', 'button'],
-    headers: ['td', 'th'],
-    height: ['canvas', 'embed', 'iframe', 'img', 'input', 'object', 'video', 'td', 'th'],
+    headers: ["td", "th"],
+    height: ["canvas", "embed", "iframe", "img", "input", "object", "video", "td", "th"],
     // FIXME: should check that hidden elements are skipped
     hidden: "*",
-    high: ['meter'],
-    href: ['a', 'area', 'base', 'link'],
-    hreflang: ['a', 'area', 'link'],
+    high: ["meter"],
+    href: ["a", "area", "base", "link"],
+    hreflang: ["a", "area", "link"],
     // "http-equiv": ['meta'],
     id: "*",
-    ismap: ['img'],
-    kind: ['track'],
-    label: ['track', 'option', 'optgroup'],
+    ismap: ["img"],
+    kind: ["track"],
+    label: ["track", "option", "optgroup"],
     lang: "*",
     // language: ['script'],
-    list: ['input'],
-    loop: ['audio', 'bgsound', 'marquee', 'video', 'embed'],
-    low: ['meter'],
+    list: ["input"],
+    loop: ["audio", "bgsound", "marquee", "video", "embed"],
+    low: ["meter"],
     // manifest: ['html'],
-    max: ['input', 'meter', 'progress'],
-    maxlength: ['input', 'textarea'],
-    media: ['a', 'area', 'link', 'source', 'style'],
-    method: ['form'],
-    min: ['input', 'meter'],
-    multiple: ['input', 'select'],
-    name: ['button', 'form', 'fieldset', 'frame', 'iframe', 'input', 'object', 'output', 'select', 'textarea', 'map', 'meta', 'param', 'img', 'a'],
-    novalidate: ['form'],
-    open: ['details'],
-    optimum: ['meter'],
-    pattern: ['input'],
-    ping: ['a', 'area'],
-    placeholder: ['input', 'textarea'],
-    poster: ['video'],
-    preload: ['audio', 'video'],
-    property: ['meta'],
-    readonly: ['input', 'textarea'],
-    rel: ['a', 'area', 'link'],
-    required: ['input', 'select', 'textarea'],
-    reversed: ['ol'],
-    rows: ['textarea', 'frameset'],
-    rowspan: ['td', 'th'],
-    sandbox: ['iframe'],
-    scope: ['th', 'td'],
-    scoped: ['style'],
+    max: ["input", "meter", "progress"],
+    maxlength: ["input", "textarea"],
+    media: ["a", "area", "link", "source", "style"],
+    method: ["form"],
+    min: ["input", "meter"],
+    multiple: ["input", "select"],
+    name: ["button", "form", "fieldset", "frame", "iframe", "input", "object", "output", "select", "textarea", "map", "meta", "param", "img", "a"],
+    novalidate: ["form"],
+    open: ["details"],
+    optimum: ["meter"],
+    pattern: ["input"],
+    ping: ["a", "area"],
+    placeholder: ["input", "textarea"],
+    poster: ["video"],
+    preload: ["audio", "video"],
+    property: ["meta"],
+    readonly: ["input", "textarea"],
+    rel: ["a", "area", "link"],
+    required: ["input", "select", "textarea"],
+    reversed: ["ol"],
+    rows: ["textarea", "frameset"],
+    rowspan: ["td", "th"],
+    sandbox: ["iframe"],
+    scope: ["th", "td"],
+    scoped: ["style"],
     // FIXME: is seamless actually a thing?
-    seamless: ['iframe'],
-    selected: ['option'],
-    shape: ['a', 'area'],
-    size: ['input', 'select', 'hr', 'font', 'basefont', 'select'],
-    sizes: ['link', 'img', 'source'],
-    span: ['col', 'colgroup'],
+    seamless: ["iframe"],
+    selected: ["option"],
+    shape: ["a", "area"],
+    size: ["input", "select", "hr", "font", "basefont", "select"],
+    sizes: ["link", "img", "source"],
+    span: ["col", "colgroup"],
     spellcheck: "*",
-    src: ['audio', 'embed', 'frame', 'iframe', 'img', 'input', 'script', 'source', 'track', 'video'],
-    srcdoc: ['iframe'],
-    srclang: ['track'],
-    srcset: ['img', 'source'],
-    start: ['ol', 'audio', 'video'],
-    step: ['input'],
+    src: ["audio", "embed", "frame", "iframe", "img", "input", "script", "source", "track", "video"],
+    srcdoc: ["iframe"],
+    srclang: ["track"],
+    srcset: ["img", "source"],
+    start: ["ol", "audio", "video"],
+    step: ["input"],
     style: "*",
-    summary: ['table'],
+    summary: ["table"],
     tabindex: "*",
-    target: ['a', 'area', 'base', 'form', 'link'],
+    target: ["a", "area", "base", "form", "link"],
     title: "*",
-    type: ['button', 'input', 'embed', 'object', 'script', 'source', 'style', 'menu', 'a', 'link', 'param', 'li', 'ol', 'ul'],
-    usemap: ['img',  'input', 'object'],
-    value: ['button', 'option', 'input', 'li', 'meter', 'progress', 'param', 'meta'],
-    width: ['canvas', 'embed', 'iframe', 'img', 'input', 'object', 'video', 'hr', 'table', 'td', 'th', 'applet', 'col', 'colgroup', 'pre'],
-    wrap: ['textarea'],
+    type: ["button", "input", "embed", "object", "script", "source", "style", "menu", "a", "link", "param", "li", "ol", "ul"],
+    usemap: ["img",  "input", "object"],
+    value: ["button", "option", "input", "li", "meter", "progress", "param", "meta"],
+    width: ["canvas", "embed", "iframe", "img", "input", "object", "video", "hr", "table", "td", "th", "applet", "col", "colgroup", "pre"],
+    wrap: ["textarea"],
     // HTML4 attributes:
     // From https://www.w3.org/TR/html4/index/attributes.html
     abbr: ["td", "th"],
     alink: ["body"],
-    archive: ['applet', 'object'],
-    axis: ['td', 'th'],
-    background: ['body'],
-    ghcolor: ['table', 'tr', 'td', 'th', 'body'],
-    cellpadding: ['table'],
-    cellspacing: ['table'],
-    char: ['col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr'],
-    charoff: ['col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr'],
-    classid: ['object'],
-    clear: ['br'],
-    codetype: ['object'],
-    compact: ['dir', 'dl', 'menu', 'ol', 'ul'],
-    declare: ['object'],
-    face: ['basefont', 'font'],
-    frame: ['table'],
-    frameborder: ['frame', 'iframe'],
-    hspace: ['applet', 'img', 'object', 'iframe'],
-    link: ['body'],
-    longdesc: ['img', 'frame', 'iframe'],
-    marginheight: ['body', 'frame', 'iframe'],
-    marginwidth: ['body', 'frame', 'iframe'],
-    nohref: ['area'],
-    noresize: ['frame'],
-    noshade: ['hr'],
-    nowrap: ['td', 'th'],
-    profile: ['head'],
-    prompt: ['isindex'],
-    rev: ['a', 'link'],
-    rules: ['table'],
-    scheme: ['meta'],
-    scrolling: ['frame', 'iframe'],
-    standby: ['object'],
-    text: ['body'],
-    valign: ['col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'iframe'],
-    valuetype: ['param'],
+    archive: ["applet", "object"],
+    axis: ["td", "th"],
+    background: ["body"],
+    ghcolor: ["table", "tr", "td", "th", "body"],
+    cellpadding: ["table"],
+    cellspacing: ["table"],
+    char: ["col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"],
+    charoff: ["col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr"],
+    classid: ["object"],
+    clear: ["br"],
+    codetype: ["object"],
+    compact: ["dir", "dl", "menu", "ol", "ul"],
+    declare: ["object"],
+    face: ["basefont", "font"],
+    frame: ["table"],
+    frameborder: ["frame", "iframe"],
+    hspace: ["applet", "img", "object", "iframe"],
+    link: ["body"],
+    longdesc: ["img", "frame", "iframe"],
+    marginheight: ["body", "frame", "iframe"],
+    marginwidth: ["body", "frame", "iframe"],
+    nohref: ["area"],
+    noresize: ["frame"],
+    noshade: ["hr"],
+    nowrap: ["td", "th"],
+    profile: ["head"],
+    prompt: ["isindex"],
+    rev: ["a", "link"],
+    rules: ["table"],
+    scheme: ["meta"],
+    scrolling: ["frame", "iframe"],
+    standby: ["object"],
+    text: ["body"],
+    valign: ["col", "colgroup", "tbody", "td", "tfoot", "th", "thead", "tr", "iframe"],
+    valuetype: ["param"],
     // version: ['html'],
-    vspace: ['applet', 'img', 'object', 'iframe'],
+    vspace: ["applet", "img", "object", "iframe"],
     // from https://developer.apple.com/library/iad/documentation/AppleApplications/Reference/SafariHTMLRef/Articles/Attributes.html
     "aria-checked": "*",
     "aria-level": "*",
@@ -342,27 +342,27 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     "aria-valuemax": "*",
     "aria-valuemin": "*",
     "aria-valuenow": "*",
-    autocapitalize: ['input'],
+    autocapitalize: ["input"],
     // FIXME: not sure what elements this can be on
-    autocorrect: ['input', 'select', 'textarea', 'form'],
-    behavior: ['marquee'],
-    bgproperties: ['body'],
-    bordercolor: ['table', 'tr', 'td', 'th'],
-    cellborder: ['td', 'th'],
-    composite: ['img'],
-    direction: ['marquee'],
-    end: ['audio', 'video'],
-    incremental: ['input'],
-    leftmargin: ['body'],
-    loopend: ['audio', 'video'],
-    loopstart: ['audio', 'video'],
-    playcount: ['audio', 'video'],
-    results: ['input'],
+    autocorrect: ["input", "select", "textarea", "form"],
+    behavior: ["marquee"],
+    bgproperties: ["body"],
+    bordercolor: ["table", "tr", "td", "th"],
+    cellborder: ["td", "th"],
+    composite: ["img"],
+    direction: ["marquee"],
+    end: ["audio", "video"],
+    incremental: ["input"],
+    leftmargin: ["body"],
+    loopend: ["audio", "video"],
+    loopstart: ["audio", "video"],
+    playcount: ["audio", "video"],
+    results: ["input"],
     role: "*",
-    scrollamount: ['marquee'],
-    scrolldelay: ['marquee'],
-    topmargin: ['body'],
-    "webkit-playsinline": ['video'],
+    scrollamount: ["marquee"],
+    scrolldelay: ["marquee"],
+    topmargin: ["body"],
+    "webkit-playsinline": ["video"],
     // Microdata attributes: http://www.htmlgoodies.com/html5/Web-Developer-Tutorial-HTML5-Microdata-3920016.htm#fbid=Ltd89va4VpM
     itemscope: "*",
     itemtype: "*",
@@ -371,20 +371,20 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     itemref: "*",
     // Misc attributes
     // From https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-    allowfullscreen: ['iframe', 'embed'],
+    allowfullscreen: ["iframe", "embed"],
     "aria-hidden": "*",
     "aria-label": "*",
     "aria-labelledby": "*",
     "aria-multiline": "*",
     // From https://msdn.microsoft.com/en-us/library/ms533072(v=vs.85).aspx
-    allowtransparency: ['iframe'],
-    webkitallowfullscreen: ['iframe'],
-    mozallowfullscreen: ['iframe'],
-    pubdate: ['time'],
-    verticalscrolling: ['iframe'],
-    horizontalscrolling: ['iframe'],
-    quality: ['embed'],
-    margin: ['iframe'],
+    allowtransparency: ["iframe"],
+    webkitallowfullscreen: ["iframe"],
+    mozallowfullscreen: ["iframe"],
+    pubdate: ["time"],
+    verticalscrolling: ["iframe"],
+    horizontalscrolling: ["iframe"],
+    quality: ["embed"],
+    margin: ["iframe"],
     xmlns: "*"
   };
 
@@ -479,28 +479,28 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     if (skipElementsBadTags[tag]) {
       return true;
     }
-    if (el.id == "pageshot-stylesheet" || (typeof el.className == "string" && el.className.startsWith("pageshot-"))) {
+    if (el.id === "pageshot-stylesheet" || (typeof el.className === "string" && el.className.startsWith("pageshot-"))) {
       return true;
     }
-    if (el.tagName == "META" && el.getAttribute("http-equiv")) {
+    if (el.tagName === "META" && el.getAttribute("http-equiv")) {
       return true;
     }
-    if (el.tagName == "IFRAME" && !el.contentWindow) {
+    if (el.tagName === "IFRAME" && !el.contentWindow) {
       // FIXME: I'm not sure why this happens, but when it does we can't serialize
       // the iframe usefully
       return true;
     }
-    if (el.tagName == "LINK") {
+    if (el.tagName === "LINK") {
       let rel = (el.getAttribute("rel") || "").toLowerCase();
-      if (rel == "prefetch" || rel == "dns-prefetch") {
+      if (rel === "prefetch" || rel === "dns-prefetch") {
         return true;
       }
     }
     if (CONFIG.inlineCss) {
-      if (el.tagName == "STYLE") {
+      if (el.tagName === "STYLE") {
         return true;
       }
-      if (el.tagName == "LINK" && (el.getAttribute("rel") || "").toLowerCase() == "stylesheet") {
+      if (el.tagName === "LINK" && (el.getAttribute("rel") || "").toLowerCase() === "stylesheet") {
         return true;
       }
     }
@@ -516,10 +516,10 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     // Note elements with children might have children with, e.g., absolute
     // positioning -- so they might not make the parent have any width, but
     // may still need to be displayed.
-    if (el.style && el.style.display == 'none') {
+    if (el.style && el.style.display === "none") {
       return true;
     }
-    if ((!skipElementsOKEmpty[tag]) && winGetComputedStyle(el).display == 'none') {
+    if ((!skipElementsOKEmpty[tag]) && winGetComputedStyle(el).display === "none") {
       return true;
     }
     if ((el.clientWidth === 0 && el.clientHeight === 0) &&
@@ -529,7 +529,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
         return true;
       }
     }
-    if (el.tagName == "INPUT" && (el.getAttribute("type") || '').search(/hidden/i) !== -1) {
+    if (el.tagName === "INPUT" && (el.getAttribute("type") || "").search(/hidden/i) !== -1) {
       // Probably hidden fields will get eliminated because they aren't visible
       // but just to be double sure...
       return true;
@@ -576,13 +576,13 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   const ELEMENT_NODE = getDocument().ELEMENT_NODE;
 
   // Used when an iframe fails to serialize:
-  let NULL_IFRAME = '<html><head><meta charset="UTF-8"></head><body></body></html>';
+  let NULL_IFRAME = "<html><head><meta charset=\"UTF-8\"></head><body></body></html>";
 
   function staticHTMLDocument(doc) {
     let html = staticHTML(doc.documentElement);
     let parts = html.split(/<\/head>/i);
     let base = `<base href="${htmlQuote(doc.location.href)}">`;
-    let rules = '';
+    let rules = "";
     if (CONFIG.inlineCss) {
       rules = createStyle(doc);
     }
@@ -594,33 +594,33 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       The element must not be one that should be skipped.
       */
   function staticHTML(el, childLimit) { // eslint-disable-line complexity
-    if (el.tagName == 'CANVAS') {
-      return '<IMG SRC="' + htmlQuote(el.toDataURL('image/png')) + '">';
+    if (el.tagName === "CANVAS") {
+      return "<IMG SRC=\"" + htmlQuote(el.toDataURL("image/png")) + "\">";
     }
     let replSrc = null;
-    if (el.tagName == 'IFRAME') {
+    if (el.tagName === "IFRAME") {
       try {
         let html = staticHTMLDocument(el.contentWindow.document);
-        replSrc = encodeData('text/html', html);
+        replSrc = encodeData("text/html", html);
       } catch (e) {
         if (e.name !== "InvalidCharacterError") {
-          console.warn('Had to skip iframe for permission reasons:', e + "", "(" + e.name + ")");
+          console.warn("Had to skip iframe for permission reasons:", e + "", "(" + e.name + ")");
         }
-        replSrc = encodeData('text/html', NULL_IFRAME);
+        replSrc = encodeData("text/html", NULL_IFRAME);
       }
     }
-    let s = '<' + el.tagName;
+    let s = "<" + el.tagName;
     let elementHidden = isElementHidden(el);
     if (!CONFIG.excludeHidden && CONFIG.annotateHidden && elementHidden) {
-      s += ' data-hidden="true"';
+      s += " data-hidden=\"true\"";
     }
-    if (CONFIG.sizeEverything || (CONFIG.sizeImages && el.tagName == "IMG")) {
+    if (CONFIG.sizeEverything || (CONFIG.sizeImages && el.tagName === "IMG")) {
       s += ` data-width="${el.clientWidth}"`;
       s += ` data-height="${el.clientHeight}"`;
     }
     if (CONFIG.annotateDisplay && !elementHidden) {
       let display = getComputedStyle(el).display;
-      if (display != DEFAULT_DISPLAY[el.tagName]) {
+      if (display !== DEFAULT_DISPLAY[el.tagName]) {
         s += ` data-display="${display}"`;
       }
     }
@@ -629,20 +629,20 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       let l = attrs.length;
       for (let i = 0; i < l; i++) {
         let name = attrs[i].name;
-        if (name.substr(0, 2).toLowerCase() == "on") {
+        if (name.substr(0, 2).toLowerCase() === "on") {
           continue;
         }
         if (skipAttribute(name, el)) {
           continue;
         }
         let value;
-        if (name == 'rel' && el.tagName == "LINK") {
+        if (name === "rel" && el.tagName === "LINK") {
           // Remove any attempt to mark something as prefetch
           value = attrs[i].value;
           value = value.replace(/(dns-)?prefetch/ig, "");
-        } else if (name == 'src' && replSrc) {
+        } else if (name === "src" && replSrc) {
           value = replSrc;
-        } else if (name == 'srcset') {
+        } else if (name === "srcset") {
           let majorParts = attrs[i].value.split(/,/g);
           let newParts = [];
           for (let pair of majorParts) {
@@ -659,12 +659,12 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
             newParts.push(link + " " + (pairParts[1] || ""));
           }
           value = newParts.join(",");
-        } else if (name == "href" || name == "src" || name == "action" || name == "value" || name == "checked" || name == "selected") {
+        } else if (name === "href" || name === "src" || name === "action" || name === "value" || name === "checked" || name === "selected") {
           value = el[name] + "";
           if (name === "href" || name === "src") {
             value = checkLink(value);
           }
-          if (el.tagName != "A" && (name === "href" || name === "src")) {
+          if (el.tagName !== "A" && (name === "href" || name === "src")) {
             value = rewriteResource(el, name, value);
           }
         } else {
@@ -673,9 +673,9 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
         if (value === false || value === null || value === undefined) {
           continue;
         } else if (value === true) {
-          s += ' ' + name;
+          s += " " + name;
         } else {
-          s += ' ' + name + '="' + htmlQuote(value) + '"';
+          s += " " + name + "=\"" + htmlQuote(value) + "\"";
         }
       }
     }
@@ -683,36 +683,36 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       let elType = (el.getAttribute("type") || "text").toLowerCase();
       if (elType.search(/password/) !== -1) {
         // do nothing, don't save value
-      } else if (elType === "checkbox" || elType == "radio") {
+      } else if (elType === "checkbox" || elType === "radio") {
         if ((!el.hasAttribute("checked")) && el.checked) {
           s += " checked";
         }
       } else if ((!el.hasAttribute("value")) && el.value) {
-        s += ' value="' + htmlQuote(el.value) + '"';
+        s += " value=\"" + htmlQuote(el.value) + "\"";
       }
-    } else if (el.tagName == "OPTION") {
+    } else if (el.tagName === "OPTION") {
       if ((!el.hasAttribute("selected")) && el.selected) {
         s += " selected";
       }
     }
-    s += '>';
-    if (CONFIG.inlineCss && el.tagName == "HEAD") {
+    s += ">";
+    if (CONFIG.inlineCss && el.tagName === "HEAD") {
       s += createStyle(el.contentWindow.document);
     }
-    if (el.tagName == "TEXTAREA") {
+    if (el.tagName === "TEXTAREA") {
       s += htmlQuote(el.value);
     }
     if (voidElements[el.tagName]) {
       return s;
     }
     let childrenHTML = staticChildren(el, childLimit);
-    if (typeof childrenHTML == "string") {
+    if (typeof childrenHTML === "string") {
       s += childrenHTML;
-      s += '</' + el.tagName + '>';
+      s += "</" + el.tagName + ">";
       return s;
     }
     return childrenHTML.then(function(html) {
-      return s + html + '</' + el.tagName + '>';
+      return s + html + "</" + el.tagName + ">";
     });
   }
 
@@ -725,13 +725,13 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       let l = attrs.length;
       for (let i = 0; i < l; i++) {
         let name = attrs[i].name;
-        if (name.substr(0, 2).toLowerCase() == "on") {
+        if (name.substr(0, 2).toLowerCase() === "on") {
           continue;
         }
         if (skipAttribute(name, el)) {
           continue;
         }
-        if (name == "href" || name == "src" || name == "value") {
+        if (name === "href" || name === "src" || name === "value") {
           value = el[name];
           if (name === "href" || name === "src") {
             value = checkLink(value);
@@ -753,9 +753,9 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     let promises = [];
     for (let i = 0; i < l; i++) {
       let child = children[i];
-      if (child.nodeType == TEXT_NODE) {
+      if (child.nodeType === TEXT_NODE) {
         pieces.push(htmlQuote(child.nodeValue, true));
-      } else if (child.nodeType == ELEMENT_NODE) {
+      } else if (child.nodeType === ELEMENT_NODE) {
         if (skipElementAsInvalid(child)) {
           continue;
         }
@@ -767,7 +767,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
           promises.push(insertInto(doSoon(staticHTML, child, childLimit), pieces, pieces.length - 1));
         } else {
           let result = staticHTML(child, childLimit);
-          if (typeof result == "string") {
+          if (typeof result === "string") {
             pieces.push(result);
           } else {
             pieces.push("");
@@ -810,7 +810,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   function asyncStaticChildren(el) {
     return new Promise((resolve, reject) => {
       let result = staticChildren(el, 5);
-      if (typeof result == "string") {
+      if (typeof result === "string") {
         resolve(result);
       } else {
         result.then(resolve, reject); // eslint-disable-line promise/catch-or-return
@@ -879,7 +879,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
         let anyFound = false;
         for (let media of stylesheet.media) {
           media = media.toLowerCase();
-          if (media == "*" || media == "screen" || media == "all") {
+          if (media === "*" || media === "screen" || media === "all") {
             anyFound = true;
             break;
           }
@@ -906,12 +906,12 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       let parent = rule.parentStyleSheet;
       if (parent && parent.href) {
         let href = parent.href;
-        if (href.search(/^https?:/i) != -1) {
+        if (href.search(/^https?:/i) !== -1) {
           try {
             url = resolveRelativeUrl(url, href);
           } catch (e) {
             console.warn(`Error resolving url "${url}" from "${href}": ${e}`);
-            return 'url("")';
+            return "url(\"\")";
           }
         }
       }
@@ -926,9 +926,9 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     let allRules = [];
     function traverseRules(list) {
       for (let rule of list) {
-        if (rule.type == rule.MEDIA_RULE) {
+        if (rule.type === rule.MEDIA_RULE) {
           traverseRules(rule.cssRules);
-        } else if (rule.type == rule.STYLE_RULE) {
+        } else if (rule.type === rule.STYLE_RULE) {
           allRules.push(rule);
         }
       }
@@ -961,7 +961,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
         result.skipRule(rule);
         continue;
       }
-      if (rule.parentRule && rule.parentRule.type == rule.MEDIA_RULE) {
+      if (rule.parentRule && rule.parentRule.type === rule.MEDIA_RULE) {
         result.addMediaRule(rule.parentRule, rule);
       } else {
         if (rule.parentRule) {
@@ -1058,7 +1058,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   function getOpenGraph() {
     let openGraph = {};
     // If you update this, also update _OPENGRAPH_PROPERTIES in shot.js:
-    let forceSingle = `title type url`.split(/\s+/g);
+    let forceSingle = "title type url".split(/\s+/g);
     let openGraphProperties = `
     title type url image audio description determiner locale site_name video
     image:secure_url image:type image:width image:height
@@ -1168,12 +1168,12 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
   }
 
   function screenshot(area, size) {
-    let canvas = document.createElementNS('http://www.w3.org/1999/xhtml', 'canvas');
+    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
     let areaWidth = area.right - area.left;
     let areaHeight = area.bottom - area.top;
     canvas.width = size.width;
     canvas.height = size.height;
-    let ctx = canvas.getContext('2d');
+    let ctx = canvas.getContext("2d");
     ctx.scale(size.width / areaWidth, size.height / areaHeight);
     ctx.drawWindow(window, area.left, area.top, area.right - area.left, area.bottom - area.top, "#fff");
     return canvas.toDataURL();

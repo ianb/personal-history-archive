@@ -11,13 +11,13 @@ this.communication = (function() {
     args = args || [];
     kwargs = kwargs || {};
     let id = responderId++;
-    for (let i=0; i<args.length; i++) {
-      if (args[i] && typeof args[i] === "object" && 'toJSON' in args[i]) {
+    for (let i = 0; i < args.length; i++) {
+      if (args[i] && typeof args[i] === "object" && "toJSON" in args[i]) {
         args[i] = args[i].toJSON();
       }
     }
     for (let name in (kwargs || {})) {
-      if (kwargs[name] && typeof kwargs[name] === "object" && 'toJSON' in kwargs[name]) {
+      if (kwargs[name] && typeof kwargs[name] === "object" && "toJSON" in kwargs[name]) {
         kwargs[name] = kwargs[name].toJSON();
       }
     }
@@ -30,7 +30,7 @@ this.communication = (function() {
   port.onMessage.addListener((message) => {
     let id = message.id;
     let responder = responders.get(id);
-    if ('result' in message) {
+    if ("result" in message) {
       responder.resolve(message.result);
     } else if (message.error) {
       // Using console.error so we don't ever send this back to the server:

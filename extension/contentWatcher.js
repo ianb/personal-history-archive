@@ -1,4 +1,6 @@
-this.contentWatcher = (function () {
+/* globals elementToSelector */
+
+this.contentWatcher = (function() {
 
   document.addEventListener("click", (event) => {
     let target = event.target;
@@ -27,6 +29,6 @@ this.contentWatcher = (function () {
       startLocation,
       endLocation,
     });
-  })
+  });
 
 })();

@@ -17,7 +17,7 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
     let start = Date.now();
     let readableDiv;
     let readable;
-    if (typeof Readability != "undefined") {
+    if (typeof Readability !== "undefined") {
       let result = extractReadable();
       if (result) {
         readable = result;

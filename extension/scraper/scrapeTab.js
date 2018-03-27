@@ -29,7 +29,7 @@ this.scrapeTab = (function() {
     }
     await util.sleep(buildSettings.idleWaitTime);
     tab = await browser.tabs.get(tabId);
-    if (tab.url != originalUrl) {
+    if (tab.url !== originalUrl) {
       return waitForStableTab(tabId, attempts - 1);
     }
     return tab.url;

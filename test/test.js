@@ -27,7 +27,7 @@ const fs = require("fs");
 const PORT = 11180;
 const SERVER = `http://localhost:${PORT}`;
 const SERVER_STATIC = `${SERVER}/test-static`;
-const COMMAND_MOD = process.platform == "darwin" ? Key.COMMAND : Key.CONTROL;
+const COMMAND_MOD = process.platform === "darwin" ? Key.COMMAND : Key.CONTROL;
 const addonFileLocation = path.join(process.cwd(), "test", "build", "extension.zip");
 
 let server;
@@ -90,7 +90,7 @@ function promiseTimeout(time) {
 
 function filenameForUrl(url) {
   // FIXME: this won't work for long pages
-  return path.join(__dirname, 'test-data', 'pages', encodeURIComponent(url) + "-page.json");
+  return path.join(__dirname, "test-data", "pages", encodeURIComponent(url) + "-page.json");
 }
 
 async function closeBrowser(driver) {
@@ -142,8 +142,8 @@ describe("Test history collection", function() {
   it("will browse about", async function() {
     this.timeout(15000);
     await driver.get(`${SERVER_STATIC}/search.html`);
-    await driver.findElement(By.name('q')).sendKeys("test query\n");
-    await driver.findElement(By.css('button')).click();
+    await driver.findElement(By.name("q")).sendKeys("test query\n");
+    await driver.findElement(By.css("button")).click();
     await driver.wait(until.titleIs("Search results"));
     await driver.wait(until.elementLocated(By.css("a.result")));
     await driver.findElement(By.css("a.result")).click();
@@ -169,7 +169,7 @@ describe("Test history collection", function() {
      *  analyze the results */
     let pages = result.currentPages.concat(result.pendingPages);
     pages.sort((a, b) => a.loadTime > b.loadTime ? 1 : -1);
-    if (pages[0].url == "about:blank") {
+    if (pages[0].url === "about:blank") {
       // Sometimes about:blank shows up in the history, and sometimes it doesn't (presumably related
       // to load time), so we remove it if it is the first
       pages.shift();
@@ -201,14 +201,14 @@ describe("Test history collection", function() {
       false, false, false, false, true, true, false, false
     ], "forward_back");
     assert.deepEqual(property("transitionType"), [
-      'link',
-      'form_submit', // search result
-      'link', // clicked on search result
-      'link', // clicked on anchor link
-      'link', // clicked on back...?
-      'link', // clicked on back again
+      "link",
+      "form_submit", // search result
+      "link", // clicked on search result
+      "link", // clicked on anchor link
+      "link", // clicked on back...?
+      "link", // clicked on back again
       undefined, // apparently open in new window is misunderstood
-      'link', // driver.get looks like link?
+      "link", // driver.get looks like link?
     ], "transitionType");
     assert.deepEqual(pages.map(p => idToIndex(p.sourceId)), [
       -1, // Didn't come from anywhere, about:blank
@@ -241,12 +241,12 @@ describe("Test history collection", function() {
       "number", "number", "number", "number", "number", "number", "number", "number",
     ]);
     assert.deepEqual(property("closedReason"), [
-      'navigation',
-      'navigation',
-      'navigation',
-      'navigation',
-      'navigation',
-      'navigation',
+      "navigation",
+      "navigation",
+      "navigation",
+      "navigation",
+      "navigation",
+      "navigation",
       null,
       null, // Only the last two pages haven't been redirected away
     ], "closedReason");

@@ -1,4 +1,4 @@
-/* globals log, communication, buildSettings, scrapeTab, util, catcher, sessionId */
+/* globals log, communication, buildSettings, scrapeTab, util, catcher, sessionId, backgroundOnMessage */
 
 this.activityTracker = (function() {
   let exports = {};
@@ -122,7 +122,7 @@ this.activityTracker = (function() {
       page.initialLoadId = previous.initialLoadId || previous.id;
     }
     currentPages.set(tabId, page);
-    if (tabId == activeTabId) {
+    if (tabId === activeTabId) {
       page.setActive();
     }
     let annotations = pendingAnnotations.get(tabId);
@@ -260,7 +260,7 @@ this.activityTracker = (function() {
       for (let header of responseHeaders) {
         if (header.name.toLowerCase() === "content-type") {
           contentType = header.value && header.value.split(";")[0];
-        } else if (header.name.toLowerCase() == "set-cookie") {
+        } else if (header.name.toLowerCase() === "set-cookie") {
           hasSetCookie = true;
         }
       }
@@ -277,19 +277,18 @@ this.activityTracker = (function() {
     let {tabId, requestHeaders, url} = event;
     if (!requestHeaders) {
       log.error("no request headers", url);
+      return;
     }
-    if (requestHeaders) {
-      hasCookie = false;
-      for (let header of requestHeaders) {
-        if (header.name.toLowerCase() === "cookie") {
-          hasCookie = true;
-          break;
-        }
+    let hasCookie = false;
+    for (let header of requestHeaders) {
+      if (header.name.toLowerCase() === "cookie") {
+        hasCookie = true;
+        break;
       }
-      annotatePage({
-        tabId, url, hasCookie
-      });
     }
+    annotatePage({
+      tabId, url, hasCookie
+    });
   }), standardRequestFilter, ["requestHeaders"]);
 
   browser.tabs.onActivated.addListener(catcher.watchFunction((event) => {
@@ -339,7 +338,7 @@ this.activityTracker = (function() {
     if (!["http:", "https:", "file:", "data:"].includes(u.protocol)) {
       return false;
     }
-    if (u.hostname == "addons.mozilla.org" || u.hostname == "testpilot.firefox.com") {
+    if (u.hostname === "addons.mozilla.org" || u.hostname === "testpilot.firefox.com") {
       return false;
     }
     return true;
@@ -389,7 +388,7 @@ this.activityTracker = (function() {
     }
     if (!scraped) {
       log.info("Could not scrape", url, "from", tabId);
-      if (pagesToSerialize.get(tabId) == url) {
+      if (pagesToSerialize.get(tabId) === url) {
         pagesToSerialize.delete(tabId);
       }
       return;
