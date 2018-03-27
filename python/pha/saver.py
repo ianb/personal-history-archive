@@ -107,6 +107,8 @@ def add_activity_list(archive, *, browserId, activityItems):
             hasSetCookie
             hasCookie
             copyEvents
+            formControlInteraction
+            formTextInteraction
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)

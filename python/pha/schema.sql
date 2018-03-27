@@ -59,5 +59,7 @@ CREATE TABLE IF NOT EXISTS activity (
   contentType TEXT,
   hasSetCookie BOOLEAN,
   hasCookie BOOLEAN,
-  copyEvents TEXT -- Actually JSON
+  copyEvents TEXT, -- Actually JSON
+  formControlInteraction INT,
+  formTextInteraction INT
 );

@@ -31,4 +31,22 @@ this.contentWatcher = (function() {
     });
   });
 
+  document.addEventListener("change", (event) => {
+    let changed = event.target;
+    let isText = changed.tagName === "TEXTAREA";
+    if (changed.tagName === "INPUT") {
+      let type = (changed.getAttribute("text") || "").toLowerCase();
+      let textyTypes = [
+        "", "text", "password", "email", "number", "search", "tel", "url",
+      ];
+      if (textyTypes.includes(type)) {
+        isText = true;
+      }
+    }
+    browser.runtime.sendMessage({
+      type: "change",
+      isText
+    });
+  });
+
 })();

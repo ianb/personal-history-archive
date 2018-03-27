@@ -37,6 +37,8 @@ this.activityTracker = (function() {
       this.sourceClickText = options.sourceClickText === undefined ? null : options.sourceClickText;
       this.sourceClickHref = options.sourceClickHref === undefined ? null : options.sourceClickHref;
       this.copyEvents = [];
+      this.formControlInteraction = 0;
+      this.formTextInteraction = 0;
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -331,6 +333,19 @@ this.activityTracker = (function() {
       return;
     }
     page.copyEvents.push({text: message.text, startLocation: message.startLocation, endLocation: message.endLocation, time: Date.now()});
+  }));
+
+  backgroundOnMessage.register("change", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got change event for a tab that isn't in our record:", message);
+      return;
+    }
+    if (message.isText) {
+      page.formTextInteraction++;
+    } else {
+      page.formControlInteraction++;
+    }
   }));
 
   function pagePossiblyAllowed(url) {
