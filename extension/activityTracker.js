@@ -36,6 +36,7 @@ this.activityTracker = (function() {
       this.initialLoadId = options.initialLoadId || null;
       this.sourceClickText = options.sourceClickText === undefined ? null : options.sourceClickText;
       this.sourceClickHref = options.sourceClickHref === undefined ? null : options.sourceClickHref;
+      this.copyEvents = [];
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -322,6 +323,15 @@ this.activityTracker = (function() {
 
   backgroundOnMessage.register("anchorClick", catcher.watchFunction((message) => {
     lastClickInformation.set(message.senderTabId, {text: message.text, href: message.href});
+  }));
+
+  backgroundOnMessage.register("copy", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got copy event for a tab that isn't in our record:", message);
+      return;
+    }
+    page.copyEvents.push({text: message.text, startLocation: message.startLocation, endLocation: message.endLocation, time: Date.now()});
   }));
 
   function pagePossiblyAllowed(url) {

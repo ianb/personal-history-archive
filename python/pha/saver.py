@@ -106,6 +106,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             contentType
             hasSetCookie
             hasCookie
+            copyEvents
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)

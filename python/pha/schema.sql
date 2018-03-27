@@ -58,5 +58,6 @@ CREATE TABLE IF NOT EXISTS activity (
   statusCode INT,
   contentType TEXT,
   hasSetCookie BOOLEAN,
-  hasCookie BOOLEAN
+  hasCookie BOOLEAN,
+  copyEvents TEXT -- Actually JSON
 );

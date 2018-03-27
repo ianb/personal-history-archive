@@ -112,6 +112,8 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `scrolled`: true if the user has scrolled, false if not, null if we couldn't detect. (TODO: [#85](https://github.com/ianb/personal-history-archive/issues/85) and [#61](https://github.com/ianb/personal-history-archive/issues/61))
 
+`copyEvents`: this is a JSON list that represents all the clipboard copies taken from the page. Each event looks like: `{text, startLocation, endLocation, time}`, where start and end location are CSS selectors (`endLocation` may be omitted if it is the same as `startLocation`).
+
 `formInteraction`: true if the user interacted with any form elements, false otherwise, null if we couldn't detect. ([TODO](https://github.com/ianb/personal-history-archive/issues/62). Should we distinguish between typing and clicking?)
 
 `clipboardCopies`: an array of `[{timestamp, text, html}]` of any clipboard copies that happen in this activity/page (or, more specifically, any copies that happen while this activity is the highlighted tab). ([TODO](https://github.com/ianb/personal-history-archive/issues/78))

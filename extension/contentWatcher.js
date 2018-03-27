@@ -1,4 +1,5 @@
 this.contentWatcher = (function () {
+
   document.addEventListener("click", (event) => {
     let target = event.target;
     if (target.tagName === "A") {
@@ -9,4 +10,23 @@ this.contentWatcher = (function () {
       });
     }
   });
+
+  document.addEventListener("copy", (event) => {
+    let selection = window.getSelection();
+    let startLocation;
+    let endLocation;
+    if (selection.anchorNode) {
+      startLocation = elementToSelector(selection.anchorNode);
+    }
+    if (selection.focusNode && selection.focusNode !== selection.anchorNode) {
+      endLocation = elementToSelector(selection.focusNode);
+    }
+    browser.runtime.sendMessage({
+      type: "copy",
+      text: window.getSelection().toString(),
+      startLocation,
+      endLocation,
+    });
+  })
+
 })();
