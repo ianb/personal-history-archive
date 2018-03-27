@@ -88,14 +88,24 @@ class Archive:
             activity.forward_back,
             activity.from_address_bar,
             activity.sourceId,
+            activity.browserReferringVisitId,
             activity.initialLoadId,
             activity.newTab,
             activity.activeCount,
+            activity.activeTime,
             activity.closedReason,
             activity.method,
             activity.statusCode,
             activity.contentType,
             activity.hasSetCookie,
+            activity.hasCookie,
+            activity.copyEvents,
+            activity.formControlInteraction,
+            activity.formTextInteraction,
+            activity.isHashChange,
+            activity.maxScroll,
+            activity.documentHeight,
+            activity.hashPointsToElement,
             page.fetched IS NOT NULL AS page_fetched
         FROM activity, browser
     """
@@ -211,6 +221,7 @@ class Activity:
         self.forward_back = row.forward_back
         self.from_address_bar = row.from_address_bar
         self.sourceId = row.sourceId
+        self.browserReferringVisitId = row.browserReferringVisitId
         self.initialLoadId = row.initialLoadId
         self.newTab = row.newTab
         self.activeCount = row.activeCount
@@ -219,6 +230,17 @@ class Activity:
         self.statusCode = row.statusCode
         self.contentType = row.contentType
         self.hasSetCookie = row.hasSetCookie
+        self.hasCookie = row.hasCookie
+        if row.copyEvents:
+            self.copyEvents = json.loads(row.copyEvents)
+        else:
+            self.copyEvents = None
+        self.formControlInteraction = row.formControlInteraction
+        self.formTextInteraction = row.formTextInteraction
+        self.isHashChange = row.isHashChange
+        self.maxScroll = row.maxScroll
+        self.documentHeight = row.documentHeight
+        self.hashPointsToElement = row.hashPointsToElement
         self.has_page = row.page_fetched and os.path.exists(Page.json_filename(self.archive, self.url))
 
     @property
