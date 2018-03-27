@@ -324,7 +324,7 @@ def send_message(message):
 def install_json_command():
     import argparse
     default_location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../data"))
-    script_location = os.path.expanduser("~/.pha-starter.py")
+    script_location = os.path.join(default_location, ".pha-starter.py")
     parser = argparse.ArgumentParser()
     parser.add_argument("storage_directory", help="Location for storing the database and files", default=default_location)
     parser.add_argument("--script-location", "-s", help="Location to keep the connection script", default=script_location)
