@@ -17,3 +17,4 @@ this.elementToSelector = function elementToSelector(el) {
   }
   return parts.join(" > ");
 };
+null;
