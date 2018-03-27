@@ -53,7 +53,6 @@ There's several helper modules:
 
 * [`glovehelper`](./pha/glovehelper.py): helps with calling [GloVe](https://nlp.stanford.edu/projects/glove/). You must install and build the code from that site. The helper lets you pass in a sequence of strings and get vectors back. See [the analyze_classnames notebook](./analyze_classnames.ipynb) for an example.
 * [`htmltools`](./pha/htmltools.py): this includes various little functions to help you work with the HTML. Look at [analyze_classnames](./analyze_classnames.ipynb) for examples.
-* [`lazygetter`](./pha/lazygetter.py): a helper to fetch remote data for Jupyter Notebooks.
 * [`notebooktools`](./pha/notebooktools.py): other tools for working in Jupyter Notebooks. It's used to show inline HTML.
 * [`search`](./pha/search.py): creates a search index of your pages. You need the SQLite [FTS5](https://sqlite.org/fts5.html) extension installed. See [the search_example notebook](./search_example.ipynb) for more.
 * [`summarytools`](./pha/summarytools.py): some small helpers for doing document summarization. See [the document_summary notebook](./document_summary.ipynb) for more.
