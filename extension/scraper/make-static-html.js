@@ -1,4 +1,4 @@
-/* globals setTimeout, btoa, console, document, window, util */
+/* globals setTimeout, btoa, console, document, window, util, elementToSelector */
 
 /** This file is used to turn the document into static HTML with no scripts
 
@@ -1196,26 +1196,6 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
       }
     }
     return twitterCard;
-  }
-
-  function elementToSelector(el) {
-    let singletons = {BODY: true, HEAD: true};
-    let parts = [];
-    while (true) {
-      if (singletons[el.tagName]) {
-        parts.unshift(el.tagName.toLowerCase());
-        break;
-      }
-      if (el.id) {
-        parts.unshift(`#${el.id}`);
-        break;
-      }
-      let parent = el.parentNode;
-      let position = Array.from(parent.childNodes).indexOf(el);
-      parts.unshift(`*:nth-child(${position + 1})`);
-      el = parent;
-    }
-    return parts.join(" > ");
   }
 
   exports.documentStaticData = documentStaticData;

@@ -65,6 +65,7 @@
         "log.js",
         "catcher.js",
         "util.js",
+        "elementToSelector.js",
         "contentWatcher.js"
       ]
     }

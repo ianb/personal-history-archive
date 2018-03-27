@@ -9,7 +9,7 @@ this.scrapeTab = (function() {
       log.debug("Change", requireUrl, "to", foundUrl);
       throw new Error("URL changed from what was expected");
     }
-    for (let file of ["build/buildSettings.js", "log.js", "util.js", "scraper/make-static-html.js", "scraper/Readability.js", "scraper/extractor-worker.js"]) {
+    for (let file of ["build/buildSettings.js", "log.js", "util.js", "elementToSelector.js", "scraper/make-static-html.js", "scraper/Readability.js", "scraper/extractor-worker.js"]) {
       await browser.tabs.executeScript(tabId, {file});
     }
     let resultList = await browser.tabs.executeScript(tabId, {
