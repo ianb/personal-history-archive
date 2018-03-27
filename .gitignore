@@ -15,3 +15,5 @@ build
 /test/test-data
 /addon.log
 /dev-data
+/data
+/.venv

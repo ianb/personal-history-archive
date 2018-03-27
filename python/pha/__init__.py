@@ -68,7 +68,7 @@ class Archive:
 
     @classmethod
     def default_location(cls):
-        location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../"))
+        location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../data"))
         return cls(location)
 
     base_activity_sql = """

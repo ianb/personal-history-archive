@@ -30,14 +30,16 @@
   },
   "scripts": {
     "start": "npm run build:dev && web-ext run -f nightly -s dev-data/extension/ --keep-profile-changes --firefox-profile dev-data/Profile --browser-console",
-    "build:dev": "mkdir -p dev-data && python -m pha.saver --script-location dev-data/pha-saver-script.py --native-name pha.saver.dev dev-data/ && NATIVE_SCRIPT=pha.saver.dev LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=dev-data npm run build && mkdir -p dev-data/Profile",
+    "build:dev": "mkdir -p dev-data && .venv/bin/python -m pha.saver --script-location dev-data/pha-saver-script.py --native-name pha.saver.dev dev-data/ && NATIVE_SCRIPT=pha.saver.dev LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=dev-data npm run build && mkdir -p dev-data/Profile",
     "lint:js": "eslint .",
+    "lint:py": ".venv/bin/flake8 python/",
     "firefox-profile": "firefox-profile",
     "build:zip": "web-ext build --source-dir ${DEST:-build}/extension/ --ignore-files '**/README.md' --ignore-files '**/*.template' --overwrite-dest && mv web-ext-artifacts/personal_history_saver*.zip ${DEST:-build}/extension.zip && rmdir web-ext-artifacts || true",
-    "build": "mkdir -p ${DEST:-build} && cp -r extension/ ${DEST:-build}/extension && mkdir -p ${DEST:-build}/extension/build && python python/pha/sub-env-vars.py < extension/buildSettings.js.tmpl > ${DEST:-build}/extension/build/buildSettings.js",
+    "build": "mkdir -p ${DEST:-build} && cp -r extension/ ${DEST:-build}/extension && mkdir -p ${DEST:-build}/extension/build && .venv/bin/python python/pha/sub-env-vars.py < extension/buildSettings.js.tmpl > ${DEST:-build}/extension/build/buildSettings.js",
     "test": "npm run test:build-data && npm run test:build-ext && npm run test:selenium",
     "test:build-data": "rm -rf test/test-data/ && mkdir -p test/test-data/",
-    "test:build-ext": "NATIVE_SCRIPT=pha.saver.test IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=test/build/ npm run build && DEST=test/build/ npm run build:zip && python -m pha.saver --script-location test/test-data/pha-saver-script.py --native-name pha.saver.test test/test-data/",
-    "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS"
+    "test:build-ext": "NATIVE_SCRIPT=pha.saver.test IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=test/build/ npm run build && DEST=test/build/ npm run build:zip && .venv/bin/python -m pha.saver --script-location test/test-data/pha-saver-script.py --native-name pha.saver.test test/test-data/",
+    "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS",
+    "postinstall": "if [[ ! -e .venv ]] ; then python3 -m venv .venv ; .venv/bin/python -m ensurepip ; fi && .venv/bin/pip install --upgrade pip && .venv/bin/pip install flake8 -e python/"
   }
 }
