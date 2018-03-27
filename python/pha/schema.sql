@@ -53,6 +53,7 @@ CREATE TABLE IF NOT EXISTS activity (
   initialLoadId TEXT REFERENCES activity (id) ON DELETE SET NULL,
   newTab BOOLEAN,
   activeCount INT,
+  activeTime INT,
   closedReason TEXT,
   method TEXT,
   statusCode INT,
@@ -61,5 +62,8 @@ CREATE TABLE IF NOT EXISTS activity (
   hasCookie BOOLEAN,
   copyEvents TEXT, -- Actually JSON
   formControlInteraction INT,
-  formTextInteraction INT
+  formTextInteraction INT,
+  isHashChange BOOLEAN,
+  maxScroll INT,
+  documentHeight INT
 );

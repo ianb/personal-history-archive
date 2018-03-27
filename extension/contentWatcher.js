@@ -49,4 +49,29 @@ this.contentWatcher = (function() {
     });
   });
 
+  let maxScroll = 0;
+  let sendScrollTimeout = null;
+
+  window.addEventListener('scroll', function(event) {
+    let position = window.scrollY;
+    if (position > maxScroll) {
+      maxScroll = position;
+      if (!sendScrollTimeout) {
+        sendScrollTimeout = setTimeout(() => {
+          sendScrollTimeout = null;
+          let documentHeight = Math.max(
+            document.documentElement.clientHeight,
+            document.body.clientHeight,
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight);
+          browser.runtime.sendMessage({
+            type: "scroll",
+            maxScroll,
+            documentHeight
+          });
+        }, 100);
+      }
+    }
+  });
+
 })();

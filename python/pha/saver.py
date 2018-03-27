@@ -100,6 +100,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             initialLoadId
             newTab
             activeCount
+            activeTime
             closedReason
             method
             statusCode
@@ -109,11 +110,15 @@ def add_activity_list(archive, *, browserId, activityItems):
             copyEvents
             formControlInteraction
             formTextInteraction
+            isHashChange
+            maxScroll
+            documentHeight
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)
         marks = ["?"] * len(columns)
         activity["browserId"] = browserId
+        activity["copyEvents"] = json.dumps(activity["copyEvents"])
         values = [activity[column] for column in columns]
         unused = set(activity).difference(columns)
         if unused:

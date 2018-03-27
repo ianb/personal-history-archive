@@ -100,6 +100,8 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `containsHash`: if the URL has a hash (e.g., `page.html#section1`), then does some element with `id="section1"` exist? True or false if we calculate it, null if it is not discovered. (TODO: see [#81](https://github.com/ianb/personal-history-archive/issues/81) and [#82](https://github.com/ianb/personal-history-archive/issues/82))
 
+`isHashChange`: if the new activity was an in-page change of the hash/fragment (no actual page loading), then this is true. Null if unknown.
+
 `method`: the HTTP method that loaded the page (usually GET, of course). We do not track the POST destination if it results in an immediate redirect. (TODO: confirm POST behavior)
 
 `statusCode`: the integer status code of the response. E.g., 200, 404.
@@ -110,7 +112,9 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `hasCookie`: the request contained a `Cookie` header.
 
-`scrolled`: true if the user has scrolled, false if not, null if we couldn't detect. (TODO: [#85](https://github.com/ianb/personal-history-archive/issues/85) and [#61](https://github.com/ianb/personal-history-archive/issues/61))
+`maxScroll`: the greatest pixel location that this document was scrolled to. Null if unknown, 0 if not scrolled.
+
+`documentHeight`: the pixel height of the document. Null if unknown or if never scrolled.
 
 `copyEvents`: this is a JSON list that represents all the clipboard copies taken from the page. Each event looks like: `{text, startLocation, endLocation, time}`, where start and end location are CSS selectors (`endLocation` may be omitted if it is the same as `startLocation`).
 

@@ -39,6 +39,8 @@ this.activityTracker = (function() {
       this.copyEvents = [];
       this.formControlInteraction = 0;
       this.formTextInteraction = 0;
+      this.maxScroll = 0;
+      this.documentHeight = null;
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -55,6 +57,7 @@ this.activityTracker = (function() {
 
     toJSON() {
       let clone = {...this};
+      delete clone.active;
       delete clone._activeStartTime;
       delete clone._activeCumulatedTime;
       delete clone.closed;
@@ -346,6 +349,16 @@ this.activityTracker = (function() {
     } else {
       page.formControlInteraction++;
     }
+  }));
+
+  backgroundOnMessage.register("scroll", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got scroll event for a tab that isn't in our record:", message);
+      return;
+    }
+    page.maxScroll = message.maxScroll;
+    page.documentHeight = message.documentHeight;
   }));
 
   function pagePossiblyAllowed(url) {
