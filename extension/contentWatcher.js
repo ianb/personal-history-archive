@@ -2,6 +2,8 @@
 
 this.contentWatcher = (function() {
 
+  const IDLE_TIME = 30000;
+
   document.addEventListener("click", (event) => {
     let target = event.target;
     if (target.tagName === "A") {
@@ -89,5 +91,57 @@ this.contentWatcher = (function() {
       });
     }
   });
+
+  let activityTimer;
+  let lastActivity;
+  let isActive = true;
+
+  function updateActivity() {
+    lastActivity = Date.now();
+    if (!isActive) {
+      browser.runtime.sendMessage({
+        type: "activity"
+      });
+      isActive = true;
+    }
+    if (activityTimer) {
+      clearTimeout(activityTimer);
+    }
+    activityTimer = setTimeout(() => {
+      browser.runtime.sendMessage({
+        type: "idle",
+        lastActivity
+      });
+      activityTimer = null;
+      isActive = false;
+    }, IDLE_TIME);
+  }
+
+  function watchForActivity() {
+    document.addEventListener("mousemove", updateActivity);
+    document.addEventListener("keypress", updateActivity);
+    updateActivity();
+  }
+
+  function unwatchForActivity() {
+    document.removeEventListener("mousemove", updateActivity);
+    document.removeEventListener("keypress", updateActivity);
+    if (!isActive) {
+      isActive = true;
+    }
+    clearTimeout(activityTimer);
+  }
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      unwatchForActivity();
+    } else {
+      watchForActivity();
+    }
+  });
+
+  if (!document.hidden) {
+    watchForActivity();
+  }
 
 })();

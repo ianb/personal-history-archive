@@ -311,8 +311,8 @@ this.activityTracker = (function() {
     setActiveTabId(event.tabId);
   }));
 
-  browser.tabs.onRemoved.addListener(catcher.watchFunction((event) => {
-    closePage(event.tabId, "tabClose");
+  browser.tabs.onRemoved.addListener(catcher.watchFunction((tabId) => {
+    closePage(tabId, "tabClose");
   }));
 
   catcher.watchPromise(browser.tabs.query({}).then((tabs) => {
@@ -381,6 +381,36 @@ this.activityTracker = (function() {
       return;
     }
     page.hashPointsToElement = message.hasElement;
+  }));
+
+  backgroundOnMessage.register("idle", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got idle event for a tab that isn't in our record:", message);
+      return;
+    }
+    if (!page.active) {
+      log.warn("Got idle event for a tab that isn't active:", message);
+      return;
+    }
+    page.setInactive();
+  }));
+
+  backgroundOnMessage.register("activity", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got activity event for a tab that isn't in our record:", message);
+      return;
+    }
+    if (page.active) {
+      log.warn("Got activity event for a tab that is already active:", message);
+      return;
+    }
+    if (message.senderTabId !== activeTabId) {
+      log.warn("Got activity even for a tab that isn't the active tab:", message);
+      return;
+    }
+    page.setActive();
   }));
 
   function pagePossiblyAllowed(url) {
