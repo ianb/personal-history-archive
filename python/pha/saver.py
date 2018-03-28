@@ -117,6 +117,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             maxScroll
             documentHeight
             hashPointsToElement
+            zoomLevel
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)
@@ -136,12 +137,12 @@ def add_activity_list(archive, *, browserId, activityItems):
 
 
 @addon
-def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=False):
+def register_browser(archive, *, browserId, userAgent, testing=False, autofetch=False, devicePixelRatio=1):
     c = archive.conn.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO browser (id, userAgent, testing, autofetch)
-        VALUES (?, ?, ?, ?)
-    """, (browserId, userAgent, testing, autofetch))
+        INSERT OR REPLACE INTO browser (id, userAgent, testing, autofetch, devicePixelRatio)
+        VALUES (?, ?, ?, ?, ?)
+    """, (browserId, userAgent, testing, autofetch, devicePixelRatio))
     c.execute("""
         UPDATE browser
           SET

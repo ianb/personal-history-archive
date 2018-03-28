@@ -3,6 +3,8 @@
 this.activityTracker = (function() {
   let exports = {};
 
+  let baseDevicePixelRatio = window.devicePixelRatio;
+
   let standardRequestFilter = {
     urls: ["http://*/*", "https://*/*"],
     types: ["main_frame"]
@@ -42,6 +44,7 @@ this.activityTracker = (function() {
       this.maxScroll = 0;
       this.documentHeight = null;
       this.hashPointsToElement = null;
+      this.zoomLevel = null;
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -411,6 +414,15 @@ this.activityTracker = (function() {
       return;
     }
     page.setActive();
+  }));
+
+  backgroundOnMessage.register("devicePixelRatio", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got devicePixelRatio event for a tab that isn't in our record:", message);
+      return;
+    }
+    page.zoomLevel = message.devicePixelRatio / baseDevicePixelRatio;
   }));
 
   function pagePossiblyAllowed(url) {

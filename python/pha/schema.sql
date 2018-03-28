@@ -5,7 +5,8 @@ CREATE TABLE IF NOT EXISTS browser (
   newestHistory INT,
   userAgent TEXT,
   testing BOOLEAN,
-  autofetch BOOLEAN
+  autofetch BOOLEAN,
+  devicePixelRatio FLOAT
 );
 
 CREATE TABLE IF NOT EXISTS browser_session (
@@ -66,5 +67,6 @@ CREATE TABLE IF NOT EXISTS activity (
   isHashChange BOOLEAN,
   maxScroll INT,
   documentHeight INT,
-  hashPointsToElement BOOLEAN
+  hashPointsToElement BOOLEAN,
+  zoomLevel FLOAT
 );

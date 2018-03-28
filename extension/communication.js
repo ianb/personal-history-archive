@@ -58,6 +58,7 @@ this.communication = (function() {
       userAgent: navigator.userAgent,
       testing: buildSettings.testingBrowser,
       autofetch: buildSettings.autofetchBrowser,
+      devicePixelRatio: window.devicePixelRatio,
     });
   };
 

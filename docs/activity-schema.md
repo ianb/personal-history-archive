@@ -20,6 +20,8 @@ Because people use multiple browsers and profiles, we typically map activity to 
 
 `userAgent`: the User Agent string for the browser
 
+`devicePixelRatio`: the base value of `window.devicePixelRatio` (typically 1 for a normal screen, 2 for a High-DPI/Retina display)
+
 `created`: when we first saw this browser
 
 `testing`: if true, then this browser profile was created specifically for testing. Hopefully these browsers shouldn't show up in your normal data!
@@ -121,6 +123,8 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 `formControlInteraction`: a count of the number of times a non-text form field was changed. Will be null if we weren't watching.
 
 `formTextInteraction`: a count of the number of times a text form field was changed. Will be null if we weren't watching.
+
+`zoomLevel`: the zoom level, if we can calculate it. Typically 1, null if we didn't determine it. 1.1 means, for example, a 110% zoom.
 
 #### Derived:
 

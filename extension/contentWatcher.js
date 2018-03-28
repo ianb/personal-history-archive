@@ -144,4 +144,17 @@ this.contentWatcher = (function() {
     watchForActivity();
   }
 
+  function sendDevicePixelRatio() {
+    browser.runtime.sendMessage({
+      type: "devicePixelRatio",
+      devicePixelRatio: window.devicePixelRatio
+    });
+  }
+
+  window.addEventListener("resize", () => {
+    sendDevicePixelRatio();
+  });
+
+  sendDevicePixelRatio();
+
 })();
