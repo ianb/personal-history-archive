@@ -51,6 +51,8 @@ def query(url):
 
 class Archive:
     def __init__(self, path):
+        if not os.path.exists(path):
+            raise Exception("Could not find path %s" % path)
         self.path = path
         self.sqlite_path = os.path.join(path, 'history.sqlite')
         self.conn = sqlite3.connect(self.sqlite_path)
@@ -70,6 +72,8 @@ class Archive:
     @classmethod
     def default_location(cls):
         location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../data"))
+        if os.environ.get("PHA_DATA"):
+            location = os.environ["PHA_DATA"]
         return cls(location)
 
     base_activity_sql = """
