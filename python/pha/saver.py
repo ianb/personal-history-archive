@@ -119,12 +119,21 @@ def add_activity_list(archive, *, browserId, activityItems):
             hashPointsToElement
             zoomLevel
             canonicalUrl
+            mainFeedUrl
+            allFeeds
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)
         marks = ["?"] * len(columns)
         activity["browserId"] = browserId
-        activity["copyEvents"] = json.dumps(activity["copyEvents"])
+        if activity["copyEvents"]:
+            activity["copyEvents"] = json.dumps(activity["copyEvents"])
+        else:
+            activity["copyEvents"] = None
+        if activity["allFeeds"]:
+            activity["allFeeds"] = json.dumps(activity["allFeeds"])
+        else:
+            activity["allFeeds"] = None
         values = [activity[column] for column in columns]
         unused = set(activity).difference(columns)
         if unused:

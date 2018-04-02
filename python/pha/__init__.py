@@ -111,6 +111,10 @@ class Archive:
             activity.maxScroll,
             activity.documentHeight,
             activity.hashPointsToElement,
+            activity.zoomLevel,
+            activity.canonicalUrl,
+            activity.mainFeedLink,
+            activity.allFeeds,
             page.fetched IS NOT NULL AS page_fetched
         FROM activity, browser
     """
@@ -246,6 +250,13 @@ class Activity:
         self.maxScroll = row.maxScroll
         self.documentHeight = row.documentHeight
         self.hashPointsToElement = row.hashPointsToElement
+        self.zoomLevel = row.zoomLevel
+        self.canonicalUrl = row.canonicalUrl
+        self.mainFeedUrl = row.mainFeedUrl
+        if row.allFeeds:
+            self.allFeeds = json.loads(row.allFeeds)
+        else:
+            self.allFeeds = None
         self.has_page = row.page_fetched and os.path.exists(Page.json_filename(self.archive, self.url))
 
     @property

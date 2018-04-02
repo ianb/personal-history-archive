@@ -128,6 +128,10 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `canonicalUrl`: if the page has `<link rel="canonical">`, this gives the URL it points to.
 
+`mainFeedUrl`: if the page has an RSS (or similar) feed, what we think is the main feed URL.
+
+`allFeeds`: all the feeds found in the page. This is a list of `[{href, title, type}]`.
+
 #### Derived:
 
 This information can be calculated from the above information... (All TODO)

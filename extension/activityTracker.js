@@ -46,6 +46,8 @@ this.activityTracker = (function() {
       this.hashPointsToElement = null;
       this.zoomLevel = null;
       this.canonicalUrl = null;
+      this.mainFeedUrl = null;
+      this.allFeeds = null;
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -434,6 +436,16 @@ this.activityTracker = (function() {
     }
     page.canonicalUrl = message.href;
   }))
+
+  backgroundOnMessage.register("feedInformation", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got feedInformation event for a tab that isn't in our record:", message);
+      return;
+    }
+    page.mainFeedUrl = message.mainFeedUrl;
+    page.allFeeds = message.allFeeds;
+  }));
 
   function pagePossiblyAllowed(url) {
     let u = new URL(url);

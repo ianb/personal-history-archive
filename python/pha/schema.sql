@@ -52,22 +52,24 @@ CREATE TABLE IF NOT EXISTS activity (
   sourceId TEXT REFERENCES activity (id) ON DELETE SET NULL,
   browserReferringVisitId TEXT,
   initialLoadId TEXT REFERENCES activity (id) ON DELETE SET NULL,
-  newTab BOOLEAN,
-  activeCount INT,
-  activeTime INT,
+  newTab BOOLEAN, -- was opened in new tab?
+  activeCount INT, -- Count of times it was "activated"
+  activeTime INT, -- Millisecond active time
   closedReason TEXT,
-  method TEXT,
-  statusCode INT,
-  contentType TEXT,
-  hasSetCookie BOOLEAN,
-  hasCookie BOOLEAN,
+  method TEXT, -- HTTP request method
+  statusCode INT, -- HTTP status code
+  contentType TEXT, -- HTTP Content-Type
+  hasSetCookie BOOLEAN, -- has Set-Cookie response header
+  hasCookie BOOLEAN, -- has Cookie request header
   copyEvents TEXT, -- Actually JSON
-  formControlInteraction INT,
-  formTextInteraction INT,
+  formControlInteraction INT, -- count of form interactions
+  formTextInteraction INT, -- count of form interactions
   isHashChange BOOLEAN,
-  maxScroll INT,
-  documentHeight INT,
+  maxScroll INT, -- pixel Y location
+  documentHeight INT, -- pixel height
   hashPointsToElement BOOLEAN,
-  zoomLevel FLOAT,
-  canonicalUrl TEXT
+  zoomLevel FLOAT, -- 1.0 means 100% zoom
+  canonicalUrl TEXT, -- URL
+  mainFeedUrl TEXT, -- URL
+  allFeeds TEXT -- JSON
 );
