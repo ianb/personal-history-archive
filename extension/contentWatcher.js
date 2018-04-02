@@ -155,6 +155,17 @@ this.contentWatcher = (function() {
     sendDevicePixelRatio();
   });
 
+  function sendCanonicalUrl() {
+    let el = document.querySelector("link[rel=canonical]");
+    if (el) {
+      browser.runtime.sendMessage({
+        type: "canonicalUrl",
+        href: el.href
+      });
+    }
+  }
+
   sendDevicePixelRatio();
+  sendCanonicalUrl();
 
 })();

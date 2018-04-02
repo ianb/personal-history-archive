@@ -126,6 +126,8 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `zoomLevel`: the zoom level, if we can calculate it. Typically 1, null if we didn't determine it. 1.1 means, for example, a 110% zoom.
 
+`canonicalUrl`: if the page has `<link rel="canonical">`, this gives the URL it points to.
+
 #### Derived:
 
 This information can be calculated from the above information... (All TODO)

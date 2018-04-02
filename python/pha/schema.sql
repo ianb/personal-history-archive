@@ -68,5 +68,6 @@ CREATE TABLE IF NOT EXISTS activity (
   maxScroll INT,
   documentHeight INT,
   hashPointsToElement BOOLEAN,
-  zoomLevel FLOAT
+  zoomLevel FLOAT,
+  canonicalUrl TEXT
 );

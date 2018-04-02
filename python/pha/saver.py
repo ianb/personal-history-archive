@@ -118,6 +118,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             documentHeight
             hashPointsToElement
             zoomLevel
+            canonicalUrl
         """.strip().split()
         for null_default in "sourceId transitionType".split():
             activity.setdefault(null_default, None)

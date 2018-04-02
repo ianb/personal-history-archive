@@ -45,6 +45,7 @@ this.activityTracker = (function() {
       this.documentHeight = null;
       this.hashPointsToElement = null;
       this.zoomLevel = null;
+      this.canonicalUrl = null;
       this.active = false;
       this.activeCount = 0;
       this.closed = false;
@@ -424,6 +425,15 @@ this.activityTracker = (function() {
     }
     page.zoomLevel = message.devicePixelRatio / baseDevicePixelRatio;
   }));
+
+  backgroundOnMessage.register("canonicalUrl", catcher.watchFunction((message) => {
+    let page = currentPages.get(message.senderTabId);
+    if (!page) {
+      log.warn("Got canonicalUrl event for a tab that isn't in our record:", message);
+      return;
+    }
+    page.canonicalUrl = message.href;
+  }))
 
   function pagePossiblyAllowed(url) {
     let u = new URL(url);
