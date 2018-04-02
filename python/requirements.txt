@@ -1,12 +1,16 @@
 # These are not strict requirements, but useful libraries that can be used with pha, and are used in the notebooks:
-#-e ./#egg=pha
--e git+https://www.github.com/ianb/textteaser.git#egg=TextTeaser
 jupyter
+
+# Some general machine learning libraries...
+numpy
 keras
 tensorflow
-# FIXME: maybe we shouldn't bother using h5py directly
-h5py
 pandas
-# Used for entity search:
+
+# This is a fork of a simple NLP library to support Python 3
+-e git+https://www.github.com/ianb/textteaser.git#egg=TextTeaser
+
+# Used for entity search and NLP:
 spacy
+# This is the english entity database for SpaCy:
 https://github.com/explosion/spacy-models/releases/download/xx_ent_wiki_sm-2.0.0/xx_ent_wiki_sm-2.0.0.tar.gz#egg=xx_ent_wiki_sm

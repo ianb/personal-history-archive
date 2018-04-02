@@ -40,6 +40,7 @@
     "test:build-data": "rm -rf test/test-data/ && mkdir -p test/test-data/",
     "test:build-ext": "NATIVE_SCRIPT=pha.saver.test IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=test/build/ npm run build && DEST=test/build/ npm run build:zip && .venv/bin/python -m pha.saver --script-location test/test-data/pha-saver-script.py --native-name pha.saver.test test/test-data/",
     "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS",
-    "postinstall": "npm run build && if [[ ! -e .venv ]] ; then python3 -m venv .venv ; .venv/bin/python -m ensurepip ; fi && .venv/bin/pip install --upgrade pip && .venv/bin/pip install flake8 -e python/ && mkdir -p data && .venv/bin/python -m pha.saver data/"
+    "postinstall": "npm run build && if [[ ! -e .venv ]] ; then python3 -m venv .venv ; .venv/bin/python -m ensurepip ; fi && .venv/bin/pip install --upgrade pip && .venv/bin/pip install flake8 -e python/ && mkdir -p data && .venv/bin/python -m pha.saver data/",
+    "jupyter": "BASE=\"$(pwd)\" ; if [[ ! -e .venv/bin/jupyter ]] ; then echo 'Installing prerequisites...' ; .venv/bin/pip install -r python/requirements.txt ; fi && export PHA_DATA=\"$(python -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' ${PHA_DATA:-data})\" && mkdir -p $PHA_DATA/notebooks ; if [[ ! -e $PHA_DATA/notebooks/template.ipynb ]] ; then cp python/template.ipynb $PHA_DATA/notebooks/ ; fi ; cd $PHA_DATA/notebooks && $BASE/.venv/bin/jupyter notebook"
   }
 }
