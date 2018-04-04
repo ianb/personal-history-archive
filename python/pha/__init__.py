@@ -67,7 +67,7 @@ class Archive:
         self.update_status()
 
     def __repr__(self):
-        return '<Archive at %r %i/%i fetched, %i errored>' % (self.path, self.fetched_count, self.activity_count, self.error_count)
+        return '<Archive at %r %i activities, %i/%i URLs fetched, %i errored>' % (self.path, self.activity_count, self.fetched_count, self.activity_url_count, self.error_count)
 
     @classmethod
     def default_location(cls):
@@ -124,10 +124,11 @@ class Archive:
         c.execute("""
             SELECT
                 (SELECT COUNT(*) FROM activity) AS activity_count,
-                (SELECT COUNT(*) page) AS fetched_count,
-                (SELECT COUNT(*) fetch_error) AS error_count
+                (SELECT COUNT(DISTINCT url) FROM activity) AS activity_url_count,
+                (SELECT COUNT(*) FROM page) AS fetched_count,
+                (SELECT COUNT(*) FROM fetch_error) AS error_count
         """)
-        (self.activity_count, self.fetched_count, self.error_count) = c.fetchone()
+        (self.activity_count, self.activity_url_count, self.fetched_count, self.error_count) = c.fetchone()
 
     def activity(self, *, extra_query=None, extra_args=(), order_by=None):
         order_by = order_by or 'activity.loadTime DESC'
