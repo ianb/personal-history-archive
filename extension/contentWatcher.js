@@ -3,6 +3,7 @@
 this.contentWatcher = (function() {
 
   const IDLE_TIME = 30000;
+  const LINK_TEXT_LIMIT = 80;
 
   document.addEventListener("click", (event) => {
     let target = event.target;
@@ -194,8 +195,41 @@ this.contentWatcher = (function() {
     });
   }
 
+  function sendLinkInformation() {
+    let links = Array.from(document.querySelectorAll("a[href]"));
+    links = links.filter(el => el.getAttribute("href") !== "#");
+    let linkInformation = links.map((el) => {
+      let info = {
+        url: el.href
+      };
+      let text = el.textContent;
+      if (text.length > LINK_TEXT_LIMIT) {
+        text = text.substr(0, LINK_TEXT_LIMIT) + "...";
+      }
+      info.text = text;
+      if (el.href.startsWith(location.href.split("#")[0] + "#")) {
+        info.url = "#" + el.href.split("#")[1];
+      }
+      if (el.rel) {
+        info.rel = el.rel;
+      }
+      if (el.target) {
+        info.target = el.target;
+      }
+      if (el.id) {
+        info.elementId = el.id;
+      }
+      return info;
+    });
+    browser.runtime.sendMessage({
+      type: "linkInformation",
+      linkInformation
+    });
+  }
+
   sendDevicePixelRatio();
   sendCanonicalUrl();
   setTimeout(sendFeedInformation);
+  setTimeout(sendLinkInformation);
 
 })();

@@ -250,6 +250,32 @@ describe("Test history collection", function() {
       null,
       null, // Only the last two pages haven't been redirected away
     ], "closedReason");
+    let searchResultLinks = [{
+      text: "A pretend destination",
+      url: "http://localhost:11180/test-static/search-destination.html",
+    }];
+    let destinationLinks = [
+      {
+        elementId: "first-link",
+        text: "first place",
+        url: "#first",
+      },
+      {
+        elementId: "second-link",
+        text: "second place",
+        url: "#second",
+      }
+    ];
+    assert.deepEqual(property("linkInformation"), [
+      [],
+      searchResultLinks,
+      destinationLinks,
+      null, // I'm not sure why these are null, probably because there isn't time to get the information?
+      null, // that's not a good reason for null values, might be fragile in the future
+      searchResultLinks,
+      null,
+      null,
+    ]);
     return true;
   });
 

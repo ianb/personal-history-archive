@@ -126,6 +126,8 @@ def add_activity_list(archive, *, browserId, activityItems):
             activity.setdefault(null_default, None)
         marks = ["?"] * len(columns)
         activity["browserId"] = browserId
+        linkInformation = activity["linkInformation"]
+        del activity["linkInformation"]
         if activity["copyEvents"]:
             activity["copyEvents"] = json.dumps(activity["copyEvents"])
         else:
@@ -143,6 +145,19 @@ def add_activity_list(archive, *, browserId, activityItems):
               %s
             ) VALUES (%s)
         """ % (", ".join(columns), ", ".join(marks)), values)
+        c.execute("""
+            DELETE FROM activity_link WHERE activity_id = ?
+        """, (activity["id"],))
+        for link in linkInformation or []:
+            c.execute("""
+                INSERT INTO activity_link (
+                    url,
+                    text,
+                    rel,
+                    target,
+                    elementId
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (link["url"], link["text"], link.get("rel"), link.get("target"), link.get("elementId")))
     archive.conn.commit()
 
 

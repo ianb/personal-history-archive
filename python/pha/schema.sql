@@ -73,3 +73,12 @@ CREATE TABLE IF NOT EXISTS activity (
   mainFeedUrl TEXT, -- URL
   allFeeds TEXT -- JSON
 );
+
+CREATE TABLE IF NOT EXISTS activity_link (
+  activity_id TEXT REFERENCES activity (id) ON DELETE CASCADE,
+  url TEXT NOT NULL,
+  text TEXT NOT NULL,
+  rel TEXT,
+  target TEXT,
+  elementId TEXT
+);

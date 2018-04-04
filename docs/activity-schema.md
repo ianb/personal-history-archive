@@ -132,6 +132,8 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `allFeeds`: all the feeds found in the page. This is a list of `[{href, title, type}]`.
 
+`linkInformation`: a list of links found in the document. A list that looks like `[{url, text, rel, target, elementId}]` where `rel`, `target`, and `elementId` are optional (depending on the presence of those attributes), and `url` is the full URL, or if it's an page-internal link then it looks like `"#anchor`.
+
 #### Derived:
 
 This information can be calculated from the above information... (All TODO)
