@@ -78,7 +78,7 @@ class Archive:
 
     base_activity_sql = """
         SELECT
-            browser.userAgent,
+            browser.userAgent AS userAgent,
             activity.id AS activity_id,
             activity.browserId,
             activity.sessionId,
@@ -113,7 +113,7 @@ class Archive:
             activity.hashPointsToElement,
             activity.zoomLevel,
             activity.canonicalUrl,
-            activity.mainFeedLink,
+            activity.mainFeedUrl,
             activity.allFeeds,
             page.fetched IS NOT NULL AS page_fetched
         FROM activity, browser
@@ -140,6 +140,7 @@ class Archive:
               %s
             ORDER BY %s
         """ % (self.base_activity_sql, extra_query or "", order_by), extra_args)
+        rows = list(rows)
         return [Activity(self, row) for row in rows]
 
     def get_activity_by_url(self, *, like, order_by=None):
@@ -153,6 +154,18 @@ class Archive:
               AND browser.id = activity.browserId
             ORDER BY activity.loadTime DESC
         """ % self.base_activity_sql)
+        return [Activity(self, row) for row in rows]
+
+    def get_activity_sourceId_in(self, sourceIds):
+        c = self.conn.cursor()
+        rows = c.execute("""
+            %s
+            LEFT JOIN page ON page.url = activity.url
+            WHERE browser.id = activity.browserId
+              AND activity.sourceId IN (%s)
+            ORDER BY activity.loadTime DESC
+        """ % (self.base_activity_sql, ", ".join(["?"] * len(sourceIds))),
+        sourceIds)
         return [Activity(self, row) for row in rows]
 
     def get_activity(self, url):
@@ -198,10 +211,19 @@ class Archive:
     def get_activity_by_source(self, sourceId):
         return self.activity(extra_query="AND activity.sourceId = ?", extra_args=(sourceId,))
 
+    def set_all_activity_from_sources(self, sources):
+        """
+        Sets the .following attribute on all Activity in sources
+        """
+        followings = self.get_activity_sourceId_in([s.id for s in sources])
+        for source in sources:
+            source._following = [a for a in followings if a.sourceId == source.id]
+
 
 class Activity:
     def __init__(self, archive, from_row):
         self.archive = archive
+        self._following = None
         self._update_from_row(from_row)
 
     def __repr__(self):
@@ -215,50 +237,33 @@ class Activity:
     def query(self):
         return query(self.url)
 
+    @property
+    def following(self):
+        if self._following is None:
+            self.archive.set_all_activity_from_sources([self])
+        return self._following
+
     def _update_from_row(self, row):
-        self.userAgent = row.userAgent
-        self.id = row.activity_id
-        self.browserId = row.browserId
-        self.sessionId = row.sessionId
-        self.url = row.url
-        self.browserHistoryId = row.browserHistoryId
-        self.browserActivityId = row.browserActivityId
-        self.loadTime = row.loadTime
-        self.unloadTime = row.unloadTime
-        self.transitionType = row.transitionType
-        self.client_redirect = row.client_redirect
-        self.server_redirect = row.server_redirect
-        self.forward_back = row.forward_back
-        self.from_address_bar = row.from_address_bar
-        self.sourceId = row.sourceId
-        self.browserReferringVisitId = row.browserReferringVisitId
-        self.initialLoadId = row.initialLoadId
-        self.newTab = row.newTab
-        self.activeCount = row.activeCount
-        self.closedReason = row.closedReason
-        self.method = row.method
-        self.statusCode = row.statusCode
-        self.contentType = row.contentType
-        self.hasSetCookie = row.hasSetCookie
-        self.hasCookie = row.hasCookie
-        if row.copyEvents:
-            self.copyEvents = json.loads(row.copyEvents)
+        attrs = """
+        userAgent browserId sessionId url browserHistoryId browserVisitId loadTime unloadTime
+        transitionType client_redirect server_redirect forward_back from_address_bar sourceId
+        browserReferringVisitId initialLoadId newTab activeCount closedReason method statusCode
+        contentType hasSetCookie hasCookie formControlInteraction formTextInteraction
+        isHashChange maxScroll documentHeight hashPointsToElement zoomLevel canonicalUrl
+        mainFeedUrl
+        """.split()
+        for attr in attrs:
+            setattr(self, attr, row[attr])
+        self.id = row["activity_id"]
+        if row["copyEvents"]:
+            self.copyEvents = json.loads(row["copyEvents"])
         else:
             self.copyEvents = None
-        self.formControlInteraction = row.formControlInteraction
-        self.formTextInteraction = row.formTextInteraction
-        self.isHashChange = row.isHashChange
-        self.maxScroll = row.maxScroll
-        self.documentHeight = row.documentHeight
-        self.hashPointsToElement = row.hashPointsToElement
-        self.zoomLevel = row.zoomLevel
-        self.canonicalUrl = row.canonicalUrl
-        self.mainFeedUrl = row.mainFeedUrl
-        if row.allFeeds:
-            self.allFeeds = json.loads(row.allFeeds)
+        if row["allFeeds"]:
+            self.allFeeds = json.loads(row["allFeeds"])
         else:
             self.allFeeds = None
-        self.has_page = row.page_fetched and os.path.exists(Page.json_filename(self.archive, self.url))
+        self.has_page = row["page_fetched"] and os.path.exists(Page.json_filename(self.archive, self.url))
 
     @property
     def page(self):
