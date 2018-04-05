@@ -26,6 +26,8 @@ this.activityTracker = (function() {
     constructor(options) {
       this.id = util.makeUuid();
       this.url = options.url;
+      this.title = options.title || null;
+      this.ogTitle = options.ogTitle || null;
       this.loadTime = options.timeStamp;
       this.unloadTime = null;
       this.transitionType = options.transitionType;
@@ -122,7 +124,7 @@ this.activityTracker = (function() {
   }
 
 
-  function addNewPage({tabId, url, timeStamp, transitionType, transitionQualifiers, sourceTabId, newTab, isHashChange}) {
+  function addNewPage({tabId, url, timeStamp, transitionType, transitionQualifiers, sourceTabId, newTab, isHashChange, title}) {
     let previous;
     if (sourceTabId) {
       previous = currentPages.get(sourceTabId);
@@ -138,7 +140,7 @@ this.activityTracker = (function() {
     }
     let sourceClick = lastClickInformation.get(tabId) || {};
     lastClickInformation.delete(tabId);
-    let page = new Page({url, timeStamp, transitionType, transitionQualifiers, previous, newTab, isHashChange, sourceClickText: sourceClick.text, sourceClickHref: sourceClick.href});
+    let page = new Page({url, timeStamp, transitionType, transitionQualifiers, previous, newTab, isHashChange, title, sourceClickText: sourceClick.text, sourceClickHref: sourceClick.href});
     if (isHashChange && previous) {
       page.initialLoadId = previous.initialLoadId || previous.id;
     }
@@ -333,6 +335,7 @@ this.activityTracker = (function() {
       addPageToSerialize(tab.id, tab.url);
       addNewPage({
         tabId: tab.id,
+        title: tab.title,
         url: tab.url,
         timeStamp: Date.now(),
         transitionType: "existed_onload",
@@ -429,13 +432,19 @@ this.activityTracker = (function() {
     page.zoomLevel = message.devicePixelRatio / baseDevicePixelRatio;
   }));
 
-  backgroundOnMessage.register("canonicalUrl", catcher.watchFunction((message) => {
+  backgroundOnMessage.register("basicPageMetadata", catcher.watchFunction((message) => {
     let page = currentPages.get(message.senderTabId);
     if (!page) {
-      log.warn("Got canonicalUrl event for a tab that isn't in our record:", message);
+      log.warn("Got basicPageMetadata event for a tab that isn't in our record:", message);
       return;
     }
-    page.canonicalUrl = message.href;
+    if (message.canonicalUrl) {
+      page.canonicalUrl = message.canonicalUrl;
+    }
+    page.title = message.title;
+    if (message.ogTitle) {
+      page.ogTitle = message.ogTitle;
+    }
   }));
 
   backgroundOnMessage.register("feedInformation", catcher.watchFunction((message) => {

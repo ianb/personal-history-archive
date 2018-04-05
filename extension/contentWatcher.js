@@ -156,14 +156,20 @@ this.contentWatcher = (function() {
     sendDevicePixelRatio();
   });
 
-  function sendCanonicalUrl() {
+  function sendBasicMetadata() {
+    let message = {
+      type: "basicPageMetadata",
+      title: document.title
+    };
     let el = document.querySelector("link[rel=canonical]");
     if (el) {
-      browser.runtime.sendMessage({
-        type: "canonicalUrl",
-        href: el.href
-      });
+      message.canonicalUrl = el.href;
     }
+    let ogTitleEl = document.querySelector("meta[name='og:title'], meta[name='twitter:title']")
+    if (ogTitleEl) {
+      message.ogTitle = ogTitleEl.getAttribute("content");
+    }
+    browser.runtime.sendMessage(message);
   }
 
   function sendFeedInformation() {
@@ -228,7 +234,7 @@ this.contentWatcher = (function() {
   }
 
   sendDevicePixelRatio();
-  sendCanonicalUrl();
+  sendBasicMetadata();
   setTimeout(sendFeedInformation);
   setTimeout(sendLinkInformation);
 

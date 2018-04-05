@@ -38,6 +38,8 @@ CREATE TABLE IF NOT EXISTS activity (
   browserId TEXT REFERENCES browser (id) ON DELETE CASCADE,
   sessionId TEXT REFERENCES browser_session (id) ON DELETE CASCADE,
   url TEXT NOT NULL,
+  title TEXT,
+  ogTitle TEXT,
   browserHistoryId TEXT,
   browserVisitId TEXT,
   loadTime INT,

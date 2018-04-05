@@ -250,6 +250,16 @@ describe("Test history collection", function() {
       null,
       null, // Only the last two pages haven't been redirected away
     ], "closedReason");
+    assert.deepEqual(property("title"), [
+      "Pretend Search",
+      "Search results",
+      "Pretend destination",
+      null,
+      null,
+      "Search results",
+      "Pretend destination",
+      null,
+    ], "captured title");
     let searchResultLinks = [{
       text: "A pretend destination",
       url: "http://localhost:11180/test-static/search-destination.html",

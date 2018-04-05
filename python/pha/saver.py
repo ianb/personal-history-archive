@@ -47,6 +47,7 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
             c.execute("""
                 INSERT INTO activity (
                     id,
+                    title,
                     browserId,
                     sessionId,
                     url,
@@ -59,6 +60,7 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 visit["activity_id"],
+                history["title"],
                 browserId,
                 sessionId,
                 history["url"],
@@ -90,6 +92,8 @@ def add_activity_list(archive, *, browserId, activityItems):
             browserId
             sessionId
             url
+            title
+            ogTitle
             loadTime
             unloadTime
             transitionType
@@ -136,6 +140,7 @@ def add_activity_list(archive, *, browserId, activityItems):
             activity["allFeeds"] = json.dumps(activity["allFeeds"])
         else:
             activity["allFeeds"] = None
+        log(archive, activity)
         values = [activity[column] for column in columns]
         unused = set(activity).difference(columns)
         if unused:
