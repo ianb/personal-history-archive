@@ -57,7 +57,7 @@ def add_history_list(archive, *, browserId, sessionId, historyItems):
                     transitionType,
                     browserReferringVisitId,
                     sourceId
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 visit["activity_id"],
                 history["title"],
