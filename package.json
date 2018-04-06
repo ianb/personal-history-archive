@@ -29,7 +29,7 @@
     "url": "git+https://github.com/ianb/personal-history-archive.git"
   },
   "scripts": {
-    "start": "npm run build:dev && web-ext run -f nightly -s dev-data/extension/ --keep-profile-changes --firefox-profile dev-data/Profile --browser-console",
+    "start": "npm run build:dev && web-ext run -f ${FIREFOX:-nightly} -s dev-data/extension/ --keep-profile-changes --firefox-profile dev-data/Profile --browser-console",
     "build:dev": "mkdir -p dev-data && .venv/bin/python -m pha.saver --script-location dev-data/pha-saver-script.py --native-name pha.saver.dev dev-data/ && NATIVE_SCRIPT=pha.saver.dev LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=dev-data npm run build:ext && mkdir -p dev-data/Profile",
     "lint:js": "eslint .",
     "lint:py": ".venv/bin/flake8 python/",
