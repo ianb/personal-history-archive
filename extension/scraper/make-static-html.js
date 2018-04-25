@@ -1,4 +1,4 @@
-/* globals setTimeout, btoa, console, document, window, util, elementToSelector */
+/* globals setTimeout, btoa, console, document, window, util, elementToSelector, rssFinder */
 
 /** This file is used to turn the document into static HTML with no scripts
 

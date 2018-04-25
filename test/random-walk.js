@@ -1,6 +1,6 @@
 const firefox = require("selenium-webdriver/firefox");
 const webdriver = require("selenium-webdriver");
-const { By, until, Key } = webdriver;
+const { By } = webdriver;
 const fs = require("fs");
 const path = require("path");
 const RandomGenerator = require("random-seed");
@@ -53,32 +53,6 @@ async function closeBrowser(driver) {
     // Ignore it (probably the browser is closed by now)
   }
 }
-
-const DESTINATIONS = [
-  "https://www.google.com",
-  "https://news.ycombinator.com",
-  "https://news.google.com",
-  "https://www.reddit.com",
-];
-
-const QUERIES = {
-  "https://www.google.com": {
-    "input[name='q']": 1.0
-  },
-  "https://www.reddit.com": {
-    "input[name='q']": 0.3
-  },
-  "https://news.google.com": {
-    "input[aria-label='Search']": 0.3
-  }
-};
-
-// Some things taken from https://trends.google.com/trends/
-const SEARCH_TERMS = `
-tornado watch associated press united states winter storm dallas cowboys
-real fake news oklahoma yodeling atlanta braves tennis los angeles
-cleveland interstate michigan missouri new york mets lake dancing minnesota
-`.trim().split(/[\s\n]/g);
 
 function choose(options) {
   return options[Math.floor(options.length * random())];
@@ -148,8 +122,8 @@ async function walk(config) {
   await promiseTimeout(1000);
   let seenUrls = new Set();
   let steps = 0;
-  let lastWasSearch = false
-  while (true) {
+  let lastWasSearch = false;
+  for (;;) {
     await promiseTimeout(500);
     steps++;
     let url = await driver.getCurrentUrl();
@@ -239,7 +213,7 @@ async function loadConfig(names) {
     queries: {},
     searchTerms: []
   };
-  for (config of configs) {
+  for (let config of configs) {
     let newUrls = config.destinations && config.destinations.urls;
     if (!newUrls) {
       newUrls = result.destinations.urls;

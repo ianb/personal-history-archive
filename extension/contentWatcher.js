@@ -1,4 +1,4 @@
-/* globals elementToSelector */
+/* globals elementToSelector, rssFinder */
 
 this.contentWatcher = (function() {
 
@@ -165,7 +165,7 @@ this.contentWatcher = (function() {
     if (el) {
       message.canonicalUrl = el.href;
     }
-    let ogTitleEl = document.querySelector("meta[name='og:title'], meta[name='twitter:title']")
+    let ogTitleEl = document.querySelector("meta[name='og:title'], meta[name='twitter:title']");
     if (ogTitleEl) {
       message.ogTitle = ogTitleEl.getAttribute("content");
     }

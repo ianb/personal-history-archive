@@ -33,7 +33,6 @@ this.scrapeTab = (function() {
       }
       log.info("Scraped feeds:", scraped.feeds.length, "bytes:", JSON.stringify(scraped.feeds).length);
     }
-    return scraped;
   }
 
   async function getFeed(feed) {
@@ -66,6 +65,7 @@ this.scrapeTab = (function() {
       result.fetchTime = Date.now() - start;
       result.error = String(e);
       result.errorStack = e.stack;
+      return result;
     }
   }
 

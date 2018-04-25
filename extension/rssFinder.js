@@ -1,4 +1,4 @@
-this.rssFinder = (function () {
+this.rssFinder = (function() {
   function rssFinder() {
     let contentTypes = [
       "application/rss+xml",
@@ -17,7 +17,7 @@ this.rssFinder = (function () {
     let selector = contentTypes.map((t) => `link[rel=alternate][type="${t}"]`).join(", ");
     let feeds = document.querySelectorAll(selector);
     if (!feeds.length) {
-      return;
+      return null;
     }
     let mainFeedUrl = feeds[0].href;
     let allFeeds = Array.from(feeds).map(el => ({type: el.type, href: el.href, title: el.title}));
