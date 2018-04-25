@@ -1,0 +1,23 @@
+{
+  "destinations": {
+    "urls": [
+      "https://www.google.com",
+      "https://news.ycombinator.com",
+      "https://news.google.com",
+      "https://www.reddit.com"
+    ],
+    "frequency": 0.05
+  },
+  "queries": {
+    "https://www.google.com": {
+      "input[name='q']": 1.0
+    },
+    "https://www.reddit.com": {
+      "input[name='q']": 0.3
+    },
+    "https://news.google.com": {
+      "input[aria-label='Search']": 0.3
+    }
+  },
+  "searchTerms": "tornado watch associated press united states winter storm dallas cowboys real fake news oklahoma yodeling atlanta braves tennis los angeles cleveland interstate michigan missouri new york mets lake dancing minnesota"
+}

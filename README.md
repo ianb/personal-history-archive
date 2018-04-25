@@ -84,6 +84,16 @@ $ pip install -r requirements.txt
 
 This adds a package called `pha`. There is some information [in the subdirectory](python/), and the notebooks (`*.ipynb`) show many examples (though as of March 2018, they are out of date due to refactorings).
 
+## Random walk
+
+There's a script that will do random activity in the browser, saving data to `test/walk-data/`. Run:
+
+```sh
+$ npm run walk
+# Or if you want to try a configuration in test/walk-configs/news.json that goes to news sites:
+$ CONFIG=news npm run walk
+```
+
 ## Testing
 
 The tests are in [`test/`](./test/). To run the tests:
