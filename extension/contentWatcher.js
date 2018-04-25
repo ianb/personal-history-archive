@@ -173,32 +173,14 @@ this.contentWatcher = (function() {
   }
 
   function sendFeedInformation() {
-    let contentTypes = [
-      "application/rss+xml",
-      "application/atom+xml",
-      "application/rdf+xml",
-      "application/rss",
-      "application/atom",
-      "application/rdf",
-      "text/rss+xml",
-      "text/atom+xml",
-      "text/rdf+xml",
-      "text/rss",
-      "text/atom",
-      "text/rdf",
-    ];
-    let selector = contentTypes.map((t) => `link[rel=alternate][type="${t}"]`).join(", ");
-    let feeds = document.querySelectorAll(selector);
-    if (!feeds.length) {
-      return;
+    let info = rssFinder();
+    if (info) {
+      browser.runtime.sendMessage({
+        type: "feedInformation",
+        mainFeedUrl: info.mainFeedUrl,
+        allFeeds: info.allFeeds,
+      });
     }
-    let mainFeedUrl = feeds[0].href;
-    let allFeeds = Array.from(feeds).map(el => ({type: el.type, href: el.href, title: el.title}));
-    browser.runtime.sendMessage({
-      type: "feedInformation",
-      mainFeedUrl,
-      allFeeds,
-    });
   }
 
   function sendLinkInformation() {

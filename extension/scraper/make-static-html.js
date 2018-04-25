@@ -1037,6 +1037,11 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
         console.info("static head serializing took " + (Date.now() - start) + " milliseconds");
       }));
     }
+    let feedInfo = rssFinder();
+    if (feedInfo) {
+      result.mainFeedUrl = feedInfo.mainFeedUrl;
+      result.allFeeds = feedInfo.allFeeds;
+    }
     return Promise.all(promises).then(function() {
       return result;
     });

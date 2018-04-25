@@ -66,6 +66,7 @@
         "catcher.js",
         "util.js",
         "elementToSelector.js",
+        "rssFinder.js",
         "contentWatcher.js"
       ]
     }
