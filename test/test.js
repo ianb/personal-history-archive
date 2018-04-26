@@ -23,6 +23,8 @@ const { By, until, Key } = webdriver;
 // const { ServiceBuilder } = firefox;
 const path = require("path");
 const fs = require("fs");
+const { getDriver, closeBrowser } = require("./driver-setup");
+const { promiseTimeout } = require("./test-utils");
 
 const PORT = 11180;
 const SERVER = `http://localhost:${PORT}`;
@@ -59,52 +61,9 @@ function stopServer() {
   server = null;
 }
 
-
-function getDriver() {
-  const channel = process.env.FIREFOX_CHANNEL || "NIGHTLY";
-  if (!(channel in firefox.Channel)) {
-    throw new Error(`Unknown channel: "${channel}"`);
-  }
-
-  const options = new firefox.Options()
-    .setBinary(firefox.Channel[channel])
-    .setPreference("extensions.legacy.enabled", true)
-    .setPreference("xpinstall.signatures.required", false);
-
-  const driver = new webdriver.Builder()
-    .withCapabilities({"moz:webdriverClick": true})
-    .forBrowser("firefox")
-    .setFirefoxOptions(options)
-    .build();
-
-  driver.installAddon(addonFileLocation);
-
-  return driver;
-}
-
-function promiseTimeout(time) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, time);
-  });
-}
-
 function filenameForUrl(url) {
   // FIXME: this won't work for long pages
   return path.join(__dirname, "test-data", "pages", encodeURIComponent(url) + "-page.json");
-}
-
-async function closeBrowser(driver) {
-  // This works around some geckodriver bugs in driver.quit()
-  let handles = await driver.getAllWindowHandles();
-  for (let handle of handles) {
-    await driver.switchTo().window(handle);
-    await driver.close();
-  }
-  try {
-    driver.quit();
-  } catch (error) {
-    // Ignore it (probably the browser is closed by now)
-  }
 }
 
 async function collectInformation(driver) {
@@ -124,7 +83,7 @@ describe("Test history collection", function() {
 
   before(async function() {
     startServer();
-    driver = await getDriver();
+    driver = await getDriver(addonFileLocation);
     // Give the add-on a moment to load:
     await promiseTimeout(1000);
   });

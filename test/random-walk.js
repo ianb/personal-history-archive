@@ -1,6 +1,6 @@
-const firefox = require("selenium-webdriver/firefox");
-const webdriver = require("selenium-webdriver");
-const { By } = webdriver;
+const { getDriver, closeBrowser } = require("./driver-setup");
+const { By, until } = require("selenium-webdriver");
+const { promiseTimeout, eitherPromise } = require("./test-utils");
 const fs = require("fs");
 const path = require("path");
 const RandomGenerator = require("random-seed");
@@ -11,48 +11,6 @@ const randomGenerator = RandomGenerator.create(seed);
 const random = randomGenerator.random.bind(randomGenerator);
 
 const addonFileLocation = path.join(process.cwd(), "test", "build-walk", "extension.zip");
-
-function getDriver() {
-  const channel = process.env.FIREFOX_CHANNEL || "NIGHTLY";
-  if (!(channel in firefox.Channel)) {
-    throw new Error(`Unknown channel: "${channel}"`);
-  }
-
-  const options = new firefox.Options()
-    .setBinary(firefox.Channel[channel])
-    .setPreference("extensions.legacy.enabled", true)
-    .setPreference("xpinstall.signatures.required", false);
-
-  const driver = new webdriver.Builder()
-    .withCapabilities({"moz:webdriverClick": true})
-    .forBrowser("firefox")
-    .setFirefoxOptions(options)
-    .build();
-
-  driver.installAddon(addonFileLocation);
-
-  return driver;
-}
-
-function promiseTimeout(time) {
-  return new Promise((resolve) => {
-    setTimeout(resolve, time);
-  });
-}
-
-async function closeBrowser(driver) {
-  // This works around some geckodriver bugs in driver.quit()
-  let handles = await driver.getAllWindowHandles();
-  for (let handle of handles) {
-    await driver.switchTo().window(handle);
-    await driver.close();
-  }
-  try {
-    driver.quit();
-  } catch (error) {
-    // Ignore it (probably the browser is closed by now)
-  }
-}
 
 function choose(options) {
   return options[Math.floor(options.length * random())];
@@ -117,7 +75,7 @@ async function walk(config) {
   console.log("");
   console.log("======================== RANDOM WALK ========================");
   console.log("");
-  driver = await getDriver();
+  driver = await getDriver(addonFileLocation);
   // Give the add-on a moment to load:
   await promiseTimeout(1000);
   let seenUrls = new Set();
@@ -129,6 +87,17 @@ async function walk(config) {
     let url = await driver.getCurrentUrl();
     seenUrls.add(url);
     console.log("---Running step", steps, "url:", url);
+    if (url.startsWith("http")) {
+      let result = await eitherPromise(
+        driver.wait(until.elementLocated(By.css("#pha-completed-freeze"))).then(() => true),
+        promiseTimeout(30000).then(() => false)
+      );
+      if (!result) {
+        console.log("Freezing page timed out");
+      }
+    } else {
+      console.log("Unfreezable page");
+    }
     let queryElement = chooseQuery(config.queries, url);
     if (queryElement && !lastWasSearch) {
       let term = chooseSearchTerm(config.searchTerms);
@@ -167,6 +136,8 @@ async function walk(config) {
     } catch (e) {
       if (e.name === "ElementNotInteractableError") {
         console.log("Could not interact with anchor", anchorUrl);
+      } else if (e.name === "ElementClickInterceptedError") {
+        console.log("Could not interact with anchor due to cover", anchorUrl);
       } else {
         console.log("Error interacting with anchor:", anchorUrl, e);
       }
