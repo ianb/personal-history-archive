@@ -149,8 +149,12 @@ async function walk(config) {
     }
     let anchors = await driver.findElements(By.css("a"));
     let anchor = choose(anchors);
+    if (!anchor) {
+      console.log("Warning: no anchor found in page", url);
+      continue;
+    }
     let anchorUrl = await anchor.getAttribute("href");
-    if (anchorUrl.startsWith("mailto:")) {
+    if (!anchorUrl || anchorUrl.startsWith("mailto:")) {
       console.log("Chose bad anchor:", anchorUrl);
       continue;
     }
