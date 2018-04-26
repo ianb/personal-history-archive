@@ -4,7 +4,7 @@ this.scrapeTab = (function() {
 
   async function scrapeTab(tabId, requireUrl) {
     let scraped = await scrapeTabDOM(tabId, requireUrl);
-    scraped = await addRss(scraped);
+    await addRss(scraped);
     return scraped;
   }
 
