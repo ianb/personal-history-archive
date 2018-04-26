@@ -1,13 +1,29 @@
-this.buildSettings = {
-  nativeScriptName: process.env.NATIVE_SCRIPT || "pha.saver",
-  idleWaitTime: parseInt(process.env.IDLE_WAIT_TIME || 2000, 10),
-  historyPauseBeforeCollection: parseInt(process.env.HISTORY_PAUSE || 1000, 10),
-  logLevel: process.env.LOG_LEVEL || "info",
-  serverLogLevel: process.env.SERVER_LOG_LEVEL || "warn",
-  server: "http://localhost:11180",
-  serverBase: "http://localhost",
-  updateServerPeriod: 60 * 60 * 1000, // 1 hour
-  notifyError: true,
-  testingBrowser: process.env.TESTING_BROWSER || false,
-  autofetchBrowser: process.env.AUTOFETCH || false,
-};
+this.buildSettings = (function() {
+  function toBoolean(n, defaultValue) {
+    if (n !== 0 && !n) {
+      return defaultValue;
+    }
+    if (typeof n === "string") {
+      n = n.toLowerCase();
+    }
+    if (n === "false" || n === "0" || n === 0 || n === "off" || n === "no") {
+      return false;
+    }
+    return true;
+  }
+
+  return {
+    nativeScriptName: process.env.NATIVE_SCRIPT || "pha.saver",
+    idleWaitTime: parseInt(process.env.IDLE_WAIT_TIME || 2000, 10),
+    historyPauseBeforeCollection: parseInt(process.env.HISTORY_PAUSE || 1000, 10),
+    logLevel: process.env.LOG_LEVEL || "info",
+    serverLogLevel: process.env.SERVER_LOG_LEVEL || "warn",
+    setFreezeMarker: toBoolean(process.env.SET_FREEZE_MARKER, false),
+    server: "http://localhost:11180",
+    serverBase: "http://localhost",
+    updateServerPeriod: 60 * 60 * 1000, // 1 hour
+    notifyError: true,
+    testingBrowser: process.env.TESTING_BROWSER || false,
+    autofetchBrowser: process.env.AUTOFETCH || false,
+  };
+})();
