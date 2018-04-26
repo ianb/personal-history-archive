@@ -18,4 +18,4 @@ build
 /data
 /.venv
 /test/build-walk
-/test/walk-data
+/walk-data
