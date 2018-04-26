@@ -30,7 +30,7 @@ this.historySaver = (function() {
     });
   }));
 
-  setInterval(catcher.watchFunction(sendNewHistory), buildSettings.updateSearchPeriod);
+  setInterval(catcher.watchFunction(sendNewHistory), buildSettings.updateServerPeriod);
 
   async function sendNewHistory(force) {
       try {

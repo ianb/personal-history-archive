@@ -551,7 +551,7 @@ this.activityTracker = (function() {
     };
   };
 
-  setInterval(catcher.watchFunction(flush), buildSettings.updateSearchPeriod / 4 + 1000);
+  setInterval(catcher.watchFunction(flush), buildSettings.updateServerPeriod / 4 + 1000);
 
   return exports;
 })();
