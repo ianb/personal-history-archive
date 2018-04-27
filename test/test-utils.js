@@ -7,7 +7,6 @@ exports.promiseTimeout = function(time) {
 exports.eitherPromise = function(...promises) {
   return new Promise((resolve, reject) => {
     function sendResolve(value) {
-      console.log("Got a resolution in either", value, promises);
       if (resolve) {
         resolve(value);
         resolve = null;
