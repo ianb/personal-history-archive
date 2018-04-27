@@ -25,5 +25,6 @@ this.buildSettings = (function() {
     notifyError: true,
     testingBrowser: process.env.TESTING_BROWSER || false,
     autofetchBrowser: process.env.AUTOFETCH || false,
+    cspRestrict: toBoolean(process.env.CSP_RESTRICT, false),
   };
 })();

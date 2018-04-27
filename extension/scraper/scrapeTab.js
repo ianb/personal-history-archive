@@ -2,6 +2,23 @@
 
 this.scrapeTab = (function() {
 
+  let restrictiveCsp = "font-src 'none'; frame-src 'self' data:; object-src 'none'; worker-src 'none'; manifest-src 'none'";
+
+  let rssContentTypes = [
+    "application/rss+xml",
+    "application/atom+xml",
+    "application/rdf+xml",
+    "application/rss",
+    "application/atom",
+    "application/rdf",
+    "text/rss+xml",
+    "text/atom+xml",
+    "text/rdf+xml",
+    "text/rss",
+    "text/atom",
+    "text/rdf",
+  ];
+
   async function scrapeTab(tabId, requireUrl) {
     let scraped = await scrapeTabDOM(tabId, requireUrl);
     await addRss(scraped);
@@ -29,13 +46,29 @@ this.scrapeTab = (function() {
     if (scraped.allFeeds) {
       scraped.feeds = [];
       for (let feed of scraped.allFeeds) {
-        scraped.feeds.push(await getFeed(feed));
+        scraped.feeds.push(await getFeed(feed, true));
       }
       log.info("Scraped feeds:", scraped.feeds.length, "bytes:", JSON.stringify(scraped.feeds).length);
     }
+    if (scraped.speculativeFeedLinks) {
+      for (let feed of scraped.speculativeFeedLinks) {
+        let fetched = await getFeed(feed, false);
+        if (fetched) {
+          found++;
+          scraped.feeds.push(fetched);
+        } else {
+          feed.shouldDelete = true;
+        }
+      }
+      log.info("Scraped feed links:", found, "of potential", scraped.speculativeFeedLinks.length);
+      scraped.speculativeFeedLinks = scraped.speculativeFeedLinks.filter(f => !f.shouldDelete);
+      if (!scraped.speculativeFeedLinks.length) {
+        delete scraped.speculativeFeedLinks;
+      }
+    }
   }
 
-  async function getFeed(feed) {
+  async function getFeed(feed, ignoreContentType) {
     let start = Date.now();
     let result = {
       url: feed.href,
@@ -49,9 +82,9 @@ this.scrapeTab = (function() {
         result.statusCode = resp.statusCode;
       } else {
         result.body = await resp.text();
-        result.contentType = resp.headers.get("Content-Type");
-        if (result.contentType) {
-          result.contentType = result.contentType.replace(/;?\s*charset=[^\s]+/i, "");
+        result.contentType = resp.headers.get("Content-Type").split(";")[0];
+        if (!ignoreContentType && !rssContentTypes.includes(result.contentType)) {
+          return null;
         }
         result.lastModified = (new Date(resp.headers.get("Last-Modified"))).getTime();
       }
@@ -90,6 +123,47 @@ this.scrapeTab = (function() {
       code: "null",
       runAt: "document_start"
     });
+  }
+
+  function installCsp() {
+    let options = ["blocking", "responseHeaders"];
+    let filter = {
+      types: ["main_frame"],
+      urls: ["http://*/*", "https://*/*"],
+    }
+    browser.webRequest.onHeadersReceived.addListener(
+      cspHeaderRewriter,
+      filter,
+      options,
+    );
+    return () => {
+      browser.webRequest.onHeadersReceived.removeListener(
+        cspHeaderRewriter,
+        filter,
+        options,
+      );
+    }
+  }
+
+  function cspHeaderRewriter(info) {
+    let headers = info.responseHeaders;
+    for (let i = 0; i < headers.length; i++) {
+      let name = headers[i].name.toLowerCase();
+      if (name === "content-security-policy" || name === "content-security-policy-report-only") {
+        headers.splice(i, 1);
+        i--;
+      }
+    }
+    headers.push({
+      name: "Content-Security-Policy",
+      value: restrictiveCsp,
+    });
+    return {"responseHeaders": headers};
+  }
+
+  if (buildSettings.cspRestrict) {
+    installCsp();
+    log.info("Installed CSP adder for all requests");
   }
 
   return scrapeTab;
