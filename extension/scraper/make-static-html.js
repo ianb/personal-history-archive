@@ -1041,6 +1041,7 @@ var makeStaticHtml = (function() { // eslint-disable-line no-unused-vars
     if (feedInfo) {
       result.mainFeedUrl = feedInfo.mainFeedUrl;
       result.allFeeds = feedInfo.allFeeds;
+      result.speculativeFeedLinks = feedInfo.speculativeFeedLinks;
     }
     return Promise.all(promises).then(function() {
       return result;
