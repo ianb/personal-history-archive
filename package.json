@@ -14,6 +14,7 @@
     "firefox-profile": "^1.1.0",
     "geckodriver": "^1.10.0",
     "mocha": "^5.0.4",
+    "node-feedparser": "^1.0.1",
     "random-seed": "^0.3.0",
     "readability": "git+https://github.com/mozilla/readability.git",
     "selenium-webdriver": "^4.0.0-alpha.1",
@@ -43,8 +44,10 @@
     "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS",
     "postinstall": "if [[ ! -e .venv ]] ; then python3 -m venv .venv ; .venv/bin/python -m ensurepip ; fi && .venv/bin/pip install --upgrade pip && .venv/bin/pip install flake8 -e python/ && mkdir -p data && .venv/bin/python -m pha.saver data/ && npm run build:ext",
     "walk": "npm run walk:setup && npm run walk:selenium",
-    "walk:setup": "mkdir -p ./walk-data && NATIVE_SCRIPT=pha.saver.walk IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVE=debug SERVER_LOG_LEVEL=debug SET_FREEZE_MARKER=true DEST=test/build-walk/ npm run build:ext && DEST=test/build-walk/ npm run build:zip && .venv/bin/python -m pha.saver --script-location test/build-walk/pha-saver-script --native-name pha.saver.walk ./walk-data",
+    "walk-fetch": "npm run walk:setup && npm run walk-fetch:selenium",
+    "walk:setup": "mkdir -p ./walk-data && CSP_RESTRICT=true NATIVE_SCRIPT=pha.saver.walk IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug SET_FREEZE_MARKER=true DEST=test/build-walk/ npm run build:ext && DEST=test/build-walk/ npm run build:zip && .venv/bin/python -m pha.saver --script-location test/build-walk/pha-saver-script --native-name pha.saver.walk ./walk-data",
     "walk:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ node test/random-walk.js",
+    "walk-fetch:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ node test/random-walk.js fetch",
     "jupyter": "BASE=\"$(pwd)\" ; if [[ ! -e .venv/bin/jupyter ]] ; then echo 'Installing prerequisites...' ; .venv/bin/pip install -r python/requirements.txt ; fi && export PHA_DATA=\"$(python -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' ${PHA_DATA:-data})\" && mkdir -p $PHA_DATA/notebooks ; if [[ ! -e $PHA_DATA/notebooks/template.ipynb ]] ; then cp python/template.ipynb $PHA_DATA/notebooks/ ; fi ; cd $PHA_DATA/notebooks && $BASE/.venv/bin/jupyter notebook"
   }
 }

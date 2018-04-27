@@ -147,6 +147,48 @@ async function walk(config) {
   }
 }
 
+async function fetchPages(pages) {
+  const { fetchPage, pageExists } = require("./commands");
+  console.log("");
+  console.log("");
+  console.log("======================== FETCHER ========================");
+  console.log("");
+  driver = await getDriver(addonFileLocation);
+  // Give the add-on a moment to load:
+  await promiseTimeout(1000);
+  let base = process.env.PHA_DATA || path.join(__dirname, "../walk-data");
+  let seenUrls = new Set();
+  for (let page of pages) {
+    console.log("-----------------------", page);
+    if (await pageExists(page, base)) {
+      console.log("  ...already exists.");
+      continue;
+    }
+    let result = await fetchPage(driver, page, base);
+    if (!result) {
+      console.log("  ...loaded but not fetched.");
+      continue;
+    }
+    console.log("  ...fetched.");
+    for (let feed of (result.parsedFeeds || [])) {
+      for (let item of feed.items) {
+        if (!seenUrls.has(item.link)) {
+          seenUrls.add(item.link);
+          console.log("    fetching", item.link);
+          let feedResult = await fetchPage(driver, item.link, base);
+          if (feedResult) {
+            console.log("      ...fetched.");
+          } else {
+            console.log("      ...loaded but not fetched.");
+          }
+        } else {
+          console.log("    skipping", item.link);
+        }
+      }
+    }
+  }
+}
+
 async function main() {
   let names = ["default.json"];
   if (process.env.CONFIG) {
@@ -162,6 +204,22 @@ async function main() {
   }
   console.log("---- closing");
   await closeBrowser(driver);
+}
+
+async function mainFetchPages() {
+  let names = ["default.json"];
+  if (process.env.CONFIG) {
+    names.push(process.env.CONFIG);
+  }
+  let config = await loadConfig(names);
+  console.log("config:", config);
+  try {
+    await fetchPages(config.destinations.urls);
+  } catch (e) {
+    console.log("Error:", e);
+    console.log(e.stack);
+  }
+  //await closeBrowser(driver);
 }
 
 async function loadConfig(names) {
@@ -209,5 +267,9 @@ async function loadConfig(names) {
 }
 
 if (require.main === module) {
-  main();
+  if (process.argv[2] === "fetch") {
+    mainFetchPages();
+  } else {
+    main();
+  }
 }
