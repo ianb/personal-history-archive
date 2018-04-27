@@ -6,6 +6,7 @@ import re
 from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
 from urllib.parse import urlparse, parse_qs
+import feedparser
 lxml = None
 
 www_regex = re.compile(r"^www[0-9]*\.")
@@ -314,14 +315,18 @@ class Page:
 
     def fetch(self):
         c = self.archive.conn.cursor()
-        rows = c.execute("""
-            SELECT fetched, not_logged_in, timeToFetch, redirectUrl, redirectOk
+        row = c.execute("""
+            SELECT fetched, activityId, timeToFetch, redirectUrl, redirectOk
             FROM page
             WHERE url = ?
-        """, (self.url,))
-        if not rows:
+        """, (self.url,)).fetchone()
+        if not row:
             raise KeyError("No page with URL %s" % self.url)
-        (self.fetched, self.not_logged_in, self.timeToFetch, self.redirectUrl, self.redirectOk) = list(rows)[0]
+        self.fetched = row["fetched"]
+        self.activityId = row["activityId"]
+        self.timeToFetch = row["timeToFetch"]
+        self.redirectUrl = row["redirectUrl"]
+        self.redirectOk = row["redirectOk"]
         filename = self.json_filename(self.archive, self.url)
         with open(filename) as fp:
             self.data = json.load(fp)
@@ -413,6 +418,46 @@ class Page:
         if not html:
             html = self.html
         display_html(html, title=self.title, link=self.url, link_title=self.domain)
+
+    @property
+    def feeds(self):
+        feeds = self.data.get("feeds")
+        if not feeds:
+            return []
+        return [Feed(self, f) for f in feeds]
+
+
+class Feed:
+
+    def __init__(self, page, feedInfo):
+        self.page = page
+        self.feedInfo = feedInfo
+        self._parsed = None
+
+    def __repr__(self):
+        return '<Feed %s on %s>' % (self.url, self.page.url)
+
+    @property
+    def url(self):
+        return self.feedInfo["url"]
+
+    @property
+    def body(self):
+        return self.feedInfo["body"]
+
+    @property
+    def contentType(self):
+        return self.feedInfo["contentType"]
+
+    @property
+    def fetchTime(self):
+        return self.feedInfo["fetchTime"]
+
+    @property
+    def parsed(self):
+        if not self._parsed:
+            self._parsed = feedparser.parse(self.body, response_headers={"Content-Location": self.url})
+        return self._parsed
 
 
 def make_tag(tagname, attrs):

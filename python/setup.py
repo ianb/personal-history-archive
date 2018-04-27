@@ -10,6 +10,7 @@ requirements = [
     "cssselect",
     "nltk",
     "sumy",
+    "feedparser",
 ]
 
 setup_requirements = [
