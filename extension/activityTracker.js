@@ -501,7 +501,7 @@ this.activityTracker = (function() {
       pagesToSerialize.set(tabId, url);
       startQueue(tabId, url);
     } else {
-      log.debug("loading was not necessary:", tabId, url);
+      log.debug("Page has already been serialized:", tabId, url);
     }
   }
 
