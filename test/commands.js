@@ -48,7 +48,7 @@ function filenameForUrl(base, url) {
   let name = encodeURIComponent(url);
   if (name.length > 200) {
     let sha1 = crypto.createHash("sha1");
-    let hash = sha1.digest(url).toString('hex');
+    let hash = sha1.digest(url).toString("hex");
     name = `${name.substr(0, 100)}-${hash}-trunc`;
   }
   return path.join(base, "pages", name + "-page.json");

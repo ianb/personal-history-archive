@@ -13,14 +13,11 @@ NO_CLOSE = if not empty then when the test is finished, the browser will not be 
 */
 
 const assert = require("assert");
-const firefox = require("selenium-webdriver/firefox");
 const webdriver = require("selenium-webdriver");
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const http = require("http");
 const { By, until, Key } = webdriver;
-// Uncomment the next line and others with `ServiceBuilder` to enable trace logs from Firefox and Geckodriver
-// const { ServiceBuilder } = firefox;
 const path = require("path");
 const fs = require("fs");
 const { getDriver, closeBrowser } = require("./driver-setup");

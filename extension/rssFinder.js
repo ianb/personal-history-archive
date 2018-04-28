@@ -7,7 +7,7 @@ this.rssFinder = (function() {
     /\/feed\/?$/,
     /$\/(rss|atom)/,
     /\/rss\//,
-    /[\.\/]rss2?$/,
+    /[./]rss2?$/,
     // Business Insider:
     /rss.*\.cms$/,
     // The Philly Inquirer and others:
@@ -34,6 +34,7 @@ this.rssFinder = (function() {
     /feed=rss/,
   ];
 
+  // FIXME: use these
   const hintPatterns = [
     /^https?:\/\/add.my.yahoo.com\/rss\?url=([^&]+)/,
     /^https?:\/\/feedly.com\/#subscription\/feed\/(.*)/,
@@ -88,7 +89,7 @@ this.rssFinder = (function() {
       return {
         href: a.href,
         anchorText: a.textContent.substr(0, 100),
-      }
+      };
     });
     // Never keep more than 40 links, just in case:
     speculativeFeedLinks.splice(40);

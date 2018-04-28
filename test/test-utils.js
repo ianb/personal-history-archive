@@ -19,7 +19,7 @@ exports.eitherPromise = function(...promises) {
       }
     }
     for (let promise of promises) {
-      promise.then(sendResolve, sendReject);
+      promise.then(sendResolve).catch(sendReject);
     }
   });
-}
+};

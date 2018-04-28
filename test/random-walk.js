@@ -219,7 +219,7 @@ async function mainFetchPages() {
     console.log("Error:", e);
     console.log(e.stack);
   }
-  //await closeBrowser(driver);
+  // await closeBrowser(driver);
 }
 
 async function loadConfig(names) {

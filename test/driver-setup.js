@@ -9,7 +9,6 @@ exports.getDriver = function(addonFileLocation) {
 
   const options = new firefox.Options()
     .setBinary(firefox.Channel[channel])
-    //.setPreference("extensions.legacy.enabled", true)
     // Let our unsigned add-on be installed:
     .setPreference("xpinstall.signatures.required", false)
     // Try to keep audio from playing (doesn't work):

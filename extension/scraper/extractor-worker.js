@@ -1,4 +1,4 @@
-/* globals Readability, document, console, location, makeStaticHtml, log, util */
+/* globals Readability, document, console, location, makeStaticHtml, log, util, buildSettings */
 
 /** extractor-worker is a content worker that is attached to a page when
     making a shot

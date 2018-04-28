@@ -51,6 +51,7 @@ this.scrapeTab = (function() {
       log.info("Scraped feeds:", scraped.feeds.length, "bytes:", JSON.stringify(scraped.feeds).length);
     }
     if (scraped.speculativeFeedLinks) {
+      let found = 0;
       for (let feed of scraped.speculativeFeedLinks) {
         let fetched = await getFeed(feed, false);
         if (fetched) {
@@ -130,7 +131,7 @@ this.scrapeTab = (function() {
     let filter = {
       types: ["main_frame"],
       urls: ["http://*/*", "https://*/*"],
-    }
+    };
     browser.webRequest.onHeadersReceived.addListener(
       cspHeaderRewriter,
       filter,
@@ -142,7 +143,7 @@ this.scrapeTab = (function() {
         filter,
         options,
       );
-    }
+    };
   }
 
   function cspHeaderRewriter(info) {
