@@ -29,7 +29,10 @@ exports.fetchPage = async function(driver, url, base) {
   if (json && json.feeds) {
     json.parsedFeeds = [];
     for (let feed of json.feeds) {
-      json.parsedFeeds.push(await parseFeed(feed.body));
+      let parsed = await parseFeed(feed.body);
+      if (parsed) {
+        json.parsedFeeds.push(parsed);
+      }
     }
   }
   return json;
@@ -83,7 +86,9 @@ function parseFeed(feedBody) {
   return new Promise((resolve, reject) => {
     feedparser(feedBody, (error, result) => {
       if (error) {
-        reject(error);
+        console.log("Got a bad field:", error);
+        console.log(error.stack);
+        resolve(null);
       } else {
         resolve(result);
       }
