@@ -7,6 +7,8 @@ from cgi import escape as html_escape
 from urllib.parse import quote as url_quote
 from urllib.parse import urlparse, parse_qs
 import feedparser
+from collections import defaultdict
+from collections.abc import Mapping
 lxml = None
 
 www_regex = re.compile(r"^www[0-9]*\.")
@@ -48,6 +50,21 @@ def domain(url):
 
 def query(url):
     return parse_qs(urlparse(url).query)
+
+
+class URLMixin:
+    @property
+    def domain(self):
+        return domain(self.url)
+
+    @property
+    def query(self):
+        return query(self.url)
+
+    @property
+    def is_homepage(self):
+        p = urlparse(self.url)
+        return p.path == "" or p.path == "/"
 
 
 class Archive:
@@ -221,22 +238,15 @@ class Archive:
             source._following = [a for a in followings if a.sourceId == source.id]
 
 
-class Activity:
+class Activity(URLMixin):
     def __init__(self, archive, from_row):
         self.archive = archive
         self._following = None
+        self.url = None
         self._update_from_row(from_row)
 
     def __repr__(self):
         return '<Activity %s %s>' % (self.id, self.url)
-
-    @property
-    def domain(self):
-        return domain(self.url)
-
-    @property
-    def query(self):
-        return query(self.url)
 
     @property
     def following(self):
@@ -279,7 +289,7 @@ class Activity:
         return self.archive.get_activity_by_source(self.id)
 
 
-class Page:
+class Page(URLMixin):
     def __init__(self, archive, url):
         self.archive = archive
         self.url = url
@@ -297,6 +307,17 @@ class Page:
     def title(self):
         # FIXME: consider using self.data["opengraph"]["title"]
         return self.data["docTitle"]
+
+    @property
+    def og_title(self):
+        return self.data.get("openGraph", {}).get("title")
+
+    @property
+    def og_image(self):
+        image = self.data.get("openGraph", {}).get("image")
+        if isinstance(image, list):
+            image = image[0]
+        return image
 
     @classmethod
     def json_filename(cls, archive, url):
@@ -426,6 +447,16 @@ class Page:
             return []
         return [Feed(self, f) for f in feeds]
 
+    @property
+    def fetched_feeds(self):
+        feeds = self.data.get("feeds") or []
+        return [Feed(self, f) for f in feeds if f.get("body")]
+
+    @property
+    def error_feeds(self):
+        feeds = self.data.get("feeds") or []
+        return [Feed(self, f) for f in feeds if f.get("error")]
+
 
 class Feed:
 
@@ -435,11 +466,21 @@ class Feed:
         self._parsed = None
 
     def __repr__(self):
+        if self.errored:
+            return '<Feed (errored) %s on %s>' % (self.url, self.page.url)
         return '<Feed %s on %s>' % (self.url, self.page.url)
+
+    @property
+    def errored(self):
+        return bool(self.feedInfo.get("error"))
 
     @property
     def url(self):
         return self.feedInfo["url"]
+
+    @property
+    def domain(self):
+        return domain(self.url)
 
     @property
     def body(self):
@@ -447,7 +488,7 @@ class Feed:
 
     @property
     def contentType(self):
-        return self.feedInfo["contentType"]
+        return self.feedInfo.get("contentType")
 
     @property
     def fetchTime(self):
@@ -458,6 +499,197 @@ class Feed:
         if not self._parsed:
             self._parsed = feedparser.parse(self.body, response_headers={"Content-Location": self.url})
         return self._parsed
+
+    @property
+    def entries(self):
+        return [FeedEntry(self, e) for e in self.parsed.entries]
+
+
+class FeedEntry(URLMixin):
+
+    def __init__(self, feed, entry):
+        self.feed = feed
+        self.parsed = entry
+
+    def __repr__(self):
+        return '<FeedEntry %s %r>' % (self.url, self.title)
+
+    @property
+    def url(self):
+        return self.parsed.get("link")
+
+    @property
+    def link(self):
+        return self.parsed.get("link")
+
+    @property
+    def title(self):
+        return self.parsed.get("title")
+
+    @property
+    def html_content(self):
+        global lxml
+        if lxml is None:
+            import lxml.html
+        for c in self.parsed.get("content", []):
+            if not c.get("value"):
+                continue
+            if c["type"] == "text/html":
+                ## FIXME: add URL base
+                el = lxml.html.fragment_fromstring(
+                    c["value"],
+                    base_url=c.get("base"),
+                    create_parent='div')
+                if len(el) == 1 and not el.text:
+                    el = el[0]
+                return el
+        return None
+
+    @property
+    def text_content(self):
+        for c in self.parsed.get("content", []):
+            if not c.get("value"):
+                continue
+            if c["type"] == "text/plain":
+                return c["value"]
+        return None
+
+    @property
+    def force_text_content(self):
+        text = self.text_content
+        if text:
+            return text
+        html = self.html_content
+        if html is not None:
+            return html.text_content()
+        return ""
+
+    def get(self, key, *args):
+        return self.parsed.get(key, *args)
+
+    @property
+    def tags(self):
+        return [t["term"] for t in self.get("tags", [])]
+
+    ## FIXME: add something about enclosures
+
+class ActivityPool:
+    """Represents a bunch of activities, and the relations between them.
+
+    This can be expensive to instantiate, but helps make it easier to evaluate interrelations
+    """
+
+    def __init__(self, archive, activities):
+        self.archive = archive
+        self.activities = activities
+        self.pages = []
+        self._urls = None
+        self.activities_by_id = {}
+        self.activities_by_url = defaultdict(set)
+        for a in self.activities:
+            self.activities_by_id[a.id] = a
+            self.activities_by_url[a.url].add(a)
+        self.page_by_url = {}
+        self.pages_with_feeds = []
+        for a in self.activities:
+            p = a.page
+            if p:
+                self.page_by_url[p.url] = p
+                self.pages.append(p)
+        self.feeds_by_url = {}
+        self.feed_entry_by_subject_url = {}
+        self.feed_entries_without_link = []
+        for p in self.page_by_url.values():
+            if p.feeds:
+                self.pages_with_feeds.append(p)
+            for feed in p.feeds:
+                if feed.errored:
+                    continue
+                # FIXME: make sure the feed hasn't updated, if it was fetched at the same URL more than once
+                self.feeds_by_url[feed.url] = feed
+                for entry in feed.entries:
+                    link = entry.get("link")
+                    if link:
+                        self.feed_entry_by_subject_url[link] = entry
+                    else:
+                        self.feed_entries_without_link.append((entry, feed))
+        self.link_to_url = defaultdict(set)
+        cur = archive.conn.cursor()
+        cur.execute("""
+        SELECT activity_id, url, text, rel, target, elementId
+        FROM activity_link
+        """)
+        for row in cur.fetchall():
+            a = self.activities_by_id.get(row["activity_id"])
+            if not a:
+                continue
+            if not hasattr(a, "links"):
+                a.links = {}
+            link = ActivityLink(a, row["url"], row["text"], row["rel"], row["target"], row["elementId"])
+            a.links[link.url] = link
+            if link.url in self.activities_by_url:
+                self.link_to_url[link.url].add(link)
+        self.urls = ActivityPoolURLs(self)
+        self._domains = None
+
+    @property
+    def domains(self):
+        if self._domains is None:
+            self._domains = {}
+            for url in self.activities_by_url:
+                d = domain(url)
+                self._domains.setdefault(d, {})[url] = URLPool(url, self)
+        return self._domains
+
+    @property
+    def feeds(self):
+        return self.feeds_by_url.values()
+
+    @property
+    def feed_entries(self):
+        return self.feed_entry_by_subject_url.values()
+
+
+class ActivityLink:
+    def __init__(self, activity, url, text, rel, target, elementId):
+        self.activity = activity
+        self.url = url
+        self.text = text
+        self.rel = rel
+        self.target = target
+        self.elementId = elementId
+
+
+class URLPool(URLMixin):
+
+    def __init__(self, url, activity_pool):
+        self.url = url
+        self.activity_pool = activity_pool
+        self.activities = activity_pool.activities_by_url[url]
+        self.page = activity_pool.page_by_url.get(url)
+        self.feed_entry = activity_pool.feed_entry_by_subject_url.get(url)
+        self.backlinks = activity_pool.link_to_url.get(url, set())
+
+
+class ActivityPoolURLs(Mapping):
+
+    def __init__(self, activity_pool):
+        self.activity_pool = activity_pool
+        self._instantiated = {}
+
+    def __getitem__(self, key):
+        if key in self._instantiated:
+            return self._instantiated[key]
+        if key not in self.activity_pool.activities_by_url:
+            raise KeyError
+        result = self._instantiated[key] = URLPool(key, self.activity_pool)
+        return result
+
+    def __iter__(self):
+        return iter(self.activity_pool.activities_by_url)
+
+    def __len__(self):
+        return len(self.activity_pool.activities_by_url)
 
 
 def make_tag(tagname, attrs):
