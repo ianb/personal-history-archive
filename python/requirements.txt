@@ -1,5 +1,11 @@
 # These are not strict requirements, but useful libraries that can be used with pha, and are used in the notebooks:
 jupyter
+jupyterlab
+
+# Some JupyterLab extensions:
+jupyterlab_iframe
+jupyterlab_templates
+
 
 # Some general machine learning libraries...
 numpy
