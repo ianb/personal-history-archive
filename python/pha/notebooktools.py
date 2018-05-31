@@ -4,7 +4,7 @@ Tools for use in Jupyter Notebooks, especially display_html()
 import base64
 from IPython.core.display import display, HTML
 from cgi import escape as html_escape
-import lxml
+import lxml.etree
 import time
 import os
 import shutil
@@ -49,6 +49,119 @@ def display_html(html_page, header='', footer='', height="12em", title=None, lin
     </div>
     ''' % (header, html_escape(height), literal_data, footer)
     display(HTML(html))
+
+
+def tag(t, c=None, **attrs):
+    content = c or None
+    for key, value in list(attrs.items()):
+        if value is None:
+            continue
+        if key.startswith("style_"):
+            name = key[len("style_"):]
+            name = name.replace("_", "-")
+            existing = attrs.get("style")
+            if existing:
+                attrs["style"] = "%s; %s: %s" % (existing, name, value)
+            else:
+                attrs["style"] = "%s: %s" % (name, value)
+            del attrs[key]
+    attrs = [
+        ' %s="%s"' % (html_escape(key), html_escape(str(value)))
+        for key, value in sorted(attrs.items())
+        if value is not None
+    ]
+    start = '<%s%s' % (
+        t,
+        "".join(attrs),
+    )
+    if content:
+        if isinstance(content, (list, tuple)):
+            content = "".join(content)
+        return "%s>%s</%s>" % (start, content, t)
+    else:
+        return "%s />" % (start)
+
+
+class Image:
+
+    def __init__(self, src_or_metadata, max_height='100px'):
+        if isinstance(src_or_metadata, str):
+            self.metadata = {"href": src_or_metadata}
+        else:
+            self.metadata = src_or_metadata
+        self.max_height = max_height
+
+    def _repr_html_(self):
+        src = self.metadata.get("src") or self.metadata.get("href")
+        return tag(
+            "img",
+            src=src,
+            alt=src,
+            style_max_height=self.max_height,
+            style_width="auto",
+            width=self.metadata.get("width"),
+            height=self.metadata.get("height"),
+        )
+
+
+class Link:
+
+    def __init__(self, url, title=None, domain=False):
+        if domain is True:
+            from . import domain
+            if title:
+                title = "%s (%s)" % (title, domain(url))
+            else:
+                title = domain(url)
+        if not title:
+            title = url
+        self.url = url
+        self.title = title
+
+    def _repr_html_(self):
+        return tag("a", href=self.url, target="_blank", c=html_escape(self.title))
+
+
+class Table:
+
+    def __init__(self, rows, header=None, max_height=None):
+        self.rows = list(rows)
+        self.header = header
+        self.max_height = max_height
+        if rows and self.header is None:
+            first_row = rows[0]
+            if isinstance(first_row, dict):
+                self.header = sorted(first_row.keys())
+
+    def _repr_html_(self):
+        if not self.rows:
+            return '(No records)'
+        rows = []
+        if self.header:
+            rows.append(tag("tr", [
+                tag("th", c=h) for h in self.header
+            ]))
+        for row in self.rows:
+            if isinstance(row, dict):
+                row = [row[h] for h in self.header]
+            values = [
+                c._repr_html_() if hasattr(c, "_repr_html_") else html_escape(str(c))
+                for c in row
+            ]
+            rows.append(tag("tr", [
+                tag("td", v) for v in values
+            ]))
+        table = tag("table", style_overflow="scroll-y", style_max_height=self.max_height, c=rows)
+        if self.max_height:
+            return tag(
+                "div",
+                table,
+                style_overflow="scroll",
+                style_max_height=self.max_height,
+                style_border="box-shadow: 5px 10px 18px #888888",
+                style_border_radius="3px",
+            )
+        return table
 
 
 chooser_id = int(time.time())
