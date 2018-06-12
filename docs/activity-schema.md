@@ -122,7 +122,7 @@ Browser history typically uses two concepts: the [HistoryItem](https://developer
 
 `formControlInteraction`: a count of the number of times a non-text form field was changed. Will be null if we weren't watching.
 
-`formTextInteraction`: a count of the number of times a text form field was changed. Will be null if we weren't watching.
+`formTextInteraction`: a count of the number of times a text form field was changed. Will be null if we weren't watching. This is incremented when the `change` even occurs, so typically you have to unfocus the text field for this to get incremented.
 
 `zoomLevel`: the zoom level, if we can calculate it. Typically 1, null if we didn't determine it. 1.1 means, for example, a 110% zoom.
 
@@ -164,7 +164,7 @@ These are full dumps of a page's DOM. They may be associated with a visit, or lo
 
 `redirectUrl`: if fetching the URL redirected to some other URL, then what URL? This is the URL that is actually displayed in the URL bar when we serialized the page. Will be null if this matches `url`.
 
-`redirectOk`: if `redirectUrl` exists, but someone decided the redirect is OK, then this will be true. These can be used to review autofetch redirects, and remove login page redirects (for instance).
+`redirectOk`: if `redirectUrl` exists, but someone decided the redirect is OK, then this will be true. These can be used to review autofetch redirects, and remove pages that were redirectd to login pages.
 
 `documentSize.width` and `documentSize.height`: height and width of the entire document (not just the visible portion).
 
@@ -176,7 +176,7 @@ These are full dumps of a page's DOM. They may be associated with a visit, or lo
 
 `passwordFields[i].id`: the id of a password field
 
-`passwordFields[i].hasValue`: true of the field has sometihng entered (e.g., by a password manager)
+`passwordFields[i].hasValue`: true of the field has something entered (e.g., by a password manager)
 
 `passwordFields[i].isHidden`: if the field appears not to be visible
 
@@ -201,6 +201,8 @@ These are full dumps of a page's DOM. They may be associated with a visit, or lo
 `readable.title`: the title as determined
 
 `readable.content`: an HTML string with the content (not processed like other HTML content)
+
+`readable.textContent`: a text-only version of the content
 
 `readable.length`: the length of the content, in characters
 
