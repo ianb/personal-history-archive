@@ -260,6 +260,34 @@ The DOM is annotated with some attributes to help understand the DOM without ren
 
 `value`: this is set to the *actual* form value, not the one in the original HTML.
 
+### Feeds
+
+In addition to the feed-related metadata captured as Activity, we also fetch the actual feeds alongside the page. By doing this we can match up timely feed information against a page.
+
+`feeds`: this is a list of all discovered feeds, listed in the order they appeared in the page.
+
+`feeds[i].url`: the URL of the feed (where it was fetched from)
+
+`feeds[i].redirectUrl`: if the feed redirected, then this is the destination URL
+
+`feeds[i].body`: the text body of the feed.
+
+`feeds[i].contentType`: the HTTP Content-Type given
+
+`feeds[i].lastModified`: the timestamp of the HTTP Last-Modified header
+
+`feeds[i].fetchStart`: the timestamp when we started fetching the feed
+
+`feeds[i].fetchTime`: the number of milliseconds it took to fetch the feed
+
+`feeds[i].error`: if the feed failed to fetch, this text error message describes why.  Other error information:
+
+`feeds[i].statusCode`: if the feed failed to fetch because of an HTTP error, this gives the status code
+
+`feeds[i].status`: and this gives the status text
+
+`feeds[i].errorStack`: if there was an exception fetching the feed, this gives the traceback.
+
 #### Errored pages
 
 `url`: the URL that was attempted to be fetched (we don't store historical failures, so the URL is the primary key).
