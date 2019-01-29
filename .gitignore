@@ -19,3 +19,4 @@ build
 /.venv
 /test/build-walk
 /walk-data
+__pycache__
