@@ -1,3 +1,4 @@
+*.egg-info
 /node_modules
 /Profile
 /StickyProfile
@@ -20,3 +21,4 @@ build
 /test/build-walk
 /walk-data
 __pycache__
+/blab
