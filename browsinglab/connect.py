@@ -4,7 +4,6 @@ Implements saving information into the database/files
 
 import os
 import re
-import stat
 import json
 import sys
 import struct
@@ -12,9 +11,11 @@ import time
 import pprint
 import traceback
 import uuid
-from . import Page
+from .db import Page, Archive
 
 message_handlers = {}
+
+active_archive = None
 
 
 def addon(func):
@@ -269,6 +270,30 @@ def status(archive, browserId):
 
 
 @addon
+def set_active_archive(archive, archiveLocation):
+    global active_archive
+    if archive:
+        archive.close()
+    active_archive = Archive(archiveLocation)
+
+set_active_archive.archive_optional = True
+
+
+@addon
+def get_archive_info(archive):
+    if not archive:
+        return None
+    return {"path": archive.path, "title": archive.title}
+
+get_archive_info.archive_optional = True
+
+
+@addon
+def set_archive_title(archive, title):
+    archive.title = title
+
+
+@addon
 def log(archive, *args, level='log', stack=None):
     filename = os.path.join(archive.path, "addon.log")
     with open(filename, "a") as fp:
@@ -296,17 +321,13 @@ def log(archive, *args, level='log', stack=None):
 
 
 def write_page(archive, url, data):
-    filename = Page.json_filename(archive, url)
-    with open(filename, "wb") as fp:
-        fp.write(json.dumps(data).encode("UTF-8"))
+    pages = list(Page.selectBy(url=url, orderBy="-fetched", limit=1))
+    if not pages:
+        raise Exception("No page found with url %r" % url)
+    pages[0].scrapeData = data
 
 
-def run_saver(storage_directory=None):
-    from . import Archive
-    if not storage_directory:
-        archive = Archive.default_location()
-    else:
-        archive = Archive(storage_directory)
+def run_saver():
     while True:
         m_name = "(unknown)"
         try:
@@ -323,11 +344,13 @@ def run_saver(storage_directory=None):
             if not handler:
                 print("Error: got unexpected message name: %r" % message["name"], file=sys.stderr)
                 continue
-            result = handler(archive, *message.get("args", ()), **message.get("kwargs", {}))
+            if active_archive is None and not getattr(handler, "archive_optional", False):
+                raise Exception("Attempted to send message before setting archive: %s()" % m_name)
+            result = handler(active_archive, *message.get("args", ()), **message.get("kwargs", {}))
             send_message({"id": message["id"], "result": result})
         except Exception as e:
             tb = traceback.format_exc()
-            log(archive, "Error processing message %s(): %s" % (m_name, e), tb, level='s_err')
+            log(active_archive, "Error processing message %s(): %s" % (m_name, e), tb, level='s_err')
             send_message({"id": message["id"], "error": str(e), "traceback": tb})
 
 
@@ -350,58 +373,3 @@ def encode_message(message):
 def send_message(message):
     sys.stdout.buffer.write(encode_message(message))
     sys.stdout.buffer.flush()
-
-
-def install_json_command():
-    import argparse
-    default_location = os.path.abspath(os.path.join(os.path.abspath(__file__), "../../../data"))
-    script_location = os.path.join(default_location, ".pha-starter.py")
-    parser = argparse.ArgumentParser()
-    parser.add_argument("storage_directory", help="Location for storing the database and files", default=default_location)
-    parser.add_argument("--script-location", "-s", help="Location to keep the connection script", default=script_location)
-    parser.add_argument("--native-name", help="Name this will be registered for", default="pha.saver")
-    args = parser.parse_args()
-    print("Using the storage directory", args.storage_directory)
-    print("Writing a connector script to", args.script_location)
-    install_json_file(args.storage_directory, args.script_location, args.native_name)
-
-
-def install_json_file(storage_directory, script_location, native_name):
-    # FIXME: support Windows
-    manifest_path = os.path.abspath(os.path.join(__file__, "../../../extension/manifest.json"))
-    script_location = os.path.abspath(script_location)
-    with open(manifest_path) as fp:
-        manifest = json.load(fp)
-    manifest_id = manifest["applications"]["gecko"]["id"]
-    with open(script_location, "w") as fp:
-        # This script should support a Windows .BAT file
-        fp.write("""\
-#!%s
-storage_directory = %r
-from pha.saver import run_saver
-run_saver(storage_directory)
-""" % (sys.executable, os.path.abspath(storage_directory)))
-    st = os.stat(script_location)
-    os.chmod(script_location, st.st_mode | stat.S_IEXEC)
-    native_manifest = {
-        "name": native_name,
-        "description": "Saves information from the personal-history-archive extension",
-        "path": script_location,
-        "type": "stdio",
-        "allowed_extensions": [manifest_id]
-    }
-    if sys.platform == "darwin":
-        filename = os.path.expanduser("~/Library/Application Support/Mozilla/NativeMessagingHosts/%s.json" % native_name)
-    elif sys.platform.startswith("linux"):
-        filename = os.path.expanduser("~/.mozilla/native-messaging-hosts/%s.json" % native_name)
-    else:
-        raise Exception("Not a supported platform")
-    dir = os.path.dirname(filename)
-    if not os.path.exists(dir):
-        os.makedirs(dir)
-    with open(filename, "wb") as fp:
-        fp.write(json.dumps(native_manifest, indent=2).encode("UTF-8"))
-
-
-if __name__ == "__main__":
-    install_json_command()

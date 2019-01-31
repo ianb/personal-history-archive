@@ -42,7 +42,7 @@ this.communication = (function() {
     responders.delete(id);
   });
 
-  /* Each of these exported functions is a function in pha.saver: */
+  /* Each of these exported functions is a function in browsinglab.connect: */
 
   exports.add_history_list = function(historyItems) {
     return portCall("add_history_list", [], {browserId, sessionId, historyItems});

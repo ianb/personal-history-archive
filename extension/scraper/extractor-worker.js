@@ -178,7 +178,7 @@ var extractorWorker = (function() { // eslint-disable-line no-unused-vars
     Object.assign(json, await makeStaticHtml.documentStaticData());
     if (buildSettings.setFreezeMarker) {
       let el = document.createElement("span");
-      el.id = "pha-completed-freeze";
+      el.id = "browsinglab-completed-freeze";
       el.style.display = "none";
       document.body.appendChild(el);
     }

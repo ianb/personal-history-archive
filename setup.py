@@ -14,6 +14,7 @@ requirements = [
     "click",
     "sqlobject",
     "colorama",
+    "yarl",
 ]
 
 setup(

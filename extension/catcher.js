@@ -42,7 +42,7 @@ this.catcher = (function() {
     let id = util.makeUuid();
     browser.notifications.create(id, {
       type: "basic",
-      title: "PHA Error",
+      title: "Browsing Lab Error",
       message: error
     });
   };
