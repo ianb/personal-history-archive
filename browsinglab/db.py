@@ -8,6 +8,30 @@ from . import connlist
 
 conn_init = False
 
+class Mixin:
+
+    @classmethod
+    def replaceUuid(cls, uuid, **kw):
+        existing = list(cls.selectBy(uuid=uuid))
+        if existing:
+            instance = existing[0]
+            instance.set(**kw)
+        else:
+            instance = cls(uuid=uuid, **kw)
+        return instance
+
+    @classmethod
+    def getID(cls, uuid, default="no default"):
+        if uuid is None:
+            if default == "no default":
+                raise Exception("%s.getID() id of None" % cls.__name__)
+            return default
+        results = list(cls.selectBy(uuid=uuid))
+        if not results:
+            if default == "no default":
+                raise Exception("No %s found by uuid" % cls.__name__)
+            return default
+        return results[0].id
 
 class Archive:
     """
@@ -22,8 +46,16 @@ class Archive:
         connlist.add_location(path)
         self.path = path
         self.sqlite_path = os.path.join(path, 'history.sqlite')
+        exists = os.path.exists(self.sqlite_path)
         conn_init = True
+        import sys
+        print("Location", 'sqlite:%s/history.sqlite' % self.path, exists)
         sqlhub.processConnection = connectionForURI('sqlite:%s/history.sqlite' % self.path)
+        print("Creating tables")
+        create_tables()
+
+    def __repr__(self):
+        return "<Archive %s>" % (self.path,)
 
     @property
     def title(self):
@@ -34,7 +66,7 @@ class Archive:
         return None
 
     @title.setter
-    def set_title(self, value):
+    def title(self, value):
         title_path = os.path.join(self.path, "title.txt")
         if value:
             with open(title_path, "w") as fp:
@@ -52,7 +84,7 @@ class Archive:
         self.sqlite_path = None
 
 
-class Browser(SQLObject):
+class Browser(SQLObject, Mixin):
     uuid = StringCol()
     created = DateTimeCol(default=DateTimeCol.now)
     userAgent = StringCol()
@@ -60,29 +92,33 @@ class Browser(SQLObject):
     connected = BoolCol(default=False, notNone=True)
 
 
-class BrowserSession(SQLObject):
+class BrowserSession(SQLObject, Mixin):
     uuid = StringCol()
-    browserId = ForeignKey('Browser')
-    startTime = IntCol()
-    endTime = IntCol()
-    timezoneOffset = IntCol()
+    browser = ForeignKey('Browser')
+    startTime = IntCol(default=None)
+    endTime = IntCol(default=None)
+    timezoneOffset = IntCol(default=None)
 
 
-class Page(SQLObject):
+class Page(SQLObject, Mixin):
     uuid = StringCol()
     url = URLCol(notNone=True)
     fetched = DateTimeCol(default=DateTimeCol.now)
-    activityId = ForeignKey('Activity')
+    activity = ForeignKey('Activity')
     timeToFetch = IntCol()
     redirectUrl = URLCol()
     redirectOk = BoolCol(default=False, notNone=True)
     scrapeData = JSONCol()
 
+    @classmethod
+    def urlExists(cls, url):
+        return bool(list(cls.selectBy(url=url)))
 
-class Activity(SQLObject):
+
+class Activity(SQLObject, Mixin):
     uuid = StringCol()
-    browserId = ForeignKey('Browser')
-    sessionId = ForeignKey('Session')
+    browser = ForeignKey('Browser')
+    session = ForeignKey('BrowserSession')
     url = URLCol(notNone=True)
     title = StringCol()
     ogTitle = StringCol()
@@ -95,9 +131,9 @@ class Activity(SQLObject):
     serverRedirect = BoolCol(default=False, notNone=True)
     forwardBack = BoolCol(default=False, notNone=True)
     fromAddressBar = BoolCol(default=False, notNone=True)
-    sourceId = ForeignKey('Activity')
-    browserReferringVisitId = StringCol()
-    initialLoadId = ForeignKey('Activity')
+    source = ForeignKey('Activity')
+    browserReferringVisitId = StringCol(default=None)
+    initialLoad = ForeignKey('Activity')
     newTab = BoolCol()  # was opened in new tab?
     activeCount = IntCol()  # Count of times it was "activated"
     activeTime = IntCol()  # Millisecond active time
@@ -121,9 +157,15 @@ class Activity(SQLObject):
 
 
 class ActivityLink(SQLObject):
-    activityId = ForeignKey('Activity')
+    activity = ForeignKey('Activity')
     url = URLCol(notNone=True)
     text = StringCol(notNone=True)
     rel = StringCol()
     target = StringCol()
     elementId = StringCol()
+
+
+def create_tables():
+    classes = [Browser, BrowserSession, Activity, Page, ActivityLink]
+    for cls in classes:
+        cls.createTable(ifNotExists=True)

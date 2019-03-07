@@ -29,5 +29,37 @@ this.backgroundOnMessage = (function() {
     handlers[type] = handler;
   };
 
+  exports.registerListener = function(type, handler) {
+    let existing = handlers[type];
+    if (!existing) {
+      handlers[type] = handler;
+    } else if (Array.isArray(existing)) {
+      existing.push(handler);
+    } else {
+      handlers[type] = [existing, handler];
+    }
+  };
+
+  exports.unregister = function(type, handler) {
+    let existing = handlers[type];
+    if (!existing) {
+      throw new Error(`Attempt to unregister handler that has no handlers: ${type}`);
+    }
+    if (Array.isArray(existing)) {
+      if (!existing.includes(handler)) {
+        throw new Error(`Attempt to unregister handler that hasn't been registered: ${type}`);
+      }
+      handlers[type] = existing.filter(x => x !== handler);
+      if (handlers.length === 1) {
+        handlers[type] = handlers[type][0];
+      }
+    } else {
+      if (existing === handler) {
+        throw new Error(`Attepmt to unregister handler that hasn't been registered: ${type}`);
+      }
+      delete handlers[type];
+    }
+  };
+
   return exports;
 })();

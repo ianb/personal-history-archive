@@ -1,22 +1,22 @@
 {
   "manifest_version": 2,
-  "name": "Personal History Saver",
+  "name": "Browsing Lab",
   "version": "0.1.0",
-  "description": "Saves all your history items to a local server",
+  "description": "Collects browsing information for later study",
   "author": "Ian Bicking <ian@ianbicking.org>",
   "homepage_url": "https://github.com/ianb/personal-history-archive",
   "applications": {
     "gecko": {
-      "id": "personal-history-saver@ianbicking.org"
+      "id": "browsing-lab@ianbicking.org"
     }
   },
   "browser_action": {
     "default_icon": {
-      "32": "icon.png"
+      "32": "icon.svg"
     },
-    "default_title": "Personal history",
+    "default_title": "Browsing Lab",
     "browser_style": true,
-    "default_popup": "debug-scripts/popup.html"
+    "default_popup": "controls/popup.html"
   },
   "background": {
     "scripts": [
@@ -29,51 +29,12 @@
       "browserId.js",
       "communication.js",
       "scraper/scrapeTab.js",
-      "historySaver.js",
+      "contentLoader.js",
       "activityTracker.js",
-      "autofetch/autofetchListener.js"
+      "controller.js"
     ]
   },
-  "content_scripts": [
-    {
-      "matches": ["http://localhost/fetcher.html"],
-      "js": [
-        "browser-polyfill.js",
-        "build/buildSettings.js",
-        "log.js",
-        "catcher.js",
-        "util.js",
-        "autofetch/sitescript.js"
-      ]
-    },
-    {
-      "matches": ["http://localhost/test-static/debug.html"],
-      "js": [
-        "browser-polyfill.js",
-        "build/buildSettings.js",
-        "log.js",
-        "catcher.js",
-        "util.js",
-        "debug-scripts/debug-show.js"
-      ]
-    },
-    {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": [
-        "browser-polyfill.js",
-        "build/buildSettings.js",
-        "log.js",
-        "catcher.js",
-        "util.js",
-        "elementToSelector.js",
-        "rssFinder.js",
-        "contentWatcher.js"
-      ]
-    }
-  ],
   "permissions": [
-    "http://localhost:11180/*",
-    "*://localhost/*",
     "<all_urls>",
     "history",
     "storage",
@@ -82,6 +43,7 @@
     "webRequest",
     "nativeMessaging",
     "notifications",
-    "webRequestBlocking"
+    "webRequestBlocking",
+    "contextualIdentities"
   ]
 }

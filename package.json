@@ -7,22 +7,27 @@
     "url": "https://github.com/ianb/personal-history-archive/issues"
   },
   "dependencies": {
-    "eslint-plugin-mozilla": "^0.4.10",
-    "eslint-plugin-no-unsanitized": "^2.0.2",
-    "eslint-plugin-promise": "^3.6.0",
-    "express": "^4.16.2",
-    "firefox-profile": "^1.1.0",
-    "geckodriver": "^1.10.0",
-    "mocha": "^5.0.4",
-    "node-feedparser": "^1.0.1",
-    "random-seed": "^0.3.0",
+    "react": "^16.3.1",
+    "react-dom": "^16.3.1",
     "readability": "git+https://github.com/mozilla/readability.git",
-    "selenium-webdriver": "^4.0.0-alpha.1",
-    "web-ext": "^2.2.2",
     "webextension-polyfill": "^0.2.1"
   },
   "devDependencies": {
-    "cookie-parser": "^1.4.3"
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "cookie-parser": "^1.4.3",
+    "eslint-plugin-mozilla": "^0.4.10",
+    "eslint-plugin-no-unsanitized": "^2.0.2",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-react": "^7.12.4",
+    "firefox-profile": "^1.2.0",
+    "geckodriver": "^1.14.1",
+    "mocha": "^5.0.4",
+    "node-feedparser": "^1.0.1",
+    "random-seed": "^0.3.0",
+    "selenium-webdriver": "^4.0.0-alpha.1",
+    "web-ext": "^2.9.3"
   },
   "homepage": "https://github.com/ianb/personal-history-archive",
   "license": "MPL-2.0",
@@ -31,25 +36,15 @@
     "url": "git+https://github.com/ianb/personal-history-archive.git"
   },
   "scripts": {
-    "start": "npm run build:dev && web-ext run -f ${FIREFOX:-nightly} -s dev-data/extension/ --keep-profile-changes --firefox-profile dev-data/Profile --browser-console",
-    "build:dev": "mkdir -p dev-data && .venv/bin/python -m pha.saver --script-location dev-data/pha-saver-script.py --native-name pha.saver.dev dev-data/ && NATIVE_SCRIPT=pha.saver.dev LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=dev-data npm run build:ext && mkdir -p dev-data/Profile",
+    "start": "npm run build:dev && web-ext run -f \"${FIREFOX:-nightly}\" -s extension/ --keep-profile-changes --firefox-profile dev-data/Profile --browser-console",
+    "build:dev": "mkdir -p dev-data && npm run build:deps && LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=dev-data npm run build:ext && mkdir -p dev-data/Profile",
     "lint:js": "eslint .",
-    "lint:py": ".venv/bin/flake8 python/",
-    "firefox-profile": "firefox-profile",
     "build:zip": "web-ext build --source-dir ${DEST:-build}/extension/ --ignore-files '**/README.md' --ignore-files '**/*.template' --overwrite-dest && mv web-ext-artifacts/personal_history_saver*.zip ${DEST:-build}/extension.zip && rmdir web-ext-artifacts || true",
-    "build:ext": "mkdir -p ${DEST:-build} && cp -r extension/ ${DEST:-build}/extension && mkdir -p ${DEST:-build}/extension/build && .venv/bin/python python/pha/sub-env-vars.py < extension/buildSettings.js.tmpl > ${DEST:-build}/extension/build/buildSettings.js",
+    "build:ext": "mkdir -p extension/build && .venv/bin/python -m browsinglab.subenvvars < extension/buildSettings.js.tmpl > extension/build/buildSettings.js",
+    "build:deps": "mkdir -p extension/build/ && cp node_modules/react/umd/react.production.min.js node_modules/react-dom/umd/react-dom.production.min.js node_modules/readability/Readability.js extension/build/ && babel --retain-lines extension/controls/popup.jsx > extension/build/popup.js",
     "test": "npm run test:build-data && npm run test:build-ext && npm run test:selenium",
     "test:build-data": "rm -rf test/test-data/ && mkdir -p test/test-data/",
     "test:build-ext": "NATIVE_SCRIPT=pha.saver.test IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug TESTING_BROWSER=1 DEST=test/build/ npm run build:ext && DEST=test/build/ npm run build:zip && .venv/bin/python -m pha.saver --script-location test/test-data/pha-saver-script.py --native-name pha.saver.test test/test-data/",
-    "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS",
-    "postinstall": "if [[ ! -e .venv ]] ; then python3 -m venv .venv ; .venv/bin/python -m ensurepip ; fi && .venv/bin/pip install --upgrade pip && .venv/bin/pip install flake8 -e python/ && mkdir -p data && .venv/bin/python -m pha.saver data/ && npm run build:ext",
-    "walk": "npm run walk:setup && npm run walk:selenium",
-    "walk-fetch": "npm run walk:setup && npm run walk-fetch:selenium",
-    "walk:setup": "mkdir -p ./walk-data && CSP_RESTRICT=true NATIVE_SCRIPT=pha.saver.walk IDLE_WAIT_TIME=0 HISTORY_PAUSE=0 LOG_LEVEL=debug SERVER_LOG_LEVEL=debug SET_FREEZE_MARKER=true DEST=test/build-walk/ npm run build:ext && DEST=test/build-walk/ npm run build:zip && .venv/bin/python -m pha.saver --script-location test/build-walk/pha-saver-script --native-name pha.saver.walk ./walk-data",
-    "walk:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ node test/random-walk.js",
-    "walk-fetch:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ node test/random-walk.js fetch",
-    "jupyter": "BASE=\"$(pwd)\" ; if [[ ! -e .venv/bin/jupyter ]] ; then echo 'Installing prerequisites...' ; npm run jupyter:install ; fi && export PHA_DATA=\"$(python -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' ${PHA_DATA:-data})\" && mkdir -p $PHA_DATA/notebooks ; if [[ ! -e $PHA_DATA/notebooks/template.ipynb ]] ; then cp python/template.ipynb $PHA_DATA/notebooks/ ; fi ; cd $PHA_DATA/notebooks && $BASE/.venv/bin/jupyter notebook --NotebookApp.nbserver_extensions=\"{'pha.jupyterext': True}\"",
-    "jupyter:install": ".venv/bin/pip install -r python/requirements.txt ; .venv/bin/jupyter nbextension install --py pha.jupyterext --symlink --sys-prefix ; .venv/bin/jupyter nbextension enable pha.jupyterext --py --sys-prefix",
-    "jupyterlab": "BASE=\"$(pwd)\" ; if [[ ! -e .venv/bin/jupyter-lab ]] ; then echo 'Installing prerequisites...' ; npm run jupyter:install ; fi && export PHA_DATA=\"$(python -c 'import os, sys; print(os.path.abspath(sys.argv[1]))' ${PHA_DATA:-data})\" && mkdir -p $PHA_DATA/notebooks ; if [[ ! -e $PHA_DATA/notebooks/template.ipynb ]] ; then cp python/template.ipynb $PHA_DATA/notebooks/ ; fi ; cd $PHA_DATA/notebooks && $BASE/.venv/bin/jupyter lab"
+    "test:selenium": "PATH=$PATH:/Applications/FirefoxNightly.app/Contents/MacOS/ mocha test/test.js $TEST_ARGS"
   }
 }

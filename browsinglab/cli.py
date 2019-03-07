@@ -2,7 +2,6 @@ import click
 import os
 import json
 import sys
-import stat
 
 
 @click.group()
@@ -11,27 +10,17 @@ def cli():
 
 
 @cli.command()
-def install():
+def install(native_name="browsinglab.connector"):
     """Install what is necessary for the browser connection"""
     # FIXME: support Windows
     manifest_path = os.path.abspath(os.path.join(__file__, "../../extension/manifest.json"))
     script_location = os.path.join(sys.prefix, "bin", "browser-connector")
-    native_name = "browsinglab.connector"
     with open(manifest_path) as fp:
         manifest = json.load(fp)
     manifest_id = manifest["applications"]["gecko"]["id"]
-    with open(script_location, "w") as fp:
-        # This script should support a Windows .BAT file
-        fp.write("""\
-#!%s
-from browsinglab.connector import connect
-connect()
-""" % (sys.executable,))
-    st = os.stat(script_location)
-    os.chmod(script_location, st.st_mode | stat.S_IEXEC)
     native_manifest = {
         "name": native_name,
-        "description": "Saves information from the personal-history-archive extension",
+        "description": "Saves information from the Browsing Lab extension",
         "path": script_location,
         "type": "stdio",
         "allowed_extensions": [manifest_id]

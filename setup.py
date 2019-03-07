@@ -44,6 +44,7 @@ setup(
     entry_points='''
         [console_scripts]
         blab=browsinglab.cli:cli
+        browser-connector=browsinglab.connector:connect
     ''',
     # test_suite='tests',
     # tests_require=test_requirements,

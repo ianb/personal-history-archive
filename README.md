@@ -121,3 +121,7 @@ This will run a new browser profile, with data going into `dev-data/` (and logs 
 If you have a question, probably the best thing is to [open a ticket](https://github.com/ianb/personal-history-archive/issues/new). If you are interested in implementing something, it would also be great to open a ticket so we can discuss.
 
 If you'd like to chat, I've created a channel `#pha` on irc.mozilla.org. I (`ianbicking`) am usually only online during business hours, Central Time/UTC-6.
+
+## Credits
+
+The icon comes from [Open Iconic](https://useiconic.com/open)

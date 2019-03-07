@@ -14,17 +14,15 @@ this.buildSettings = (function() {
 
   return {
     nativeScriptName: process.env.NATIVE_SCRIPT || "browsinglab.connector",
-    idleWaitTime: parseInt(process.env.IDLE_WAIT_TIME || 2000, 10),
-    historyPauseBeforeCollection: parseInt(process.env.HISTORY_PAUSE || 1000, 10),
     logLevel: process.env.LOG_LEVEL || "info",
     serverLogLevel: process.env.SERVER_LOG_LEVEL || "warn",
     setFreezeMarker: toBoolean(process.env.SET_FREEZE_MARKER, false),
-    server: "http://localhost:11180",
-    serverBase: "http://localhost",
-    updateServerPeriod: 60 * 60 * 1000, // 1 hour
     notifyError: true,
     testingBrowser: process.env.TESTING_BROWSER || false,
-    autofetchBrowser: process.env.AUTOFETCH || false,
     cspRestrict: toBoolean(process.env.CSP_RESTRICT, false),
+    defaultArchiveLocation: process.env.DEFAULT_ARCHIVE_LOCATION || null,
+    updateServerPeriod: 10000, // 60 * 60 * 1000, // 1 hour
+    temporaryArchiveLocation: process.env.TEMPORARY_ARCHIVE_LOCATION || "__prefix__/../dev-data",
+    temporaryUpdateServerPeriod: 10000, // 10 seconds
   };
 })();

@@ -21,6 +21,21 @@ def get_locations():
     return locations
 
 
+def list_archives():
+    result = []
+    for l in get_locations():
+        title = None
+        title_path = os.path.join(l, "title.txt")
+        if os.path.exists(title_path):
+            with open(title_path) as fp:
+                title = fp.read().strip() or None
+        result.append({
+            "path": l,
+            "title": title,
+        });
+    return result
+
+
 def add_location(l):
     l = os.path.abspath(l)
     if l in get_locations():

@@ -5,23 +5,26 @@ env:
 
 extends:
   - eslint:recommended
+  - plugin:react/recommended
   - plugin:mozilla/recommended
 
 parserOptions:
+  ecmaVersion: 8
   sourceType: module
 
 plugins:
   - mozilla
   - promise
+  - react
 
 root: true
 
 rules:
-  consistent-return: warn # TODO: remove, and default to mozilla/recommended of "error"
-  eqeqeq: error # TODO: change to "error"
-  no-console: [warn, {allow: [debug, error, info, trace, warn]}]
+  consistent-return: error
+  eqeqeq: error
+  no-console: warn
   prefer-const: off # TODO: change to "error"
-  quotes: [error, double] # TODO: change to "error"
+  quotes: [error, double]
 
   promise/always-return: off
   promise/avoid-new: off
@@ -31,3 +34,8 @@ rules:
   promise/no-nesting: off
   promise/no-promise-in-callback: off
   promise/param-names: error
+  react/prop-types: off
+
+settings:
+  react:
+    version: 16
